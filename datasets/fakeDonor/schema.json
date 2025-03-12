@@ -1,70 +1,72 @@
-{
-    "files": [
-        {
-            "file_name": "fake_samples.csv",
-            "schema": {
-                "columns": [
-                    {
-                        "name": "id",
-                        "dtype": "object"
-                    },
-                    {
-                        "name": "donor_id",
-                        "dtype": "object"
-                    },
-                    {
-                        "name": "organ",
-                        "dtype": "object"
-                    },
-                    {
-                        "name": "organ_condition",
-                        "dtype": "object"
-                    },
-                    {
-                        "name": "weight",
-                        "dtype": "int64"
-                    },
-                    {
-                        "name": "sample_category",
-                        "dtype": "object"
-                    }
-                ]
-            }
-        },
-        {
-            "file_name": "fake_donors.csv",
-            "schema": {
-                "columns": [
-                    {
-                        "name": "id",
-                        "dtype": "object"
-                    },
-                    {
-                        "name": "weight",
-                        "dtype": "int64"
-                    },
-                    {
-                        "name": "height",
-                        "dtype": "int64"
-                    },
-                    {
-                        "name": "sex",
-                        "dtype": "object"
-                    },
-                    {
-                        "name": "race",
-                        "dtype": "object"
-                    },
-                    {
-                        "name": "age",
-                        "dtype": "int64"
-                    },
-                    {
-                        "name": "cause_of_death",
-                        "dtype": "object"
-                    }
-                ]
+[
+    {
+        "name": "fake_sample",
+        "folder": "fakeDonor",
+        "url": "./data/fakeDonor/fake_sample.csv",
+        "row_count": 30,
+        "column_count": 6,
+        "columns": {
+            "id": {
+                "data_type": "nominal",
+                "cardinality": 30
+            },
+            "donor_id": {
+                "data_type": "nominal",
+                "cardinality": 15
+            },
+            "organ": {
+                "data_type": "nominal",
+                "cardinality": 6
+            },
+            "organ_condition": {
+                "data_type": "nominal",
+                "cardinality": 3
+            },
+            "weight": {
+                "data_type": "quantitative",
+                "cardinality": 27
+            },
+            "sample_category": {
+                "data_type": "nominal",
+                "cardinality": 3
             }
         }
-    ]
-}
+    },
+    {
+        "name": "fake_donor",
+        "folder": "fakeDonor",
+        "url": "./data/fakeDonor/fake_donor.csv",
+        "row_count": 15,
+        "column_count": 7,
+        "columns": {
+            "id": {
+                "data_type": "nominal",
+                "cardinality": 15
+            },
+            "weight": {
+                "data_type": "quantitative",
+                "cardinality": 15
+            },
+            "height": {
+                "data_type": "quantitative",
+                "cardinality": 12
+            },
+            "sex": {
+                "data_type": "nominal",
+                "cardinality": 2
+            },
+            "race": {
+                "data_type": "nominal",
+                "cardinality": 5
+            },
+            "age": {
+                "data_type": "quantitative",
+                "cardinality": 15
+            },
+            "cause_of_death": {
+                "data_type": "nominal",
+                "cardinality": 7
+            }
+        }
+    }
+]
