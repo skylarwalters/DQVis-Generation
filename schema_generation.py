@@ -27,6 +27,7 @@ def get_column_schema(df):
 
 def process_folder(folder_path):
     folder_schema = []
+    folder = folder_path.split("/")[-1]
 
     # Collect schema for each CSV file in the folder
     for file_name in os.listdir(folder_path):
@@ -37,7 +38,6 @@ def process_folder(folder_path):
             cols = df.shape[1]
             schema = get_column_schema(df)
             name = file_name.rstrip(".csv")
-            folder = folder_path.split("/")[-1]
             url = "./data/" + folder + "/" + name + ".csv"
             folder_schema.append(
                 {
@@ -55,7 +55,7 @@ def process_folder(folder_path):
     with open(schema_file_path, "w") as schema_file:
         json.dump(folder_schema, schema_file, indent=4)
 
-    return folder_schema
+    return {"name": folder, "schema": folder_schema}
 
 
 def main():
@@ -65,9 +65,7 @@ def main():
         folder_path = os.path.join(datasets_path, folder_name)
         if os.path.isdir(folder_path):
             folder_schemas = process_folder(folder_path)
-            all_schemas.extend(
-                folder_schemas
-            )  # Merge the folder schemas into the main list
+            all_schemas.append(folder_schemas)
 
     # Create the top-level schema file with the combined list
     top_level_schema_path = os.path.join(datasets_path, "schema.json")
