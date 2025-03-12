@@ -19,7 +19,12 @@ def process_folder(folder_path):
         if file_name.endswith(".csv"):
             csv_file_path = os.path.join(folder_path, file_name)
             schema = generate_schema(csv_file_path)
-            folder_schema["files"].append({"file_name": file_name, "schema": schema})
+            name = file_name.rstrip(".csv")
+            folder = folder_path.split("/")[-1]
+            url = "./data/" + folder + "/" + name + ".csv"
+            folder_schema["files"].append(
+                {"name": name, "folder": folder, "url": url, "schema": schema}
+            )
 
     # Create a schema file for the folder
     schema_file_path = os.path.join(folder_path, "schema.json")
