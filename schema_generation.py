@@ -2,28 +2,52 @@ import os
 import pandas as pd
 import json
 
+# import pyarrow.csv as pv_csv
+# import pyarrow as pa
+# from ydata_profiling import ProfileReport
 
-def generate_schema(csv_file):
-    df = pd.read_csv(csv_file)
-    schema = {
-        "columns": [{"name": col, "dtype": str(df[col].dtype)} for col in df.columns]
-    }
+
+def get_column_schema(df):
+    schema = {}
+    for col in df.columns:
+        dtype = df[col].dtype
+        if dtype == "object":
+            # You can add your own logic to infer categorical vs nominal
+            schema[col] = {"data_type": "nominal", "cardinality": len(df[col].unique())}
+        elif pd.api.types.is_numeric_dtype(dtype):
+            schema[col] = {
+                "data_type": "quantitative",
+                "cardinality": len(df[col].unique()),
+            }
+        else:
+            schema[col] = {"data_type": "unknown"}
+
     return schema
 
 
 def process_folder(folder_path):
-    folder_schema = {"files": []}
+    folder_schema = []
 
     # Collect schema for each CSV file in the folder
     for file_name in os.listdir(folder_path):
         if file_name.endswith(".csv"):
             csv_file_path = os.path.join(folder_path, file_name)
-            schema = generate_schema(csv_file_path)
+            df = pd.read_csv(csv_file_path)
+            rows = df.shape[0]
+            cols = df.shape[1]
+            schema = get_column_schema(df)
             name = file_name.rstrip(".csv")
             folder = folder_path.split("/")[-1]
             url = "./data/" + folder + "/" + name + ".csv"
-            folder_schema["files"].append(
-                {"name": name, "folder": folder, "url": url, "schema": schema}
+            folder_schema.append(
+                {
+                    "name": name,
+                    "folder": folder,
+                    "url": url,
+                    "row_count": rows,
+                    "column_count": cols,
+                    "columns": schema,
+                }
             )
 
     # Create a schema file for the folder
@@ -31,7 +55,7 @@ def process_folder(folder_path):
     with open(schema_file_path, "w") as schema_file:
         json.dump(folder_schema, schema_file, indent=4)
 
-    return folder_schema["files"]  # Return only the list of files
+    return folder_schema
 
 
 def main():
