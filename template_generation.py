@@ -3,7 +3,7 @@ from udi_grammar_py import Chart, Op, rolling
 from enum import Enum
 
 
-def generate_templates():
+def generate():
     df = pd.DataFrame(
         columns=[
             "query_template",
