@@ -5,35 +5,42 @@
         "url": "./data/penguin/penguin.csv",
         "row_count": 344,
         "column_count": 7,
-        "columns": {
-            "species": {
+        "columns": [
+            {
+                "name": "species",
                 "data_type": "nominal",
                 "cardinality": 3
             },
-            "island": {
+            {
+                "name": "island",
                 "data_type": "nominal",
                 "cardinality": 3
             },
-            "bill_length_mm": {
+            {
+                "name": "bill_length_mm",
                 "data_type": "quantitative",
                 "cardinality": 165
             },
-            "bill_depth_mm": {
+            {
+                "name": "bill_depth_mm",
                 "data_type": "quantitative",
                 "cardinality": 81
             },
-            "flipper_length_mm": {
+            {
+                "name": "flipper_length_mm",
                 "data_type": "quantitative",
                 "cardinality": 56
             },
-            "body_mass_g": {
+            {
+                "name": "body_mass_g",
                 "data_type": "quantitative",
                 "cardinality": 95
             },
-            "sex": {
+            {
+                "name": "sex",
                 "data_type": "nominal",
                 "cardinality": 3
             }
-        }
+        ]
     }
 ]

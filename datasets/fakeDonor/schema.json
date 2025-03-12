@@ -5,32 +5,38 @@
         "url": "./data/fakeDonor/fake_sample.csv",
         "row_count": 30,
         "column_count": 6,
-        "columns": {
-            "id": {
+        "columns": [
+            {
+                "name": "id",
                 "data_type": "nominal",
                 "cardinality": 30
             },
-            "donor_id": {
+            {
+                "name": "donor_id",
                 "data_type": "nominal",
                 "cardinality": 15
             },
-            "organ": {
+            {
+                "name": "organ",
                 "data_type": "nominal",
                 "cardinality": 6
             },
-            "organ_condition": {
+            {
+                "name": "organ_condition",
                 "data_type": "nominal",
                 "cardinality": 3
             },
-            "weight": {
+            {
+                "name": "weight",
                 "data_type": "quantitative",
                 "cardinality": 27
             },
-            "sample_category": {
+            {
+                "name": "sample_category",
                 "data_type": "nominal",
                 "cardinality": 3
             }
-        }
+        ]
     },
     {
         "name": "fake_donor",
@@ -38,35 +44,42 @@
         "url": "./data/fakeDonor/fake_donor.csv",
         "row_count": 15,
         "column_count": 7,
-        "columns": {
-            "id": {
+        "columns": [
+            {
+                "name": "id",
                 "data_type": "nominal",
                 "cardinality": 15
             },
-            "weight": {
+            {
+                "name": "weight",
                 "data_type": "quantitative",
                 "cardinality": 15
             },
-            "height": {
+            {
+                "name": "height",
                 "data_type": "quantitative",
                 "cardinality": 12
             },
-            "sex": {
+            {
+                "name": "sex",
                 "data_type": "nominal",
                 "cardinality": 2
             },
-            "race": {
+            {
+                "name": "race",
                 "data_type": "nominal",
                 "cardinality": 5
             },
-            "age": {
+            {
+                "name": "age",
                 "data_type": "quantitative",
                 "cardinality": 15
             },
-            "cause_of_death": {
+            {
+                "name": "cause_of_death",
                 "data_type": "nominal",
                 "cardinality": 7
             }
-        }
+        ]
     }
 ]

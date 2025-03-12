@@ -8,20 +8,18 @@ import json
 
 
 def get_column_schema(df):
-    schema = {}
+    schema = []
     for col in df.columns:
         dtype = df[col].dtype
+        column_spec = {"name": col}
         if dtype == "object":
-            # You can add your own logic to infer categorical vs nominal
-            schema[col] = {"data_type": "nominal", "cardinality": len(df[col].unique())}
+            column_spec["data_type"] = "nominal"
         elif pd.api.types.is_numeric_dtype(dtype):
-            schema[col] = {
-                "data_type": "quantitative",
-                "cardinality": len(df[col].unique()),
-            }
+            column_spec["data_type"] = "quantitative"
         else:
-            schema[col] = {"data_type": "unknown"}
-
+            column_spec["data_type"] = "unknown"
+        column_spec["cardinality"] = len(df[col].unique())
+        schema.append(column_spec)
     return schema
 
 
