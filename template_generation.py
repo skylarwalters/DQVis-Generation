@@ -16,14 +16,14 @@ def generate():
 
     df = add_row(
         df,
-        query_template="How many <E> are there, grouped by <E.F:N>?",
+        query_template="How many <E> are there, grouped by <F:N>?",
         spec=(
             Chart()
-            .source("<E>", "<E.S>")
-            .groupby("<E.F:N>")
+            .source("<E>", "<E.url>")
+            .groupby("<F>")
             .rollup({"<E> count": Op.count()})
             .mark("bar")
-            .x(field="<E.F>", type="nominal")
+            .x(field="<F>", type="nominal")
             .y(field="count", type="quantitative")
         ),
         constraints="",
