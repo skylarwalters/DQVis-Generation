@@ -1,0 +1,32 @@
+{
+    "columns": [
+        {
+            "name": "species",
+            "dtype": "object"
+        },
+        {
+            "name": "island",
+            "dtype": "object"
+        },
+        {
+            "name": "bill_length_mm",
+            "dtype": "float64"
+        },
+        {
+            "name": "bill_depth_mm",
+            "dtype": "float64"
+        },
+        {
+            "name": "flipper_length_mm",
+            "dtype": "float64"
+        },
+        {
+            "name": "body_mass_g",
+            "dtype": "float64"
+        },
+        {
+            "name": "sex",
+            "dtype": "object"
+        }
+    ]
+}
