@@ -1,0 +1,1109 @@
+{
+    "files": [
+        {
+            "file_name": "datasets.csv",
+            "schema": {
+                "columns": [
+                    {
+                        "name": "uuid",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "hubmap_id",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "ablation_distance_between_shots_x_units",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "ablation_distance_between_shots_x_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "ablation_distance_between_shots_y_units",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "ablation_distance_between_shots_y_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "ablation_frequency_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "ablation_frequency_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "acquisition_id",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "acquisition_instrument_model",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "acquisition_instrument_vendor",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "analyte_class",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "area_normalized_ion_dose_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "area_normalized_ion_dose_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "assay_category",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "assay_type",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "bead_barcode_offset",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "bead_barcode_read",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "bead_barcode_size",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "bulk_atac_cell_isolation_protocols_io_doi",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "bulk_rna_isolation_protocols_io_doi",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "bulk_rna_isolation_quality_metric_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "bulk_rna_yield_units_per_tissue_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "bulk_rna_yield_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "bulk_transposition_input_number_nuclei",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "cell_barcode_offset",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "cell_barcode_read",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "cell_barcode_size",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "created_by_user_displayname",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "created_by_user_email",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "created_timestamp",
+                        "dtype": "int64"
+                    },
+                    {
+                        "name": "data_collection_mode",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "data_precision_bytes",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "description",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "desi_solvent",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "desi_solvent_flow_rate",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "desi_solvent_flow_rate_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "dms",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "dna_assay_input_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "dna_assay_input_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "donor.hubmap_id",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "dual_count_start",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "end_datetime",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "execution_datetime",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "expected_cell_count",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "gdna_fragmentation_quality_assurance",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "group_name",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "increment_z_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "increment_z_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "ion_mobility",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "is_targeted",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "is_technical_replicate",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "labeling",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "last_modified_timestamp",
+                        "dtype": "int64"
+                    },
+                    {
+                        "name": "lc_column_model",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "lc_column_vendor",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "lc_flow_rate_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "lc_flow_rate_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "lc_gradient",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "lc_id_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "lc_id_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "lc_instrument_model",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "lc_instrument_vendor",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "lc_length_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "lc_length_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "lc_mobile_phase_a",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "lc_mobile_phase_b",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "lc_resin",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "lc_temp_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "lc_temp_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "library_adapter_sequence",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "library_average_fragment_size",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "library_concentration_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "library_concentration_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "library_construction_method",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "library_construction_protocols_io_doi",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "library_creation_date",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "library_final_yield",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "library_final_yield_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "library_final_yield_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "library_id",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "library_layout",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "library_pcr_cycles",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "library_pcr_cycles_for_sample_index",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "library_preparation_kit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "mapped_consortium",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "mapped_statusdata_access_level",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "mass_resolving_power",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "max_x_width_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "max_x_width_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "max_y_height_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "max_y_height_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "ms_scan_mode",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "ms_source",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "mz_range_high_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "mz_range_low_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "mz_resolving_power",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "number_of_antibodies",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "number_of_barcode_probes",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "number_of_barcode_regions_per_barcode_probe",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "number_of_channels",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "number_of_cycles",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "number_of_imaging_rounds",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "number_of_pseudocolors_per_channel",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "number_of_readout_probes_per_channel",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "number_of_sections",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "operator",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "operator_email",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "origin_samples_unique_mapped_organs",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "overall_protocols_io_doi",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "pi",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "pi_email",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "pixel_dwell_time_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "pixel_dwell_time_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "pixel_size_x_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "pixel_size_x_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "pixel_size_y_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "pixel_size_y_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "polarity",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "preparation_instrument_model",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "preparation_instrument_vendor",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "preparation_maldi_matrix",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "preparation_type",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "primary_ion",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "primary_ion_current_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "primary_ion_current_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "processing_protocols_io_doi",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "processing_search",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "protocols_io_doi",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "published_timestamp",
+                        "dtype": "int64"
+                    },
+                    {
+                        "name": "puck_id",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "range_z_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "range_z_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "reagent_prep_protocols_io_doi",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "resolution_x_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "resolution_x_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "resolution_y_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "resolution_y_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "resolution_z_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "resolution_z_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "rnaseq_assay_input",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "rnaseq_assay_input_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "rnaseq_assay_input_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "rnaseq_assay_method",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "roi_description",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "roi_id",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "sample_quality_metric",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "sc_isolation_cell_number",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "sc_isolation_enrichment",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "sc_isolation_entity",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "sc_isolation_protocols_io_doi",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "sc_isolation_quality_metric",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "sc_isolation_tissue_dissociation",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "section_prep_protocols_io_doi",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "segment_data_format",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "sequencing_phix_percent",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "sequencing_read_format",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "sequencing_read_percent_q30",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "sequencing_reagent_kit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "signal_type",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "source_project",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "spatial_sampling_type",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "spatial_target",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "spatial_type",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "stain",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "start_datetime",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "status",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "step_z_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "thumbnail_file_abs_path",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "transposition_input",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "transposition_kit_number",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "transposition_method",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "transposition_transposase_source",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "umi_offset",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "umi_read",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "umi_size",
+                        "dtype": "float64"
+                    }
+                ]
+            }
+        },
+        {
+            "file_name": "samples.csv",
+            "schema": {
+                "columns": [
+                    {
+                        "name": "uuid",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "hubmap_id",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "PPID",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "Preservation_condition",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "Preservation_media",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "cold_ischemia_time_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "cold_ischemia_time_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "created_by_user_displayname",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "created_by_user_email",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "created_timestamp",
+                        "dtype": "int64"
+                    },
+                    {
+                        "name": "donor.hubmap_id",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "file_row",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "group_name",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "health_status",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "histological_report",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "lab_id",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "last_modified_timestamp",
+                        "dtype": "int64"
+                    },
+                    {
+                        "name": "mapped_consortium",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "mapped_statusdata_access_level",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "metadata_schema_id",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "notes",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "organ_condition",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "origin_samples_unique_mapped_organs",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "pathname",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "pathologist_report",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "pathology_distance_unit",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "pathology_distance_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "perfusion_solution",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "preparation_condition",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "preparation_medium",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "preparation_protocol_doi",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "procedure_date",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "processing_time_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "processing_time_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "published_timestamp",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "quality_criteria",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "sample_category",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "sample_id",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "source_id",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "source_storage_duration_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "source_storage_duration_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "specimen_preservation_temperature",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "specimen_quality_criteria",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "specimen_tumor_distance_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "specimen_tumor_distance_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "status",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "storage_medium",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "storage_method",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "tissue_weight_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "tissue_weight_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "vital_state",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "volume_unit",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "volume_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "warm_ischemia_time_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "warm_ischemia_time_value",
+                        "dtype": "object"
+                    }
+                ]
+            }
+        },
+        {
+            "file_name": "donors.csv",
+            "schema": {
+                "columns": [
+                    {
+                        "name": "uuid",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "hubmap_id",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "abo_blood_group_system",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "age_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "age_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "apolipoprotein_e_phenotype",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "body_mass_index_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "body_mass_index_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "cause_of_death",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "created_by_user_displayname",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "created_by_user_email",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "created_timestamp",
+                        "dtype": "int64"
+                    },
+                    {
+                        "name": "death_event",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "egfr_ckd_epi_2021__unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "egfr_ckd_epi_2021__value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "ethnicity",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "gestational_age_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "gestational_age_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "group_name",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "height_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "height_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "kidney_donor_profile_index_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "kidney_donor_profile_index_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "last_modified_timestamp",
+                        "dtype": "int64"
+                    },
+                    {
+                        "name": "mapped_consortium",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "mapped_statusdata_access_level",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "mechanism_of_injury",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "medical_history",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "other_anatomic_concept",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "pathology_note",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "published_timestamp",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "race",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "rh_blood_group",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "serum_creatinine_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "serum_creatinine_value",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "sex",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "social_history",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "status",
+                        "dtype": "float64"
+                    },
+                    {
+                        "name": "weight_unit",
+                        "dtype": "object"
+                    },
+                    {
+                        "name": "weight_value",
+                        "dtype": "float64"
+                    }
+                ]
+            }
+        }
+    ]
+}

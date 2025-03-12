@@ -1,11 +1,3 @@
-"""
-For each folder in ./datasets there will be some number of csv files.
-
-For each fodler a schema file will be created that contains
-the schema of the csv files in the folder. Then a top-level schema file
-will be created that contains a list of all schemas.
-"""
-
 import os
 import pandas as pd
 import json
@@ -20,16 +12,21 @@ def generate_schema(csv_file):
 
 
 def process_folder(folder_path):
-    schema_list = []
+    folder_schema = {"files": []}
+
+    # Collect schema for each CSV file in the folder
     for file_name in os.listdir(folder_path):
         if file_name.endswith(".csv"):
             csv_file_path = os.path.join(folder_path, file_name)
             schema = generate_schema(csv_file_path)
-            schema_list.append(schema)
-            schema_file_path = os.path.join(folder_path, f"{file_name}_schema.json")
-            with open(schema_file_path, "w") as schema_file:
-                json.dump(schema, schema_file, indent=4)
-    return schema_list
+            folder_schema["files"].append({"file_name": file_name, "schema": schema})
+
+    # Create a schema file for the folder
+    schema_file_path = os.path.join(folder_path, "schema.json")
+    with open(schema_file_path, "w") as schema_file:
+        json.dump(folder_schema, schema_file, indent=4)
+
+    return folder_schema
 
 
 def main():
@@ -39,8 +36,9 @@ def main():
         folder_path = os.path.join(datasets_path, folder_name)
         if os.path.isdir(folder_path):
             folder_schemas = process_folder(folder_path)
-            all_schemas.extend(folder_schemas)
+            all_schemas.append(folder_schemas)
 
+    # Create the top-level schema file
     top_level_schema_path = os.path.join(datasets_path, "schema.json")
     with open(top_level_schema_path, "w") as top_level_schema_file:
         json.dump(all_schemas, top_level_schema_file, indent=4)
