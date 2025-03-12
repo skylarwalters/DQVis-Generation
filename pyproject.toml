@@ -6,5 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "pandas>=2.2.3",
+    "parsimonious>=0.10.0",
+    "python-constraint2>=2.1.0",
     "udi-grammar-py>=0.2.0",
 ]
