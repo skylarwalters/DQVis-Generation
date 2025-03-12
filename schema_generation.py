@@ -26,19 +26,21 @@ def process_folder(folder_path):
     with open(schema_file_path, "w") as schema_file:
         json.dump(folder_schema, schema_file, indent=4)
 
-    return folder_schema
+    return folder_schema["files"]  # Return only the list of files
 
 
 def main():
     datasets_path = "./datasets"
-    all_schemas = []
+    all_schemas = []  # This will hold all file schemas in one list
     for folder_name in os.listdir(datasets_path):
         folder_path = os.path.join(datasets_path, folder_name)
         if os.path.isdir(folder_path):
             folder_schemas = process_folder(folder_path)
-            all_schemas.append(folder_schemas)
+            all_schemas.extend(
+                folder_schemas
+            )  # Merge the folder schemas into the main list
 
-    # Create the top-level schema file
+    # Create the top-level schema file with the combined list
     top_level_schema_path = os.path.join(datasets_path, "schema.json")
     with open(top_level_schema_path, "w") as top_level_schema_file:
         json.dump(all_schemas, top_level_schema_file, indent=4)
