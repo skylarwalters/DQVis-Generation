@@ -19,6 +19,7 @@ def expand(df, dataset_schemas):
                 entity = file["name"]
                 row_count = file["row_count"]
                 column_count = file["column_count"]
+                url = file["url"]
                 for col in file["columns"]:
                     expanded_col = col.copy()
                     expanded_col.update(
@@ -26,15 +27,21 @@ def expand(df, dataset_schemas):
                             "entity": entity,
                             "row_count": row_count,
                             "column_count": column_count,
+                            "url": url,
                         }
                     )
                     schema_flattened.append(expanded_col)
             field_options = schema_flattened
-            unique_entities = set([x["entity"] for x in schema_flattened])
+            # unique_entities = set([x["entity"] for x in schema_flattened])
+            url_lookup = {x["entity"]: x["url"] for x in schema_flattened}
+            unique_entities = url_lookup.keys()
             empty_entity_options = [
                 {"name": None, "data_type": None, "cardinality": None}
             ]
-            entity_options = [{"entity": entity} for entity in unique_entities]
+            entity_options = [
+                {"entity": entity, "url": url_lookup[entity]}
+                for entity in unique_entities
+            ]
             for e in entity_options:
                 e.update(empty_entity_options)
             expanded_rows.extend(expand_template(row, entity_options, field_options))
@@ -57,16 +64,16 @@ def expand_solutions(row, tags, solutions):
     result = []
     for s in solutions:
         expanded_row = row.copy()
-        expanded_row["query_base"] = expand_query_template(
+        expanded_row["query_base"] = resolve_query_template(
             row["query_template"], tags, s
         )
-        expanded_row["spec"] = expand_query_template(row["spec_template"], tags, s)
+        expanded_row["spec"] = resolve_spec_template(row["spec_template"], tags, s)
         result.append(expanded_row)
     pprint(result)
     return result
 
 
-def expand_query_template(query_template, tags, solution):
+def resolve_query_template(query_template, tags, solution):
     query_base = query_template
     for tag in tags:
         if tag["field"]:
@@ -78,8 +85,35 @@ def expand_query_template(query_template, tags, solution):
     return query_base
 
 
-def expand_spec_template(spec_template, tags, solution):
+def resolve_spec_template(spec_template, tags, solution):
     spec = spec_template
+    pattern = r"<([^>]+)>"
+    while True:
+        match = re.search(pattern, spec)
+        if match == None:
+            break
+        match = match.group(0)
+        content = match.strip("<>")
+        parts = content.split(".")
+        if len(parts) == 1:
+            if parts[0].startswith("E"):
+                entity = parts[0]
+                resolved = solution[entity]["entity"]
+            else:
+                resolved = solution["E_" + parts[0]]["name"]
+        elif len(parts) == 2:
+            left, right = parts
+            if right == "url":
+                resolved = solution[left]["url"]
+            else:
+                resolved = solution[left + "_" + right]["name"]
+        else:
+            raise ValueError(
+                f"Invalid match: {match}. Only a single '.' is supported in spec template"
+            )
+
+        # resolved = "RESOLVED"
+        spec = spec.replace(match, resolved, 1)
     return spec
 
 
@@ -106,7 +140,7 @@ def extract_tags(text: str) -> List[Dict[str, Union[str, List[str]]]]:
         entity, field, field_type = None, None, None
         if len(parts) == 1:
             first = parts[0]
-            if first.startswith("E") or first.startswith("e"):
+            if first.startswith("E"):
                 entity = first
             else:
                 field = first
@@ -157,11 +191,10 @@ def infer_entity(
     defined_entities = [tag["entity"] for tag in tags if tag["entity"]]
     unique_entities = set(defined_entities)
 
-    fill_with = unique_entities.pop() if len(unique_entities) == 1 else "E"
     if len(unique_entities) > 1 and any(not tag["entity"] for tag in tags):
         raise ValueError("Multiple entities defined, cannot infer empty entity.")
     for tag in [x for x in tags if not x["entity"]]:
-        tag["entity"] = fill_with
+        tag["entity"] = "E"
     return tags
 
 
@@ -306,23 +339,26 @@ if __name__ == "__main__":
     expand_template(
         row={
             "constraints": [],
-            "query_template": "How many <E1> are there <E1>?",
-            "spec_template": "{}",
+            "query_template": "How many <E> are there <F:Q>?",
+            "spec_template": "{ source: '<E>', '<E.url> rep: <F>'}",
         },
         entity_options=[
             {
+                "url": "./data/fake_sample.csv",
                 "entity": "fake_sample",
                 "name": None,
                 "data_type": None,
                 "cardinality": None,
             },
             {
+                "url": "./data/fake_donor.csv",
                 "entity": "fake_donor",
                 "name": None,
                 "data_type": None,
                 "cardinality": None,
             },
             {
+                "url": "./data/fake_file.csv",
                 "entity": "fake_file",
                 "name": None,
                 "data_type": None,
