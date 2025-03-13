@@ -19,7 +19,6 @@ def expand(df, dataset_schemas):
                 entity = file["name"]
                 row_count = file["row_count"]
                 column_count = file["column_count"]
-                # TODO: FINISH FLATTENING
                 for col in file["columns"]:
                     expanded_col = col.copy()
                     expanded_col.update(
@@ -50,7 +49,38 @@ def expand_template(row, entity_options, field_options):
     fields = extract["fields"]
     constraints = expand_constraints(row["constraints"], tags)
     s = constraint_solver(entities, fields, constraints, entity_options, field_options)
-    return s
+
+    return expand_solutions(row, tags, s)
+
+
+def expand_solutions(row, tags, solutions):
+    result = []
+    for s in solutions:
+        expanded_row = row.copy()
+        expanded_row["query_base"] = expand_query_template(
+            row["query_template"], tags, s
+        )
+        expanded_row["spec"] = expand_query_template(row["spec_template"], tags, s)
+        result.append(expanded_row)
+    pprint(result)
+    return result
+
+
+def expand_query_template(query_template, tags, solution):
+    query_base = query_template
+    for tag in tags:
+        if tag["field"]:
+            k = tag["entity"] + "_" + tag["field"]
+            resolved = solution[k]["name"]
+        else:
+            resolved = solution[tag["entity"]]["entity"]
+        query_base = query_base.replace(f"<{tag['original']}>", resolved, 1)
+    return query_base
+
+
+def expand_spec_template(spec_template, tags, solution):
+    spec = spec_template
+    return spec
 
 
 def extract_tags(text: str) -> List[Dict[str, Union[str, List[str]]]]:
@@ -213,21 +243,21 @@ def constraint_solver(
     field_options: List[Dict[str, Union[str, int]]],
 ) -> List[Dict[str, str]]:
     problem = Problem()
-    print("⭐ constraints ⭐")
-    pprint(constraints)
-    print("⭐ entities ⭐")
-    pprint(entities)
-    pprint(entity_options)
-    print("⭐ fields ⭐")
-    pprint(fields)
-    pprint(field_options)
+    # print("⭐ constraints ⭐")
+    # pprint(constraints)
+    # print("⭐ entities ⭐")
+    # pprint(entities)
+    # pprint(entity_options)
+    # print("⭐ fields ⭐")
+    # pprint(fields)
+    # pprint(field_options)
     problem.addVariables(fields, field_options)
     problem.addVariables(entities, entity_options)
     for constraint in constraints:
         problem.addConstraint(constraint)
     s = problem.getSolutions()
-    pprint("⭐ solutions ⭐")
-    pprint(s)
+    # pprint("⭐ solutions ⭐")
+    # pprint(s)
     return s
 
 
@@ -276,7 +306,8 @@ if __name__ == "__main__":
     expand_template(
         row={
             "constraints": [],
-            "query_template": "waht <E1> hufh and <E2.F:Q>",
+            "query_template": "How many <E1> are there <E1>?",
+            "spec_template": "{}",
         },
         entity_options=[
             {
