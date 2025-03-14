@@ -24,7 +24,7 @@ def generate():
             .rollup({"<E> count": Op.count()})
             .mark("bar")
             .x(field="<F>", type="nominal")
-            .y(field="count", type="quantitative")
+            .y(field="<E> count", type="quantitative")
         ),
         constraints="",
         query_type=QueryType.QUESTION,
