@@ -35,9 +35,12 @@ def expand(df, dataset_schemas):
             # unique_entities = set([x["entity"] for x in schema_flattened])
             url_lookup = {x["entity"]: x["url"] for x in schema_flattened}
             unique_entities = url_lookup.keys()
-            empty_entity_options = [
-                {"name": None, "data_type": None, "cardinality": None}
-            ]
+            empty_entity_options = {
+                "name": None,
+                "data_type": None,
+                "cardinality": None,
+            }
+
             entity_options = [
                 {"entity": entity, "url": url_lookup[entity]}
                 for entity in unique_entities
@@ -69,7 +72,7 @@ def expand_solutions(row, tags, solutions):
         )
         expanded_row["spec"] = resolve_spec_template(row["spec_template"], tags, s)
         result.append(expanded_row)
-    pprint(result)
+    # pprint(result)
     return result
 
 

@@ -35,7 +35,7 @@ def generate():
         query_template="Is there a correlation between <F1:Q> and <F2:Q>?",
         spec=(
             Chart()
-            .source("<E>", "<E.S>")
+            .source("<E>", "<E.url>")
             .mark("point")
             .x(field="<F1>", type="quantitative")
             .y(field="<F2>", type="quantitative")
