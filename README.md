@@ -14,7 +14,7 @@ The overall pipeline can be run from `main.pynb` and consists of a few high-leve
 - `query_type`: The form of the query, either `question` or `utterance`.
 - `creation_method`: Will always output `template` from this script.
 - `query_base`: The query with placeholders satisfied. e.g. 'donors' and 'sex' instead of <E> and <F>.
-- `spec`: The UDI `pecification with entities and fields satisfied.
+- `spec`: The UDI's specification with entities and fields satisfied.
 - `dataset_schema`: The dataset schema name.
 - `query`: The paraphrased version of `query_base`
 - `expertise`: The expertise score [1-5] of the paraphrased query.
