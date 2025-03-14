@@ -8,7 +8,7 @@ def generate():
         columns=[
             "query_template",
             "constraints",
-            "spec",
+            "spec_template",
             "query_type",
             "creation_method",
         ]
@@ -17,7 +17,7 @@ def generate():
     df = add_row(
         df,
         query_template="How many <E> are there, grouped by <F:N>?",
-        spec=(
+        spec_template=(
             Chart()
             .source("<E>", "<E.url>")
             .groupby("<F>")
@@ -33,7 +33,7 @@ def generate():
     df = add_row(
         df,
         query_template="Is there a correlation between <F1:Q> and <F2:Q>?",
-        spec=(
+        spec_template=(
             Chart()
             .source("<E>", "<E.S>")
             .mark("point")
@@ -47,7 +47,7 @@ def generate():
     # df = add_row(
     #     df,
     #     query_template="TODO",
-    #     spec=(
+    #     spec_template=(
     #         Chart()
     #         .source("<E>", "<E.S>")
     #         .mark("TODO")
