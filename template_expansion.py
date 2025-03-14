@@ -47,7 +47,10 @@ def expand(df, dataset_schemas):
             ]
             for e in entity_options:
                 e.update(empty_entity_options)
-            expanded_rows.extend(expand_template(row, entity_options, field_options))
+            new_rows = expand_template(row, entity_options, field_options)
+            for new_row in new_rows:
+                new_row["dataset_schema"] = schema_name
+            expanded_rows.extend(new_rows)
     expanded_df = pd.DataFrame(expanded_rows)
     return expanded_df
 
