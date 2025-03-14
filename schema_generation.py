@@ -37,7 +37,7 @@ def process_folder(folder_path):
             rows = df.shape[0]
             cols = df.shape[1]
             schema = get_column_schema(df)
-            name = file_name.rstrip(".csv")
+            name = file_name[:-4] if file_name.endswith(".csv") else file_name
             url = "./data/" + folder + "/" + name + ".csv"
             folder_schema.append(
                 {
