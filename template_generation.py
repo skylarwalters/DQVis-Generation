@@ -17,7 +17,7 @@ def generate():
     df = add_row(
         df,
         query_template="How many <E> are there, grouped by <F:N>?",
-        spec_template=(
+        spec=(
             Chart()
             .source("<E>", "<E.url>")
             .groupby("<F>")
@@ -33,7 +33,7 @@ def generate():
     df = add_row(
         df,
         query_template="Is there a correlation between <F1:Q> and <F2:Q>?",
-        spec_template=(
+        spec=(
             Chart()
             .source("<E>", "<E.S>")
             .mark("point")
@@ -47,7 +47,7 @@ def generate():
     # df = add_row(
     #     df,
     #     query_template="TODO",
-    #     spec_template=(
+    #     spec=(
     #         Chart()
     #         .source("<E>", "<E.S>")
     #         .mark("TODO")
@@ -70,7 +70,7 @@ def add_row(df, query_template, constraints, spec, query_type: QueryType):
     df.loc[len(df)] = {
         "query_template": query_template,
         "constraints": constraints,
-        "spec": spec.to_json(),
+        "spec_template": spec.to_json(),
         "query_type": query_type.value,
         "creation_method": "template",
     }
@@ -79,5 +79,5 @@ def add_row(df, query_template, constraints, spec, query_type: QueryType):
 
 
 if __name__ == "__main__":
-    df = generate_templates()
+    df = generate()
     print(df.head())
