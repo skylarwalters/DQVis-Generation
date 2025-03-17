@@ -2,13 +2,13 @@ from typing import List, Dict, Union
 import pandas as pd
 import re
 from constraint import *
-from parsimonious.grammar import Grammar
+
+# from parsimonious.grammar import Grammar
 from pprint import pprint
 
 
 def expand(df, dataset_schemas):
     expanded_rows = []
-    # TODO: optimize, flip the order of these for loops?
     for _, row in df.iterrows():
         for schema in dataset_schemas:
             schema_name = schema["name"]
@@ -33,16 +33,20 @@ def expand(df, dataset_schemas):
                     schema_flattened.append(expanded_col)
             field_options = schema_flattened
             # unique_entities = set([x["entity"] for x in schema_flattened])
+            row_count_lookup = {x["entity"]: x["row_count"] for x in schema_flattened}
             url_lookup = {x["entity"]: x["url"] for x in schema_flattened}
             unique_entities = url_lookup.keys()
             empty_entity_options = {
                 "name": None,
                 "data_type": None,
-                "cardinality": None,
             }
 
             entity_options = [
-                {"entity": entity, "url": url_lookup[entity]}
+                {
+                    "entity": entity,
+                    "url": url_lookup[entity],
+                    "cardinality": row_count_lookup[entity],
+                }
                 for entity in unique_entities
             ]
             for e in entity_options:
@@ -214,7 +218,11 @@ def expand_constraints(
     and will add a constraint to ensure unique fields
     """
     expanded_constraints = []
-    # TODO expand input constraints
+    for constraint in contstraints:
+        resolved = constraint.replace(".C", "['cardinality']")
+        resolved = resolved.replace(".", "_")
+        resolved = add_default_entity(resolved)
+        expanded_constraints.append(resolved)
 
     # Turn field types into constraints
     expanded_constraints.extend(
@@ -263,15 +271,12 @@ def expand_constraints(
         entity = field.split("_")[0]
         expanded_constraints.append(f"{field}['entity'] == {entity}['entity']")
 
-    # TODO: do I need this one now?
-    # ensure that fields within the same entity are preserved
-    # unique_entities = set([tag["entity"] for tag in tags if tag["entity"]])
-    # # for entity in unique_entities:
-    #     entity_fields = [tag["field"] for tag in tags if tag["entity"] == entity]
-    #     if len(entity_fields) > 1:
-    #         expanded_constraints.append("==".join(f"{entity_fields}['entity']"))
-
     return expanded_constraints
+
+def add_default_entity(text):
+    # Use regex to match "F" that is not preceded by "_" and replace it with "E_F"
+    modified_text = re.sub(r'(?<!_)F', r'E_F', text)
+    return modified_text
 
 
 def constraint_solver(
