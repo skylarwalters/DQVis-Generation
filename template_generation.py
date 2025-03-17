@@ -26,7 +26,30 @@ def generate():
             .x(field="<F>", type="nominal")
             .y(field="<E> count", type="quantitative")
         ),
-        constraints="",
+        constraints=[
+            "F.C * 2 < E.C",
+            "F.C < 4"
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template="How many <E> are there, grouped by <F:N>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .groupby("<F>")
+            .rollup({"<E> count": Op.count()})
+            .mark("bar")
+            .x(field="<E> count", type="quantitative")
+            .y(field="<F>", type="nominal")
+        ),
+        constraints=[
+            "F.C * 2 < E.C",
+            "F.C >= 4",
+            "F.C < 25",
+        ],
         query_type=QueryType.QUESTION,
     )
 
@@ -40,23 +63,111 @@ def generate():
             .x(field="<F1>", type="quantitative")
             .y(field="<F2>", type="quantitative")
         ),
-        constraints="",
+        constraints=[
+            "F1.C > 10",
+            "F2.C > 10"
+        ],
         query_type=QueryType.QUESTION,
     )
+
+    
+    df = add_row(
+        df,
+        query_template="What is the distribution of <F:Q>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .kde(
+                field="<F>", 
+                output={
+                    "sample": "<F>",
+                    "density": "density"},)
+            .mark("area")
+            .x(field="<F>", type="quantitative")
+            .y(field="density", type="quantitative")
+        ),
+        constraints=["E.C > 20"],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template="What is the distribution of <F:Q>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .mark("point")
+            .x(field="<F>", type="quantitative")
+        ),
+        constraints=[
+            "E.C < 20",
+            "E.C > 3"
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
 
     # df = add_row(
     #     df,
     #     query_template="TODO",
     #     spec=(
     #         Chart()
-    #         .source("<E>", "<E.S>")
+    #         .source("<E>", "<E.url>")
     #         .mark("TODO")
     #         .x(field="TODO", type="nominal")
     #         .y(field="TODO", type="quantitative")
     #     ),
-    #     constraints="",
+    #     constraints=[],
     #     query_type=QueryType.QUESTION,
     # )
+
+    df = add_row(
+        df,
+        query_template="Make a stacked bar chart of <F1:N> and <F2:N>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .groupby(['<F1>', '<F2>'])
+            .rollup({"count": Op.count()})
+            .mark("bar")
+            .x(field="<F1>", type="nominal")
+            .y(field="count", type="quantitative")
+            .color(field="<F2>", type="nominal")
+        ),
+        constraints=[
+            "F1.C * 2 < E.C",
+            "F1.C < 25",
+            "F1.C > F2.C",
+            "1 < F2.C",
+            "F2.C < 8",
+            "F1.C <= 4",
+        ],
+        query_type=QueryType.UTTERANCE,
+    )
+
+    df = add_row(
+        df,
+        query_template="Make a stacked bar chart of <F1:N> and <F2:N>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .groupby(['<F1>', '<F2>'])
+            .rollup({"count": Op.count()})
+            .mark("bar")
+            .x(field="count", type="quantitative")
+            .y(field="<F1>", type="nominal")
+            .color(field="<F2>", type="nominal")
+        ),
+        constraints=[
+            "F1.C * 2 < E.C",
+            "F1.C < 25",
+            "F1.C > F2.C",
+            "1 < F2.C",
+            "F2.C < 8",
+            "F1.C > 4",
+        ],
+        query_type=QueryType.UTTERANCE,
+    )
 
     return df
 
@@ -66,7 +177,7 @@ class QueryType(Enum):
     UTTERANCE = "utterance"
 
 
-def add_row(df, query_template, constraints, spec, query_type: QueryType):
+def add_row(df, query_template, spec, constraints, query_type: QueryType):
     df.loc[len(df)] = {
         "query_template": query_template,
         "constraints": constraints,
