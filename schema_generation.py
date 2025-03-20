@@ -29,6 +29,32 @@ def process_folder(folder_path):
     if folder.startswith("_"):
         return
 
+    entity_relationships = {}
+    possible_entity_file = os.path.join(folder_path, "entity_relationships.json")
+    if os.path.exists(possible_entity_file):
+        er_file = open(possible_entity_file, "r")
+        entity_relationships = json.load(er_file)
+        er_file.close()
+
+    er_lookup = {}
+    for er in entity_relationships:
+        from_name = er["name"]["from"]
+        to_name = er["name"]["to"]
+        from_cardinality = er["cardinality"]["from"]
+        to_cardinality = er["cardinality"]["to"]
+
+        er_lookup.setdefault(from_name, {})
+        er_lookup[from_name][to_name] = {
+            "id": {"from": er["id"]["from"], "to": er["id"]["to"]},
+            "cardinality": {"from": from_cardinality, "to": to_cardinality},
+        }
+
+        er_lookup.setdefault(to_name, {})
+        er_lookup[to_name][from_name] = {
+            "id": {"from": er["id"]["to"], "to": er["id"]["from"]},
+            "cardinality": {"from": to_cardinality, "to": from_cardinality},
+        }
+
     # Collect schema for each CSV file in the folder
     for file_name in os.listdir(folder_path):
         if file_name.endswith(".csv"):
@@ -39,16 +65,17 @@ def process_folder(folder_path):
             schema = get_column_schema(df)
             name = file_name[:-4] if file_name.endswith(".csv") else file_name
             url = "./data/" + folder + "/" + name + ".csv"
-            folder_schema.append(
-                {
-                    "name": name,
-                    "folder": folder,
-                    "url": url,
-                    "row_count": rows,
-                    "column_count": cols,
-                    "columns": schema,
-                }
-            )
+            new_schema = {
+                "name": name,
+                "folder": folder,
+                "url": url,
+                "row_count": rows,
+                "column_count": cols,
+                "columns": schema,                
+            }
+            if name in er_lookup:
+                new_schema["relationships"] = er_lookup[name]
+            folder_schema.append(new_schema)
 
     # Create a schema file for the folder
     schema_file_path = os.path.join(folder_path, "schema.json")

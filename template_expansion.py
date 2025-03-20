@@ -19,6 +19,7 @@ def expand(df, dataset_schemas):
                 entity = file["name"]
                 row_count = file["row_count"]
                 column_count = file["column_count"]
+                relationships = file.get("relationships", {})
                 url = file["url"]
                 for col in file["columns"]:
                     expanded_col = col.copy()
@@ -28,6 +29,7 @@ def expand(df, dataset_schemas):
                             "row_count": row_count,
                             "column_count": column_count,
                             "url": url,
+                            "relationships": relationships
                         }
                     )
                     schema_flattened.append(expanded_col)
@@ -35,6 +37,7 @@ def expand(df, dataset_schemas):
             # unique_entities = set([x["entity"] for x in schema_flattened])
             row_count_lookup = {x["entity"]: x["row_count"] for x in schema_flattened}
             url_lookup = {x["entity"]: x["url"] for x in schema_flattened}
+            er_lookup = {x["entity"]: x["relationships"] for x in schema_flattened}
             unique_entities = url_lookup.keys()
             empty_entity_options = {
                 "name": None,
@@ -46,6 +49,7 @@ def expand(df, dataset_schemas):
                     "entity": entity,
                     "url": url_lookup[entity],
                     "cardinality": row_count_lookup[entity],
+                    "relationships":  er_lookup[entity]
                 }
                 for entity in unique_entities
             ]
@@ -78,10 +82,19 @@ def expand_solutions(row, tags, solutions):
             row["query_template"], tags, s
         )
         expanded_row["spec"] = resolve_spec_template(row["spec_template"], tags, s)
+        expanded_row["solution"] = cleanup_solution(s)
         result.append(expanded_row)
     # pprint(result)
     return result
 
+def cleanup_solution(solution):
+    cleaned = {}
+    for k in solution:
+        newK = k.replace('_', '.')
+        cleaned[newK] = solution[k]
+        if 'F' in newK and 'relationships' in cleaned[newK]:
+            cleaned[newK].pop('relationships')
+    return cleaned
 
 def resolve_query_template(query_template, tags, solution):
     query_base = query_template
@@ -117,12 +130,18 @@ def resolve_spec_template(spec_template, tags, solution):
                 resolved = solution[left]["url"]
             else:
                 resolved = solution[left + "_" + right]["name"]
+        elif len(parts) == 5:
+            E1, r, E2, id, source = parts
+            if E1[0] != "E" or E2[0] != "E" or r != "r" or id != "id" or source not in ["from", "to"]:
+                raise ValueError(
+                    f"Invalid match: {match}. Unexpected formatting of spec template tag."
+                )
+            E2_name = solution[E2]["entity"]
+            resolved = solution[E1]["relationships"][E2_name]["id"][source]
         else:
             raise ValueError(
-                f"Invalid match: {match}. Only a single '.' is supported in spec template"
+                f"Invalid match: {match}. Unexpected formatting length of spec template tag."
             )
-
-        # resolved = "RESOLVED"
         spec = spec.replace(match, resolved, 1)
     return spec
 
@@ -130,15 +149,15 @@ def resolve_spec_template(spec_template, tags, solution):
 def extract_tags(text: str) -> List[Dict[str, Union[str, List[str]]]]:
     """
     Example input:
-     "This is just to test <E> and <E1> and <E2> and <F:O> and <E.F:O> and <E1.F1:N> and <E2.F2:O|N> and more text"
+     "This is just to test <E> and <E1> and <E2> and <F:o> and <E.F:o> and <E1.F1:N> and <E2.F2:o|n> and more text"
     Example output:
         [
             {"original": "E", "entity": "E", "field": None, "field_type": None},
             {"original": "E1", "entity": "E1", "field": None, "field_type": None},
             {"original": "E2", "entity": "E2", "field": None, "field_type": None},
-            {"original": "F:O", "entity": None, "field": "F", "field_type": ["O"]},
-            {"original": "E1.F1:N", "entity": "E1", "field": "F1", "field_type": ["N"]},
-            {"original": "E2.F2:O|N", "entity": "E2", "field": "F2", "field_type": ["O", "N"]}
+            {"original": "F:o", "entity": None, "field": "F", "field_type": ["o"]},
+            {"original": "E1.F1:n", "entity": "E1", "field": "F1", "field_type": ["n"]},
+            {"original": "E2.F2:o|n", "entity": "E2", "field": "F2", "field_type": ["o", "n"]}
         ]
     """
     pattern = r"<([^>]+)>"
@@ -166,7 +185,7 @@ def extract_tags(text: str) -> List[Dict[str, Union[str, List[str]]]]:
             if len(field_parts) == 2:
                 field, field_type = field_parts
                 field_type = [
-                    {"N": "nominal", "O": "ordinal", "Q": "quantitative"}[t]
+                    {"n": "nominal", "o": "ordinal", "q": "quantitative"}[t]
                     for t in field_type.split("|")
                 ]
             else:
@@ -213,14 +232,29 @@ def expand_constraints(
 ) -> List[str]:  # type: ignore
     """
     the current constraints will be expanded a bit
-        e.g. F.C > 4 → F["cardinality"] > 4
+        e.g. F.c > 4 → F["cardinality"] > 4
     the tags will add constraints for each field type
     and will add a constraint to ensure unique fields
     """
     expanded_constraints = []
     for constraint in contstraints:
-        resolved = constraint.replace(".C", "['cardinality']")
+        # E1.r.E2.c.to → E1.r.E2['cardinality'].to
+        resolved = constraint.replace(".c", "['cardinality']")
+        # E1.r.E2['cardinality'].to → E1.r[E2['entity']]['cardinality'].to
+        resolved, isErConstraint = resolve_related_entity(resolved)
+        if isErConstraint:
+            relationship_existance = create_relationship_existence_constraint(constraint)
+            expanded_constraints.append(relationship_existance)
+        # E1.r[E2["name"]]['cardinality'].to →
+        # E1['relationships][E2["name"]]['cardinality'].to
+        resolved = resolved.replace(".r", "['relationships']")
+        # E1['relationships][E2["name"]]['cardinality'].to →
+        # E1['relationships][E2["name"]]['cardinality']['to']
+        resolved = resolved.replace(".to", "['to']")
+        resolved = resolved.replace(".from", "['from']")
+        #  E1.F1 → E1_F1
         resolved = resolved.replace(".", "_")
+        #  F → E_F1
         resolved = add_default_entity(resolved)
         expanded_constraints.append(resolved)
 
@@ -272,6 +306,33 @@ def expand_constraints(
         expanded_constraints.append(f"{field}['entity'] == {entity}['entity']")
 
     return expanded_constraints
+
+
+def create_relationship_existence_constraint(constraint: str) -> str:
+    '''
+    given an input E1.r.E2.c.to == 'one'
+    want to generate E2['entity'] in E1['relationships']
+    '''
+    parts = constraint.split('.')
+    if len(parts) < 3:
+        raise ValueError("Unexpected relationship constraint length:", constraint)
+    E1, r, E2 = parts[:3]
+    if (E1[0] != 'E') or (E2[0] != 'E') or (r != 'r'):
+        raise ValueError("Unexpected relationship constraint:", constraint)
+    return f"{E2}['entity'] in {E1}['relationships']"
+
+def resolve_related_entity(text):
+    # use regex to replace E1.r.E2.c.to with E1.r[E2['entity']].c.to
+    # other things well be resolved elsewhere
+    # assumes that the only time .E exists is when finding a relationship
+    foundConstraint = False
+    pattern = r'\.E[0-9]*'
+    while re.search(pattern, text):
+        foundConstraint = True
+        match = re.search(pattern, text).group(0)
+        resolved = f"[{match.lstrip('.')}['entity']]"
+        text = text.replace(match, resolved)
+    return text, foundConstraint
 
 def add_default_entity(text):
     # Use regex to match "F" that is not preceded by "_" and replace it with "E_F"
