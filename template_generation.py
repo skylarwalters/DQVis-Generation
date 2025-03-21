@@ -14,44 +14,44 @@ def generate():
         ]
     )
 
-    # df = add_row(
-    #     df,
-    #     query_template="How many <E> are there, grouped by <F:n>?",
-    #     spec=(
-    #         Chart()
-    #         .source("<E>", "<E.url>")
-    #         .groupby("<F>")
-    #         .rollup({"<E> count": Op.count()})
-    #         .mark("bar")
-    #         .x(field="<F>", type="nominal")
-    #         .y(field="<E> count", type="quantitative")
-    #     ),
-    #     constraints=[
-    #         "F.c * 2 < E.c",
-    #         "F.c < 4"
-    #     ],
-    #     query_type=QueryType.QUESTION,
-    # )
+    df = add_row(
+        df,
+        query_template="How many <E> are there, grouped by <F:n>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .groupby("<F>")
+            .rollup({"<E> count": Op.count()})
+            .mark("bar")
+            .x(field="<F>", type="nominal")
+            .y(field="<E> count", type="quantitative")
+        ),
+        constraints=[
+            "F.c * 2 < E.c",
+            "F.c < 4"
+        ],
+        query_type=QueryType.QUESTION,
+    )
 
-    # df = add_row(
-    #     df,
-    #     query_template="How many <E> are there, grouped by <F:n>?",
-    #     spec=(
-    #         Chart()
-    #         .source("<E>", "<E.url>")
-    #         .groupby("<F>")
-    #         .rollup({"<E> count": Op.count()})
-    #         .mark("bar")
-    #         .x(field="<E> count", type="quantitative")
-    #         .y(field="<F>", type="nominal")
-    #     ),
-    #     constraints=[
-    #         "F.c * 2 < E.c",
-    #         "F.c >= 4",
-    #         "F.c < 25",
-    #     ],
-    #     query_type=QueryType.QUESTION,
-    # )
+    df = add_row(
+        df,
+        query_template="How many <E> are there, grouped by <F:n>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .groupby("<F>")
+            .rollup({"<E> count": Op.count()})
+            .mark("bar")
+            .x(field="<E> count", type="quantitative")
+            .y(field="<F>", type="nominal")
+        ),
+        constraints=[
+            "F.c * 2 < E.c",
+            "F.c >= 4",
+            "F.c < 25",
+        ],
+        query_type=QueryType.QUESTION,
+    )
 
     df = add_row(
         df,
@@ -109,121 +109,121 @@ def generate():
     ) 
 
 
-    # df = add_row(
-    #     df,
-    #     query_template="Is there a correlation between <F1:q> and <F2:q>?",
-    #     spec=(
-    #         Chart()
-    #         .source("<E>", "<E.url>")
-    #         .mark("point")
-    #         .x(field="<F1>", type="quantitative")
-    #         .y(field="<F2>", type="quantitative")
-    #     ),
-    #     constraints=[
-    #         "F1.c > 10",
-    #         "F2.c > 10"
-    #     ],
-    #     query_type=QueryType.QUESTION,
-    # )
+    df = add_row(
+        df,
+        query_template="Is there a correlation between <F1:q> and <F2:q>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .mark("point")
+            .x(field="<F1>", type="quantitative")
+            .y(field="<F2>", type="quantitative")
+        ),
+        constraints=[
+            "F1.c > 10",
+            "F2.c > 10"
+        ],
+        query_type=QueryType.QUESTION,
+    )
 
     
+    df = add_row(
+        df,
+        query_template="What is the distribution of <F:q>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .kde(
+                field="<F>", 
+                output={
+                    "sample": "<F>",
+                    "density": "density"},)
+            .mark("area")
+            .x(field="<F>", type="quantitative")
+            .y(field="density", type="quantitative")
+        ),
+        constraints=["E.c > 20"],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template="What is the distribution of <F:q>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .mark("point")
+            .x(field="<F>", type="quantitative")
+        ),
+        constraints=[
+            "E.c < 20",
+            "E.c > 3"
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+
     # df = add_row(
     #     df,
-    #     query_template="What is the distribution of <F:q>?",
+    #     query_template="TODO",
     #     spec=(
     #         Chart()
     #         .source("<E>", "<E.url>")
-    #         .kde(
-    #             field="<F>", 
-    #             output={
-    #                 "sample": "<F>",
-    #                 "density": "density"},)
-    #         .mark("area")
-    #         .x(field="<F>", type="quantitative")
-    #         .y(field="density", type="quantitative")
+    #         .mark("TODO")
+    #         .x(field="TODO", type="nominal")
+    #         .y(field="TODO", type="quantitative")
     #     ),
-    #     constraints=["E.c > 20"],
+    #     constraints=[],
     #     query_type=QueryType.QUESTION,
     # )
 
-    # df = add_row(
-    #     df,
-    #     query_template="What is the distribution of <F:q>?",
-    #     spec=(
-    #         Chart()
-    #         .source("<E>", "<E.url>")
-    #         .mark("point")
-    #         .x(field="<F>", type="quantitative")
-    #     ),
-    #     constraints=[
-    #         "E.c < 20",
-    #         "E.c > 3"
-    #     ],
-    #     query_type=QueryType.QUESTION,
-    # )
+    df = add_row(
+        df,
+        query_template="Make a stacked bar chart of <F1:n> and <F2:n>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .groupby(['<F1>', '<F2>'])
+            .rollup({"count": Op.count()})
+            .mark("bar")
+            .x(field="<F1>", type="nominal")
+            .y(field="count", type="quantitative")
+            .color(field="<F2>", type="nominal")
+        ),
+        constraints=[
+            "F1.c * 2 < E.c",
+            "F1.c < 25",
+            "F1.c > F2.c",
+            "1 < F2.c",
+            "F2.c < 8",
+            "F1.c <= 4",
+        ],
+        query_type=QueryType.UTTERANCE,
+    )
 
-
-    # # df = add_row(
-    # #     df,
-    # #     query_template="TODO",
-    # #     spec=(
-    # #         Chart()
-    # #         .source("<E>", "<E.url>")
-    # #         .mark("TODO")
-    # #         .x(field="TODO", type="nominal")
-    # #         .y(field="TODO", type="quantitative")
-    # #     ),
-    # #     constraints=[],
-    # #     query_type=QueryType.QUESTION,
-    # # )
-
-    # df = add_row(
-    #     df,
-    #     query_template="Make a stacked bar chart of <F1:n> and <F2:n>?",
-    #     spec=(
-    #         Chart()
-    #         .source("<E>", "<E.url>")
-    #         .groupby(['<F1>', '<F2>'])
-    #         .rollup({"count": Op.count()})
-    #         .mark("bar")
-    #         .x(field="<F1>", type="nominal")
-    #         .y(field="count", type="quantitative")
-    #         .color(field="<F2>", type="nominal")
-    #     ),
-    #     constraints=[
-    #         "F1.c * 2 < E.c",
-    #         "F1.c < 25",
-    #         "F1.c > F2.c",
-    #         "1 < F2.c",
-    #         "F2.c < 8",
-    #         "F1.c <= 4",
-    #     ],
-    #     query_type=QueryType.UTTERANCE,
-    # )
-
-    # df = add_row(
-    #     df,
-    #     query_template="Make a stacked bar chart of <F1:n> and <F2:n>?",
-    #     spec=(
-    #         Chart()
-    #         .source("<E>", "<E.url>")
-    #         .groupby(['<F1>', '<F2>'])
-    #         .rollup({"count": Op.count()})
-    #         .mark("bar")
-    #         .x(field="count", type="quantitative")
-    #         .y(field="<F1>", type="nominal")
-    #         .color(field="<F2>", type="nominal")
-    #     ),
-    #     constraints=[
-    #         "F1.c * 2 < E.c",
-    #         "F1.c < 25",
-    #         "F1.c > F2.c",
-    #         "1 < F2.c",
-    #         "F2.c < 8",
-    #         "F1.c > 4",
-    #     ],
-    #     query_type=QueryType.UTTERANCE,
-    # )
+    df = add_row(
+        df,
+        query_template="Make a stacked bar chart of <F1:n> and <F2:n>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .groupby(['<F1>', '<F2>'])
+            .rollup({"count": Op.count()})
+            .mark("bar")
+            .x(field="count", type="quantitative")
+            .y(field="<F1>", type="nominal")
+            .color(field="<F2>", type="nominal")
+        ),
+        constraints=[
+            "F1.c * 2 < E.c",
+            "F1.c < 25",
+            "F1.c > F2.c",
+            "1 < F2.c",
+            "F2.c < 8",
+            "F1.c > 4",
+        ],
+        query_type=QueryType.UTTERANCE,
+    )
 
     return df
 
