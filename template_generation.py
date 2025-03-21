@@ -74,7 +74,8 @@ def generate():
         constraints=[
             "E2.F.c * 2 < E1.c",
             "E2.F.c < 4",
-            "E1.r.E2.c.to == 'one'"
+            "E1.r.E2.c.to == 'one'",
+            "E2.F.name not in E1.fields"
         ],
         query_type=QueryType.QUESTION,
     )
@@ -101,7 +102,8 @@ def generate():
             "E2.F.c * 2 < E1.c",
             "E2.F.c >= 4",
             "E2.F.c < 25",
-            "E1.r.E2.c.to == 'one'"
+            "E1.r.E2.c.to == 'one'",
+            "E2.F.name not in E1.fields"
         ],
         query_type=QueryType.QUESTION,
     ) 

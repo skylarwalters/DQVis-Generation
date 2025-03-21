@@ -45,7 +45,8 @@ def expand(df, dataset_schemas):
                     "entity": entity,
                     "url": url_lookup[entity],
                     "cardinality": row_count_lookup[entity],
-                    "relationships":  er_lookup[entity]
+                    "relationships":  er_lookup[entity],
+                    "fields": [ x["name"] for x in schema_flattened if x["entity"] == entity]
                 }
                 for entity in unique_entities
             ]
@@ -246,6 +247,8 @@ def expand_constraints(
         # E1['relationships][E2["name"]]['cardinality']['to']
         resolved = resolved.replace(".to", "['to']")
         resolved = resolved.replace(".from", "['from']")
+        resolved = resolved.replace(".fields", "['fields']")
+        resolved = resolved.replace(".name", "['name']")
         #  E1.F1 → E1_F1
         resolved = resolved.replace(".", "_")
         #  F → E_F1
@@ -342,8 +345,8 @@ def constraint_solver(
     field_options: List[Dict[str, Union[str, int]]],
 ) -> List[Dict[str, str]]:
     problem = Problem()
-    # print("⭐ constraints ⭐")
-    # pprint(constraints)
+    print("⭐ constraints ⭐")
+    pprint(constraints)
     # print("⭐ entities ⭐")
     # pprint(entities)
     # pprint(entity_options)
