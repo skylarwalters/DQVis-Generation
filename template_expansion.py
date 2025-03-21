@@ -39,10 +39,6 @@ def expand(df, dataset_schemas):
             url_lookup = {x["entity"]: x["url"] for x in schema_flattened}
             er_lookup = {x["entity"]: x["relationships"] for x in schema_flattened}
             unique_entities = url_lookup.keys()
-            empty_entity_options = {
-                "name": None,
-                "data_type": None,
-            }
 
             entity_options = [
                 {
@@ -53,8 +49,6 @@ def expand(df, dataset_schemas):
                 }
                 for entity in unique_entities
             ]
-            for e in entity_options:
-                e.update(empty_entity_options)
             new_rows = expand_template(row, entity_options, field_options)
             for new_row in new_rows:
                 new_row["dataset_schema"] = schema_name
