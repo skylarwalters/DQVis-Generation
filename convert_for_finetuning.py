@@ -1,6 +1,9 @@
 import json
+import os
+from datasets import load_dataset, Dataset, DatasetDict
+from huggingface_hub import HfApi
 
-def convert(df, dataset_schema_list, grammar_schema, output_path, pretty=False):
+def convert(df, dataset_schema_list, grammar_schema, output_path, huggingface_path, push_to_hub=False, pretty=False):
     """
     converts the input data frame with expected columnms:
         query - the user query
@@ -29,6 +32,9 @@ def convert(df, dataset_schema_list, grammar_schema, output_path, pretty=False):
     with open(output_path, "w") as output_file:
         indent = 2 if pretty else None
         json.dump(conversations, output_file, indent=indent)
+
+
+    save_huggingface_dataset(new_dataset=conversations, dataset_path=huggingface_path, push_to_hub=push_to_hub)
 
     return
 
@@ -73,10 +79,47 @@ def create_assistant_response(spec, grammar_schema):
         "tool_calls": [
             {
                 "tool": "RenderVisualization",
-                "parameters": {
+                "arguments": {
                     "spec": spec
                 }
             }
         ],
         "tools": None
     }
+
+def save_huggingface_dataset(dataset_path, new_dataset=None, test_dataset=None, push_to_hub=False):
+   """
+   Save the dataset in a format recognized by Hugging Face's datasets library.
+
+
+   Args:
+       new_dataset (list): List of training examples.
+       test_dataset (list): List of test examples.
+       dataset_path (str): Path to save the dataset.
+   """
+   if new_dataset is not None:
+       train_path = os.path.join(dataset_path, "train")
+       os.makedirs(train_path, exist_ok=True)
+       train_dataset = Dataset.from_dict({"messages": new_dataset})
+       train_dataset.save_to_disk(train_path)
+
+
+   if test_dataset is not None:
+       test_path = os.path.join(dataset_path, "test")
+       os.makedirs(test_path, exist_ok=True)
+       test_dataset = Dataset.from_dict({"messages": test_dataset})
+       test_dataset.save_to_disk(test_path)
+
+
+   # Save a dataset_dict file for metadata
+   if new_dataset is not None and test_dataset is not None:
+       dataset_dict = DatasetDict(
+           {"train": train_dataset, "test": test_dataset})
+   elif new_dataset is not None and test_dataset is None:
+       dataset_dict = DatasetDict({"train": train_dataset})
+   elif new_dataset is None and test_dataset is not None:
+       dataset_dict = DatasetDict({"test": test_dataset})
+   dataset_dict.save_to_disk(dataset_path)
+   if push_to_hub:
+       api = HfApi()
+       api.upload_folder(folder_path=dataset_path, repo_id="agenticx/UDI-VIS", repo_type="dataset")
