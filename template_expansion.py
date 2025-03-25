@@ -345,8 +345,8 @@ def constraint_solver(
     field_options: List[Dict[str, Union[str, int]]],
 ) -> List[Dict[str, str]]:
     problem = Problem()
-    print("⭐ constraints ⭐")
-    pprint(constraints)
+    # print("⭐ constraints ⭐")
+    # pprint(constraints)
     # print("⭐ entities ⭐")
     # pprint(entities)
     # pprint(entity_options)
