@@ -162,21 +162,6 @@ def generate():
         query_type=QueryType.QUESTION,
     )
 
-
-    # df = add_row(
-    #     df,
-    #     query_template="TODO",
-    #     spec=(
-    #         Chart()
-    #         .source("<E>", "<E.url>")
-    #         .mark("TODO")
-    #         .x(field="TODO", type="nominal")
-    #         .y(field="TODO", type="quantitative")
-    #     ),
-    #     constraints=[],
-    #     query_type=QueryType.QUESTION,
-    # )
-
     df = add_row(
         df,
         query_template="Make a stacked bar chart of <F1:n> and <F2:n>?",
