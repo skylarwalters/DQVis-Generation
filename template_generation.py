@@ -210,6 +210,26 @@ def generate():
         query_type=QueryType.UTTERANCE,
     )
 
+    df = add_row(
+        df,
+        query_template="Make a pie chart of <F:n>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .groupby('<F>')
+            .rollup({"frequency": Op.frequency()})
+            .mark("arc")
+            .theta(field="frequency", type="quantitative")
+            .color(field="<F>", type="nominal")
+        ),
+        constraints=[
+            "F.c * 2 < E.c",
+            "F.c > 1",
+            "F.c < 8",
+        ],
+        query_type=QueryType.UTTERANCE,
+    )
+
     return df
 
 
