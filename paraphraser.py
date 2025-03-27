@@ -28,11 +28,12 @@ def paraphrase(df):
     cache = get_cache()
     new_rows = []
     index = 0
+    llm = init_llm()
     for _, row in df.iterrows():
         index += 1
         display_progress(df, index)
         query_base = row["query_base"]
-        response = paraphrase_query(query_base, cache)
+        response = paraphrase_query(llm, query_base, cache)
         for sentence in response.sentences:
             new_data = {
                 "query": sentence.paraphrasedSentence,
@@ -104,18 +105,21 @@ Sentence: {sentence}
             template += f'Score-A {i}, Score-B {j}:\n'
     return template
 
-def paraphrase_query(query: str, cache: Dict[str, ParaphrasedSentencesList] = {}) -> ParaphrasedSentencesList:
-    if query in cache:
-        # print('FROM CACHE')
-        return cache[query]
-    
+
+def init_llm():
     llm = init_chat_model("gpt-4o-mini", model_provider="openai")
     structured_llm = llm.with_structured_output(ParaphrasedSentencesList)
 
     prompt_template = PromptTemplate.from_template(construct_prompt_template())
     llm_chained = prompt_template | structured_llm
+    return llm_chained
 
-    response = llm_chained.invoke({
+def paraphrase_query(llm, query: str, cache: Dict[str, ParaphrasedSentencesList] = {}) -> ParaphrasedSentencesList:
+    if query in cache:
+        # print('FROM CACHE')
+        return cache[query]
+    
+    response = llm.invoke({
         "sentence": query,
         "dim1_1": "Colloquial",
         "dim1_5": "Standard",
@@ -124,13 +128,3 @@ def paraphrase_query(query: str, cache: Dict[str, ParaphrasedSentencesList] = {}
     })
     cache[query] = response
     return response
-
-
-if __name__ == "__main__":
-    cache = get_cache()
-    for test in ['A', 'B', 'C', 'D', 'E', 'F', 'G']:
-        print(test)
-        paraphrase_query(f"How many donors are there by {test}?", cache)
-        update_cache(cache)
-    print('done')
-    # print(response)
