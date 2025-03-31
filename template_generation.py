@@ -106,9 +106,56 @@ def generate():
             "E2.F.name not in E1.fields"
         ],
         query_type=QueryType.QUESTION,
-    ) 
+    )
 
 
+    for name, op in [('minimum', Op.min), ('maximum', Op.max), ('average', Op.mean), ('median', Op.median), ('total', Op.sum)]:
+        df = add_row(
+            df,
+            query_template=f"What is the {name} <F1:q> for each <F2:n>?",
+            spec=(
+                Chart()
+                .source("<E>", "<E.url>")
+                .groupby("<F2>")
+                .rollup({name: op("<F1>")})
+                .mark("bar")
+                .x(field=f"{name} <F1>", type="quantitative")
+                .y(field="<F2>", type="nominal")
+            ),
+            constraints=[
+                "F1.c > 10",
+                "F2.c * 2 < E.c",
+                "F2.c >= 4",
+                "F2.c < 25",
+            ],
+            query_type=QueryType.QUESTION,
+        )
+
+        df = add_row(
+            df,
+            query_template=f"What is the {name} <F1:q> for each <F2:n>?",
+            spec=(
+                Chart()
+                .source("<E>", "<E.url>")
+                .groupby("<F2>")
+                .rollup({name: op("<F1>")})
+                .mark("bar")
+                .x(field="<F2>", type="nominal")
+                .y(field=f"{name} <F1>", type="quantitative")
+            ),
+            constraints=[
+                "F1.c > 10",
+                "F2.c * 2 < E.c",
+                "F2.c < 4",
+            ],
+            query_type=QueryType.QUESTION,
+        )
+
+    scatterplot_constraints = [
+        "F1.c > 10",
+        "F2.c > 10",
+        "E.c < 100000"
+    ]
     df = add_row(
         df,
         query_template="Is there a correlation between <F1:q> and <F2:q>?",
@@ -119,11 +166,22 @@ def generate():
             .x(field="<F1>", type="quantitative")
             .y(field="<F2>", type="quantitative")
         ),
-        constraints=[
-            "F1.c > 10",
-            "F2.c > 10"
-        ],
+        constraints=scatterplot_constraints,
         query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template="Make a scatterplot of <F1:q> and <F2:q>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .mark("point")
+            .x(field="<F1>", type="quantitative")
+            .y(field="<F2>", type="quantitative")
+        ),
+        constraints=scatterplot_constraints,
+        query_type=QueryType.UTTERANCE,
     )
 
     
