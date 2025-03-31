@@ -47,8 +47,8 @@ def create_system_prompt(dataset_schema, grammar_schema):
     return {
         "content": f"You are a helpful assistant that will explore, and analyze datasets with visualizations. The following defines the available datasets:\n{dataset_schema_string}\n Typically, your actions will use the provided functions. You have access to the following functions.",
         "role": "system",
-        "tool_calls": None,
-        "tools": [
+        "tool_calls": json.dumps(None),
+        "tools": json.dumps([
             {
                 "name": "RenderVisualization",
                 "description": "Render a visualization with a provided visualization grammar of graphics style specification.",
@@ -64,7 +64,7 @@ def create_system_prompt(dataset_schema, grammar_schema):
                     }
                 }
             }
-        ]
+        ])
     }
 
 
@@ -72,8 +72,8 @@ def create_user_query(query):
     return {
         "content": query,
         "role": "user",
-        "tool_calls": None,
-        "tools": None
+        "tool_calls": json.dumps(None),
+        "tools": json.dumps(None)
     }
 
 def create_assistant_response(spec, grammar_schema):
@@ -88,7 +88,7 @@ def create_assistant_response(spec, grammar_schema):
                 }
             }
         ]),
-        "tools": None
+        "tools": json.dumps(None)
     }
 
 def save_huggingface_dataset(dataset_path, new_dataset=None, test_dataset=None, push_to_hub=False):
