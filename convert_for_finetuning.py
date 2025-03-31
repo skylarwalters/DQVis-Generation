@@ -1,7 +1,7 @@
 import json
 import os
-from datasets import load_dataset, Dataset, DatasetDict
-from huggingface_hub import HfApi
+from datasets import load_dataset, Dataset, DatasetDict, load_from_disk
+from huggingface_hub import HfApi, HfFolder
 
 def convert(df, dataset_schema_list, grammar_schema, output_path, huggingface_path, push_to_hub=False, pretty=False):
     """
@@ -34,7 +34,11 @@ def convert(df, dataset_schema_list, grammar_schema, output_path, huggingface_pa
         json.dump(conversations, output_file, indent=indent)
 
 
-    save_huggingface_dataset(new_dataset=conversations, dataset_path=huggingface_path, push_to_hub=push_to_hub)
+    # split converstations into train and test sets
+    train_size = int(len(conversations) * 0.8)
+    train_conversations = conversations[:train_size]
+    test_conversations = conversations[train_size:]
+    save_huggingface_dataset(new_dataset=train_conversations, test_dataset=test_conversations, dataset_path=huggingface_path, push_to_hub=push_to_hub)
 
     return
 
@@ -76,14 +80,14 @@ def create_assistant_response(spec, grammar_schema):
     return {
         "content": "",
         "role": "assistant",
-        "tool_calls": [
+        "tool_calls": json.dumps([
             {
-                "tool": "RenderVisualization",
+                "name": "RenderVisualization",
                 "arguments": {
                     "spec": spec
                 }
             }
-        ],
+        ]),
         "tools": None
     }
 
