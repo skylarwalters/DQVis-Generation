@@ -1,6 +1,6 @@
 import pickle
 import sys
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 import pandas as pd
 import os
 from langchain.chat_models import init_chat_model
@@ -14,7 +14,7 @@ load_dotenv()
 CACHE_FILE = "./datasets/paraphrase_cache.pkl"
 
 
-def paraphrase(df):
+def paraphrase(df, only_cached: Optional[bool] = False) -> pd.DataFrame:
     '''
     Input dataframe will have the following relevant columnns:
     - query_base: the original query
@@ -29,20 +29,28 @@ def paraphrase(df):
     new_rows = []
     index = 0
     llm = init_llm()
+    cache_interval = 10
+    interval_index = 0
     for _, row in df.iterrows():
         index += 1
         display_progress(df, index)
         query_base = row["query_base"]
-        response = paraphrase_query(llm, query_base, cache)
-        for sentence in response.sentences:
-            new_data = {
-                "query": sentence.paraphrasedSentence,
-                "expertise": sentence.expertise,
-                "formality": sentence.formality
-            }
-            new_data.update(row)
-            new_rows.append(new_data)
-        update_cache(cache)
+        response, is_cached = paraphrase_query(llm, query_base, cache, only_cached)
+        if response:
+            for sentence in response.sentences:
+                new_data = {
+                    "query": sentence.paraphrasedSentence,
+                    "expertise": sentence.expertise,
+                    "formality": sentence.formality
+                }
+                new_data.update(row)
+                new_rows.append(new_data)
+        if not is_cached:
+            interval_index += 1
+            if interval_index % cache_interval == 0:
+                update_cache(cache)
+
+    update_cache(cache)
     df = pd.DataFrame(new_rows)
     return df
 
@@ -114,10 +122,20 @@ def init_llm():
     llm_chained = prompt_template | structured_llm
     return llm_chained
 
-def paraphrase_query(llm, query: str, cache: Dict[str, ParaphrasedSentencesList] = {}) -> ParaphrasedSentencesList:
+def paraphrase_query(llm, query: str, cache: Dict[str, ParaphrasedSentencesList] = {}, only_cached = False) -> Tuple[ParaphrasedSentencesList, bool]:
     if query in cache:
         # print('FROM CACHE')
-        return cache[query]
+        return cache[query], True
+    if only_cached:
+        not_paraphrased = ParaphrasedSententence(
+            paraphrasedSentence=query,
+            formality=-1,
+            expertise=-1
+        )
+        response = ParaphrasedSentencesList(
+            sentences=[not_paraphrased]
+        )
+        return response, True
     
     response = llm.invoke({
         "sentence": query,
@@ -127,4 +145,4 @@ def paraphrase_query(llm, query: str, cache: Dict[str, ParaphrasedSentencesList]
         "dim2_5": "Technical"
     })
     cache[query] = response
-    return response
+    return response, False
