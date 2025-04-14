@@ -7,6 +7,9 @@ from langchain.chat_models import init_chat_model
 from langchain_openai import AzureChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from pydantic import BaseModel, Field
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import threading
+
 
 from dotenv import load_dotenv
 from rich import print
@@ -28,28 +31,55 @@ def paraphrase(df, only_cached: Optional[bool] = False) -> pd.DataFrame:
 
     cache = get_cache()
     new_rows = []
+    total_rows = len(df)
     index = 0
     llm = init_llm()
     cache_interval = 10
     interval_index = 0
-    for _, row in df.iterrows():
-        index += 1
-        display_progress(df, index)
+
+    cache_lock = threading.Lock()
+    result_lock = threading.Lock()
+    progress_lock = threading.Lock()
+    completed_rows = 0
+
+    max_worker_count = 5
+
+    def worker(row, row_index):
+        nonlocal interval_index, completed_rows
         query_base = row["query_base"]
-        response, is_cached = paraphrase_query(llm, query_base, cache, only_cached)
-        if response:
-            for sentence in response.sentences:
-                new_data = {
-                    "query": sentence.paraphrasedSentence,
-                    "expertise": sentence.expertise,
-                    "formality": sentence.formality
-                }
-                new_data.update(row)
-                new_rows.append(new_data)
-        if not is_cached:
-            interval_index += 1
-            if interval_index % cache_interval == 0:
-                update_cache(cache)
+        try:
+            response, is_cached = paraphrase_query(llm, query_base, cache, only_cached)
+            result_rows = []
+            if response:
+                for sentence in response.sentences:
+                    new_data = {
+                        "query": sentence.paraphrasedSentence,
+                        "expertise": sentence.expertise,
+                        "formality": sentence.formality
+                    }
+                    new_data.update(row)
+                    result_rows.append(new_data)
+            with progress_lock:
+                completed_rows += 1
+                display_progress(df, completed_rows)
+            if not is_cached:
+                with cache_lock:
+                    interval_index += 1
+                    if interval_index % cache_interval == 0:
+                        update_cache(cache)
+            return result_rows
+        except Exception as e:
+            print(f"Error in row {row_index}: {e}")
+            return []
+
+
+    with ThreadPoolExecutor(max_workers=max_worker_count) as executor:
+        futures = {executor.submit(worker, row, idx): idx for idx, (_, row) in enumerate(df.iterrows())}
+
+        for future in as_completed(futures):
+            result_rows = future.result()
+            with result_lock:
+                new_rows.extend(result_rows)
 
     update_cache(cache)
     df = pd.DataFrame(new_rows)
