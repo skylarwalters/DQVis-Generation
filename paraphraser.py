@@ -4,6 +4,7 @@ from typing import Dict, Optional, Tuple
 import pandas as pd
 import os
 from langchain.chat_models import init_chat_model
+from langchain_openai import AzureChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from pydantic import BaseModel, Field
 
@@ -79,7 +80,7 @@ def update_cache(cache):
     return
 
 
-class ParaphrasedSententence(BaseModel):
+class ParaphrasedSentence(BaseModel):
     """A paraphrased sentence with metadata on the dimension of formality and expertise"""
 
     paraphrasedSentence: str = Field(description="The paraphrased sentence.")
@@ -92,7 +93,7 @@ class ParaphrasedSententence(BaseModel):
 
 class ParaphrasedSentencesList(BaseModel):
     """A class that contains a list of paraphrased sentences."""
-    sentences: list[ParaphrasedSententence] = Field(
+    sentences: list[ParaphrasedSentence] = Field(
         default_factory=list,
         description="A list of paraphrased sentences with their metadata."
     )
@@ -115,7 +116,14 @@ Sentence: {sentence}
 
 
 def init_llm():
-    llm = init_chat_model("gpt-4o-mini", model_provider="openai")
+    # llm = init_chat_model("gpt-4o-mini", model_provider="openai")
+    llm = AzureChatOpenAI(
+        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        openai_api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
+        deployment_name="o1",
+        api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+    )
+
     structured_llm = llm.with_structured_output(ParaphrasedSentencesList)
 
     prompt_template = PromptTemplate.from_template(construct_prompt_template())
@@ -127,7 +135,7 @@ def paraphrase_query(llm, query: str, cache: Dict[str, ParaphrasedSentencesList]
         # print('FROM CACHE')
         return cache[query], True
     if only_cached:
-        not_paraphrased = ParaphrasedSententence(
+        not_paraphrased = ParaphrasedSentence(
             paraphrasedSentence=query,
             formality=-1,
             expertise=-1
