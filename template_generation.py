@@ -214,7 +214,7 @@ def generate():
             .x(field="<F>", type="quantitative")
         ),
         constraints=[
-            "E.c < 20",
+            "E.c <= 20",
             "E.c > 3"
         ],
         query_type=QueryType.QUESTION,
