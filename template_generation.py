@@ -28,7 +28,8 @@ def generate():
         ),
         constraints=[
             "F.c * 2 < E.c",
-            "F.c < 4"
+            "F.c <= 4",
+            "F.c > 1",
         ],
         query_type=QueryType.QUESTION,
     )
@@ -47,7 +48,7 @@ def generate():
         ),
         constraints=[
             "F.c * 2 < E.c",
-            "F.c >= 4",
+            "F.c > 4",
             "F.c < 25",
         ],
         query_type=QueryType.QUESTION,
@@ -73,7 +74,8 @@ def generate():
         ),
         constraints=[
             "E2.F.c * 2 < E1.c",
-            "E2.F.c < 4",
+            "E2.F.c <= 4",
+            "E2.F.c > 1",
             "E1.r.E2.c.to == 'one'",
             "E2.F.name not in E1.fields"
         ],
@@ -100,7 +102,7 @@ def generate():
         ),
         constraints=[
             "E2.F.c * 2 < E1.c",
-            "E2.F.c >= 4",
+            "E2.F.c > 4",
             "E2.F.c < 25",
             "E1.r.E2.c.to == 'one'",
             "E2.F.name not in E1.fields"
@@ -125,7 +127,7 @@ def generate():
             constraints=[
                 "F1.c > 10",
                 "F2.c * 2 < E.c",
-                "F2.c >= 4",
+                "F2.c > 4",
                 "F2.c < 25",
             ],
             query_type=QueryType.QUESTION,
@@ -146,12 +148,13 @@ def generate():
             constraints=[
                 "F1.c > 10",
                 "F2.c * 2 < E.c",
-                "F2.c < 4",
+                "F2.c <= 4",
+                "F2.c > 1",
             ],
             query_type=QueryType.QUESTION,
         )
 
-    scatterplot_constraints = [
+    scatterplot_constraints=[
         "F1.c > 10",
         "F2.c > 10",
         "E.c < 100000"
@@ -200,7 +203,10 @@ def generate():
             .x(field="<F>", type="quantitative")
             .y(field="density", type="quantitative")
         ),
-        constraints=["E.c > 20"],
+        constraints=[
+            "E.c > 20",
+            "F.c > 1",
+            ],
         query_type=QueryType.QUESTION,
     )
 
@@ -215,7 +221,8 @@ def generate():
         ),
         constraints=[
             "E.c <= 20",
-            "E.c > 3"
+            "E.c > 3",
+            "F.c > 1",
         ],
         query_type=QueryType.QUESTION,
     )
