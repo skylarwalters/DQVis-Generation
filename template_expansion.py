@@ -11,17 +11,20 @@ def expand(df, dataset_schemas):
     expanded_rows = []
     for _, row in df.iterrows():
         for schema in dataset_schemas:
-            schema_name = schema["name"]
-            schema_def = schema["schema"]
+            schema_name = schema["udi:name"]
+            base_path = schema["udi:path"]
+            schema_def = schema["resources"]
             # flatten schema_def
             schema_flattened = []
             for file in schema_def:
                 entity = file["name"]
-                row_count = file["row_count"]
-                column_count = file["column_count"]
-                relationships = file.get("relationships", {})
-                url = file["url"]
-                for col in file["columns"]:
+                row_count = file["udi:row_count"]
+                column_count = file["udi:column_count"]
+                file_schema = file["schema"]
+                foreignKeys = file_schema.get("foreignKeys", [])
+                file_path = file["path"]
+                url = base_path + file_path
+                for col in file_schema["fields"]:
                     expanded_col = col.copy()
                     expanded_col.update(
                         {
@@ -29,7 +32,7 @@ def expand(df, dataset_schemas):
                             "row_count": row_count,
                             "column_count": column_count,
                             "url": url,
-                            "relationships": relationships
+                            "foreignKeys": foreignKeys
                         }
                     )
                     schema_flattened.append(expanded_col)
@@ -37,15 +40,15 @@ def expand(df, dataset_schemas):
             # unique_entities = set([x["entity"] for x in schema_flattened])
             row_count_lookup = {x["entity"]: x["row_count"] for x in schema_flattened}
             url_lookup = {x["entity"]: x["url"] for x in schema_flattened}
-            er_lookup = {x["entity"]: x["relationships"] for x in schema_flattened}
+            er_lookup = {x["entity"]: x["foreignKeys"] for x in schema_flattened}
             unique_entities = url_lookup.keys()
 
             entity_options = [
                 {
                     "entity": entity,
                     "url": url_lookup[entity],
-                    "cardinality": row_count_lookup[entity],
-                    "relationships":  er_lookup[entity],
+                    "udi:cardinality": row_count_lookup[entity],
+                    "foreignKeys":  er_lookup[entity],
                     "fields": [ x["name"] for x in schema_flattened if x["entity"] == entity]
                 }
                 for entity in unique_entities
@@ -87,8 +90,8 @@ def cleanup_solution(solution):
     for k in solution:
         newK = k.replace('_', '.')
         cleaned[newK] = solution[k]
-        if 'F' in newK and 'relationships' in cleaned[newK]:
-            cleaned[newK].pop('relationships')
+        if 'F' in newK and 'foreignKeys' in cleaned[newK]:
+            cleaned[newK].pop('foreignKeys')
     return cleaned
 
 def resolve_query_template(query_template, tags, solution):
@@ -101,7 +104,6 @@ def resolve_query_template(query_template, tags, solution):
             resolved = solution[tag["entity"]]["entity"]
         query_base = query_base.replace(f"<{tag['original']}>", resolved, 1)
     return query_base
-
 
 def resolve_spec_template(spec_template, tags, solution):
     spec = spec_template
@@ -132,7 +134,26 @@ def resolve_spec_template(spec_template, tags, solution):
                     f"Invalid match: {match}. Unexpected formatting of spec template tag."
                 )
             E2_name = solution[E2]["entity"]
-            resolved = solution[E1]["relationships"][E2_name]["id"][source]
+            # resolved = solution[E1]["foreignKeys"][E2_name]["id"][source]
+            # What needs to happen here, is it should loop over foreign keys to find if reference.resource matches E2_name
+            # and then if source is 'from' return fields else return reference.fields
+            foreignKeys = solution[E1]["foreignKeys"]
+            matchedKey = next(
+                (fk for fk in foreignKeys if fk["reference"]["resource"] == E2_name),
+                None,
+            )
+            if matchedKey is None:
+                raise ValueError(
+                    f"Invalid match: {match}. Could not find foreign key for {E1} to {E2}"
+                )
+            if source == "from":
+                resolved = matchedKey["fields"]
+            else:
+                resolved = matchedKey["reference"]["fields"]
+            if len(resolved) == 1:
+                resolved = resolved[0]
+            else:
+                resolved = f"[\"{'","'.join(resolved)}\"]"
         else:
             raise ValueError(
                 f"Invalid match: {match}. Unexpected formatting length of spec template tag."
@@ -223,18 +244,18 @@ def infer_entity(
 
 
 def expand_constraints(
-    contstraints: List[str], tags: List[Dict[str, Union[str, List[str]]]]
+    constraints: List[str], tags: List[Dict[str, Union[str, List[str]]]]
 ) -> List[str]:  # type: ignore
     """
     the current constraints will be expanded a bit
-        e.g. F.c > 4 → F["cardinality"] > 4
+        e.g. F.c > 4 → F["udi:cardinality"] > 4
     the tags will add constraints for each field type
     and will add a constraint to ensure unique fields
     """
     expanded_constraints = []
-    for constraint in contstraints:
+    for constraint in constraints:
         # E1.r.E2.c.to → E1.r.E2['cardinality'].to
-        resolved = constraint.replace(".c", "['cardinality']")
+        resolved = constraint.replace(".c", "['udi:cardinality']")
         # E1.r.E2['cardinality'].to → E1.r[E2['entity']]['cardinality'].to
         resolved, isErConstraint = resolve_related_entity(resolved)
         if isErConstraint:
@@ -242,7 +263,7 @@ def expand_constraints(
             expanded_constraints.append(relationship_existance)
         # E1.r[E2["name"]]['cardinality'].to →
         # E1['relationships][E2["name"]]['cardinality'].to
-        resolved = resolved.replace(".r", "['relationships']")
+        resolved = resolved.replace(".r", "['foreignKeys']")
         # E1['relationships][E2["name"]]['cardinality'].to →
         # E1['relationships][E2["name"]]['cardinality']['to']
         resolved = resolved.replace(".to", "['to']")
@@ -258,7 +279,7 @@ def expand_constraints(
     # Turn field types into constraints
     expanded_constraints.extend(
         [
-            f"{tag['entity']}_{tag['field']}['data_type'] in {tag['allowed_fields']}"
+            f"{tag['entity']}_{tag['field']}['udi:data_type'] in {tag['allowed_fields']}"
             for tag in tags
             if tag["field"]
         ]
@@ -308,7 +329,8 @@ def expand_constraints(
 def create_relationship_existence_constraint(constraint: str) -> str:
     '''
     given an input E1.r.E2.c.to == 'one'
-    want to generate E2['entity'] in E1['relationships']
+    want to generate a relationship existence constraint:
+        E2['entity'] in [fk['reference']['resource'] for fk in E1['foreignKeys']]
     '''
     parts = constraint.split('.')
     if len(parts) < 3:
@@ -316,11 +338,13 @@ def create_relationship_existence_constraint(constraint: str) -> str:
     E1, r, E2 = parts[:3]
     if (E1[0] != 'E') or (E2[0] != 'E') or (r != 'r'):
         raise ValueError("Unexpected relationship constraint:", constraint)
-    return f"{E2}['entity'] in {E1}['relationships']"
+    existence_constraint =  f"{E2}['entity'] in [fk['reference']['resource'] for fk in {E1}['foreignKeys']]"
+    return existence_constraint
 
-def resolve_related_entity(text):
-    # use regex to replace E1.r.E2.c.to with E1.r[E2['entity']].c.to
-    # other things well be resolved elsewhere
+def resolve_related_entity(text): 
+    # use regex to replace E1.r.E2.c.to with:
+    # {fk['reference']['resource']:fk for fk in E1['foreignKeys']}.r[E2['entity']].c.to
+    # other things (.c, .to) well be resolved elsewhere
     # assumes that the only time .E exists is when finding a relationship
     foundConstraint = False
     pattern = r'\.E[0-9]*'
@@ -329,6 +353,13 @@ def resolve_related_entity(text):
         match = re.search(pattern, text).group(0)
         resolved = f"[{match.lstrip('.')}['entity']]"
         text = text.replace(match, resolved)
+    if foundConstraint:
+        pattern = r'E[0-9]*\.r'
+        while re.search(pattern, text):
+            match = re.search(pattern, text).group(0)
+            E_number = match.split(".")[0].lstrip("E")
+            resolved = "{fk['reference']['resource']:fk for fk in E" + str(E_number) + "['foreignKeys']}"
+            text = text.replace(match, resolved)
     return text, foundConstraint
 
 def add_default_entity(text):

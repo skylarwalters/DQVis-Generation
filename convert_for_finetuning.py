@@ -28,7 +28,7 @@ def convert(df, dataset_schema_list, grammar_schema, output_path, huggingface_pa
                 and in follow ups it will be null 
     """
     print('converting to finetuning format')
-    dataset_schema_map = {schema["name"]: schema for schema in dataset_schema_list}
+    dataset_schema_map = {schema["udi:name"]: schema for schema in dataset_schema_list}
     # for each row in the data frame, create a conversation that consists of three messages
     # 1. system prompt, 2. user query, 3. assistant response
     conversations = []

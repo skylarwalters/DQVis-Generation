@@ -25,7 +25,7 @@ def main():
     with open(top_level_catalogue_path, "w") as top_level_schema_file:
         json.dump(datapackage_list, top_level_schema_file, indent=4)
 
-    return datapackage_list
+    return
 
 def augment_datapackage(in_path, out_path):
     """
