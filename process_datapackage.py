@@ -1,64 +1,62 @@
+import os
+import sys
+import json
 from frictionless import Package
 import pandas as pd
 
 def main():
-    # package = Package("./datasets/SenNet_C2M2_Spring_2025/C2M2_datapackage.json")
-    # print(package.name)
+    datasets_path = "./datasets"
+    input_catalogue = os.path.join(datasets_path, "input_catalogue.txt")
+    datapackage_list = []
+    with open(input_catalogue, 'r') as f:
+        lines = f.readlines()
+        lines = [line.strip() for line in lines if line.strip()]
+        # remove commented out lines from the input_catalogue
+        lines = [line for line in lines if not line.startswith('#')]
+        lines = [line for line in lines if not line.startswith('//')]
+        for line in lines:
+            print('Processing Data Package:', line)
+            out_path = line.replace('.json', '_udi.json')
+            datapackage = augment_datapackage(line, out_path)
+            datapackage_list.append(datapackage)
 
-    # report = package.validate()
-    # if report.valid:
-    #     print("Everything looks good!")
-    # else:
-    #     print(report.flatten(["rowPosition", "fieldPosition", "code"]))
+    # Create the top-level schema file with the combined list
+    top_level_catalogue_path = os.path.join(datasets_path, "output_catalogue.json")
+    with open(top_level_catalogue_path, "w") as top_level_schema_file:
+        json.dump(datapackage_list, top_level_schema_file, indent=4)
 
-
-    # # subject = package.get_resource("subject")
-    # # df = subject.to_pandas()
-    # # print(df.head())
-
-    # # for resource in package.resources:
-    # #     print(resource.name)
-    # #     print(len(resource.schema.fields))
-
-    # # print(package.metadata)
-    # package.description = "This is a new description"
-    # package.to_json("./datasets/test_datapackage.json")
-    augment_datapackage(
-        "./datasets/SenNet_C2M2_Spring_2025/C2M2_datapackage.json",
-        "./datasets/test_datapackage.json"
-    )
-    return
+    return datapackage_list
 
 def augment_datapackage(in_path, out_path):
     """
     Augment a datapackage with additional metadata we expect.
     """
+    folder = in_path.split('/')[-2]
     package = Package(in_path)
-    report = package.validate()
-    if not report.valid:
-        print("The package is not valid:")
-        print(report.flatten(["rowPosition", "fieldPosition", "code"]))
-        raise ValueError("Invalid datapackage. Please fix the errors and try again.")
+    package.custom['udi:name'] = folder
+    package.custom['udi:path'] = './data/' + folder + '/'
+    # report = package.validate()
+    # if not report.valid:
+    #     print("The package is not valid:")
+    #     print(report.flatten(["rowPosition", "fieldPosition", "code"]))
+    #     raise ValueError("Invalid datapackage. Please fix the errors and try again.")
     
-    
+    print('...updating metadata')
     for resource in package.resources:
-        # print(resource.name)
-        # print('header :', resource.header)
+        ephemeral_print(resource.name)
         df = resource.to_pandas()
-        # print(df.index)
         df = df.reset_index()
-        # df_raw = pd.read_csv('./datasets/SenNet_C2M2_Spring_2025/' + resource.path, delimiter='\t')
-        # print('raw    :', df_raw.columns.tolist())
-        # print('package:', df.columns.tolist())
-        # print('schema :', [f.name for f in resource.schema.fields])
 
         rows = df.shape[0]
         cols = df.shape[1]
         resource.custom['udi:row_count'] = rows
         resource.custom['udi:column_count'] = cols
-        # print(df.head())
         for field in resource.schema.fields:
-            if rows == 0:
+            if field.type == 'array':
+                cardinality = 0
+                # pandas.nunique does not work on arrays and 
+                # we don't use array types so we can ignore this
+            elif rows == 0:
                 cardinality = 0
             else:
                 col = field.name
@@ -67,18 +65,11 @@ def augment_datapackage(in_path, out_path):
             field.custom['udi:unique'] = cardinality == rows
             field.custom['udi:data_type'] = infer_data_type(field)
 
+    print('\n...updating relationships')
     # handle relationships in another pass so we can assume udi fields are populated
     for resource in package.resources:
-        # print(type(resource.schema))
-        # print(resource.schema.foreign_keys)
-        # if 'foreignKeys' not in resource.schema:
-        #     continue
-        # print(resource.name)
-        # print('\t', resource.schema.foreignKeys)
+        ephemeral_print(resource.name)
         foreignKeys = resource.schema.foreign_keys
-        # if foreignKeys is None:
-        #     continue
-        # print('has FK')
         for foreignKey in foreignKeys:
             from_unique = unique_multi_key(resource, foreignKey['fields'])
             from_cardinality = 'one' if from_unique else 'many'
@@ -90,10 +81,9 @@ def augment_datapackage(in_path, out_path):
                 "from": from_cardinality,
                 "to": to_cardinality,
             }
-
-    # package.description = "This is a new description"
+    print('\n...exporting')
     package.to_json(out_path)
-    return
+    return json.load(open(out_path, 'r'))
 
 def unique_multi_key(resource, key_fields):
     """
@@ -116,6 +106,11 @@ def unique_multi_key(resource, key_fields):
             return False
         return len(df[key_fields].drop_duplicates()) == df.shape[0]
 
+
+def ephemeral_print(message):
+    sys.stdout.write("\r\033[K")  # Clear the line
+    sys.stdout.write(f"\t{message}")
+    sys.stdout.flush()
 
 def infer_data_type(field):
     """
