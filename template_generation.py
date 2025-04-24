@@ -112,6 +112,7 @@ def generate():
 
 
     for name, op in [('minimum', Op.min), ('maximum', Op.max), ('average', Op.mean), ('median', Op.median), ('total', Op.sum)]:
+        named_aggregate = f"{name} <F1>"
         df = add_row(
             df,
             query_template=f"What is the {name} <F1:q> for each <F2:n>?",
@@ -119,9 +120,9 @@ def generate():
                 Chart()
                 .source("<E>", "<E.url>")
                 .groupby("<F2>")
-                .rollup({name: op("<F1>")})
+                .rollup({named_aggregate: op("<F1>")})
                 .mark("bar")
-                .x(field=f"{name} <F1>", type="quantitative")
+                .x(field=named_aggregate, type="quantitative")
                 .y(field="<F2>", type="nominal")
             ),
             constraints=[
@@ -140,10 +141,10 @@ def generate():
                 Chart()
                 .source("<E>", "<E.url>")
                 .groupby("<F2>")
-                .rollup({name: op("<F1>")})
+                .rollup({named_aggregate: op("<F1>")})
                 .mark("bar")
                 .x(field="<F2>", type="nominal")
-                .y(field=f"{name} <F1>", type="quantitative")
+                .y(field=named_aggregate, type="quantitative")
             ),
             constraints=[
                 "F1.c > 10",

@@ -154,6 +154,7 @@ def resolve_spec_template(spec_template, tags, solution):
                 resolved = resolved[0]
             else:
                 resolved = f"[\"{'","'.join(resolved)}\"]"
+                match = f"\"{match}\"" # add quotes because the replace needs to replace the string with a list of strings.
         else:
             raise ValueError(
                 f"Invalid match: {match}. Unexpected formatting length of spec template tag."
