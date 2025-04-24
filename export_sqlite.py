@@ -63,7 +63,7 @@ def export(db_path, json_path):
                     template_ID += 1
                     expanded_ID = 0
                     paraphrased_ID = 0
-                elif row["query_base"] != data[index - 1]["query_base"]:
+                elif row["query_base"] != data[index - 1]["query_base"] or row["dataset_schema"] != data[index - 1]["dataset_schema"]:
                     expanded_ID += 1
                     paraphrased_ID = 0
                 else:
