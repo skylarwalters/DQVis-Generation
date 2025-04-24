@@ -3,21 +3,21 @@ import sys
 import json
 from frictionless import Package
 import pandas as pd
+import json
 
 def main():
     datasets_path = "./datasets"
-    input_catalogue = os.path.join(datasets_path, "input_catalogue.txt")
+    input_catalogue = os.path.join(datasets_path, "input_catalogue.json")
     datapackage_list = []
     with open(input_catalogue, 'r') as f:
-        lines = f.readlines()
-        lines = [line.strip() for line in lines if line.strip()]
-        # remove commented out lines from the input_catalogue
-        lines = [line for line in lines if not line.startswith('#')]
-        lines = [line for line in lines if not line.startswith('//')]
-        for line in lines:
-            print('Processing Data Package:', line)
-            out_path = line.replace('.json', '_udi.json')
-            datapackage = augment_datapackage(line, out_path)
+        data_packages = json.load(f)
+        for data_package in data_packages:
+            if not data_package['process']:
+                continue
+            name = data_package['name']
+            print('Processing Data Package:', name)
+            out_path = data_package['outName']
+            datapackage = augment_datapackage(name, out_path)
             datapackage_list.append(datapackage)
 
     # Create the top-level schema file with the combined list

@@ -6,22 +6,21 @@ import pandas as pd
 
 def main():
     datasets_path = "./datasets"
-    input_catalogue = os.path.join(datasets_path, "input_C2M2_catalogue.txt")
+    input_catalogue = os.path.join(datasets_path, "input_catalogue.json")
     reference_df = pd.read_csv(os.path.join(datasets_path, "C2M2_reference.tsv"), delimiter='\t')
-    out_path = './out/C2M2_updated/'
+    out_path = './out/'
     with open(input_catalogue, 'r') as f:
-        lines = f.readlines()
-        lines = [line.strip() for line in lines if line.strip()]
-        # remove commented out lines from the input_catalogue
-        lines = [line for line in lines if not line.startswith('#')]
-        lines = [line for line in lines if not line.startswith('//')]
-        for line in lines:
-            print('Processing Data Package:', line)
-            data_package_out_path = os.path.join(out_path, os.path.dirname(line))
-            insert_reference_values(line, reference_df, data_package_out_path)
+        data_packages = json.load(f)
+        for data_package in data_packages:
+            if not data_package['process']:
+                continue
+            name = data_package['outName']
+            print('Inserting Reference Values into Data Package:', name)
+            data_package_out_path = os.path.join(out_path, os.path.dirname(name))
+            insert_reference_values(name, reference_df, data_package_out_path, not data_package['c2m2'])
     return
 
-def insert_reference_values(in_path, ref_df, out_path):
+def insert_reference_values(in_path, ref_df, out_path, pass_through):
     """
     for every resource in the datapackage, add the reference values based on the
     reference_df.
@@ -35,14 +34,16 @@ def insert_reference_values(in_path, ref_df, out_path):
         ephemeral_print(resource.name)
         df = resource.to_pandas()
         df = df.reset_index()
+        if not pass_through:
+            df = df.replace(ref_df['id'].tolist(), ref_df['name'].tolist())
 
-        df = df.replace(ref_df['id'].tolist(), ref_df['name'].tolist())
-
-        print('\n...exporting')
+        # print('\n...exporting')
         # export the updated datapackage resource to the out_path
         file_out_path = os.path.join(out_path, resource.name + '.tsv')
-        print('\n', file_out_path)
+        # print('\n', file_out_path)
         df.to_csv(file_out_path, sep='\t', index=False)
+        if pass_through:
+            continue
         for field in resource.schema.fields:
             if 'enum' in field.custom:
                 new_enum = [x for x in field.custom['enum']]
@@ -50,6 +51,7 @@ def insert_reference_values(in_path, ref_df, out_path):
                     if x in ref_df['id'].tolist():
                         new_enum[i] = ref_df['name'][ref_df['id'].tolist().index(x)]
                 field.custom['enum'] = new_enum
+    print('\n...exporting')
     file_out_path = os.path.join(out_path, os.path.basename(in_path))
     package.to_json(file_out_path)
     return
