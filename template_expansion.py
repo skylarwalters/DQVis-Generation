@@ -67,6 +67,8 @@ def expand_template(row, entity_options, field_options):
     entities = extract["entities"]
     fields = extract["fields"]
     constraints = expand_constraints(row["constraints"], tags)
+    # print("⭐ expanded constraints ⭐")
+    # print(row)
     s = constraint_solver(entities, fields, constraints, entity_options, field_options)
 
     return expand_solutions(row, tags, s)
@@ -116,8 +118,9 @@ def resolve_spec_template(spec_template, tags, solution):
         content = match.strip("<>")
         parts = content.split(".")
         if len(parts) == 1:
-            if parts[0].startswith("E"):
-                entity = parts[0]
+            content = parts[0]
+            if content.startswith("E"):
+                entity = content
                 resolved = solution[entity]["entity"]
             else:
                 resolved = solution["E_" + parts[0]]["name"]
@@ -160,6 +163,20 @@ def resolve_spec_template(spec_template, tags, solution):
                 f"Invalid match: {match}. Unexpected formatting length of spec template tag."
             )
         spec = spec.replace(match, resolved, 1)
+    
+    # Special care needs to take place to handle comparisons
+    # e.g. {lte} should be replaced with <=
+    # this must happen after the other replacements that are 
+    # looking for < and > characters.
+    comparisons = [
+        {"content": "{lte}", "resolved": "<="},
+        {"content": "{gte}", "resolved": ">="},
+        {"content": "{lt}", "resolved": "<"},
+        {"content": "{gt}", "resolved": ">"}
+    ]
+    for comparison in comparisons:
+        spec = spec.replace(comparison["content"], comparison["resolved"])
+    
     return spec
 
 
