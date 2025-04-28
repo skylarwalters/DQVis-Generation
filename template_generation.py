@@ -116,7 +116,7 @@ def generate():
         spec=(
             Chart()
             .source("<E>", "<E.url>")
-            .filter("d.<F>")
+            .filter("d['<F>']")
             .groupby("<F>")
             .rollup({"count": Op.count()})
             .derive({"negativeCount": "-d.count"})
@@ -348,7 +348,7 @@ def generate():
                 on="<F2>",
                 out_name="datasets",
             )
-            .derive({"frequency": "d.<F1>_and_<F2>_count / d.<F2>_count"})
+            .derive({"frequency": "d['<F1>_and_<F2>_count' / d['<F2>_count']"})
             .mark("bar")
             .y(field="frequency", type="quantitative")
             .color(field="<F1>", type="nominal")
@@ -380,7 +380,7 @@ def generate():
                 on="<F2>",
                 out_name="datasets",
             )
-            .derive({"frequency": "d.<F1>_and_<F2>_count / d.<F2>_count"})
+            .derive({"frequency": "d['<F1>_and_<F2>_count'] / d['<F2>_count]"})
             .mark("bar")
             .x(field="frequency", type="quantitative")
             .color(field="<F1>", type="nominal")
