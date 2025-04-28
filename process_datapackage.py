@@ -21,9 +21,9 @@ def main():
             datapackage_list.append(datapackage)
 
     # Create the top-level schema file with the combined list
-    top_level_catalogue_path = os.path.join(datasets_path, "output_catalogue.json")
-    with open(top_level_catalogue_path, "w") as top_level_schema_file:
-        json.dump(datapackage_list, top_level_schema_file, indent=4)
+    # top_level_catalogue_path = os.path.join(datasets_path, "output_catalogue.json")
+    # with open(top_level_catalogue_path, "w") as top_level_schema_file:
+    #     json.dump(datapackage_list, top_level_schema_file, indent=4)
 
     return
 
