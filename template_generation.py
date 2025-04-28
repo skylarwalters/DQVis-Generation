@@ -164,7 +164,8 @@ def generate():
             "E2.F2.c <= 4",
             "E1.F1.c >= E2.F2.c",
             "E1.r.E2.c.to == 'one'",
-            "E2.F2.name not in E1.fields"
+            "E2.F2.name not in E1.fields",
+            "E1.F1.name not in E2.fields",
         ],
         query_type=QueryType.QUESTION,
     )
@@ -198,7 +199,8 @@ def generate():
             "E1.F1.c > 4 or E2.F2.c > 4",
             "E1.F1.c <= E2.F2.c",
             "E1.r.E2.c.to == 'one'",
-            "E2.F2.name not in E1.fields"
+            "E2.F2.name not in E1.fields",
+            "E1.F1.name not in E2.fields",
         ],
         query_type=QueryType.QUESTION,
     )
@@ -348,7 +350,7 @@ def generate():
                 on="<F2>",
                 out_name="datasets",
             )
-            .derive({"frequency": "d['<F1>_and_<F2>_count' / d['<F2>_count']"})
+            .derive({"frequency": "d['<F1>_and_<F2>_count'] / d['<F2>_count']"})
             .mark("bar")
             .y(field="frequency", type="quantitative")
             .color(field="<F1>", type="nominal")
@@ -380,7 +382,7 @@ def generate():
                 on="<F2>",
                 out_name="datasets",
             )
-            .derive({"frequency": "d['<F1>_and_<F2>_count'] / d['<F2>_count]"})
+            .derive({"frequency": "d['<F1>_and_<F2>_count'] / d['<F2>_count']"})
             .mark("bar")
             .x(field="frequency", type="quantitative")
             .color(field="<F1>", type="nominal")
