@@ -110,6 +110,293 @@ def generate():
         query_type=QueryType.QUESTION,
     )
 
+    df = add_row(
+        df,
+        query_template="What is the most frequent <F:n>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .filter("d.<F>")
+            .groupby("<F>")
+            .rollup({"count": Op.count()})
+            .derive({"negativeCount": "-d.count"})
+            .orderby("negativeCount")
+            .derive({"rank": "rank()"})
+            .filter("d.rank {lte} 5")
+            .derive({"most frequent": "d.rank == 1 ? 'Most Frequent' : 'Other Frequent'"})
+            .mark("bar")
+            .x(field="count", type="quantitative")
+            .y(field="<F>", type="nominal")
+            .color(field="most frequent", type="nominal")
+        ),
+        constraints=[
+            "F.c * 2 < E.c",
+            "F.c > 1",
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template=f"How many <E1> are there, grouped by <E1.F1:n> and <E2.F2:n>?",
+        spec=(
+            Chart()
+            .source("<E1>", "<E1.url>")
+            .source("<E2>", "<E2.url>")
+            .join(
+                in_name=['<E1>', '<E2>'],
+                on=['<E1.r.E2.id.from>', '<E1.r.E2.id.to>'],
+                out_name='<E1>__<E2>',
+            )
+            .groupby(["<E2.F2>", "<E1.F1>"])
+            .rollup({"count <E1>": Op.count()})
+            .mark("bar")
+            .y(field="count <E1>", type="quantitative")
+            .color(field="<E2.F2>", type="nominal")
+            .x(field="<E1.F1>", type="nominal")
+        ),
+        constraints=[
+            "E1.F1.c * 2 < E1.c",
+            "E2.F2.c * 2 < E2.c",
+            "E1.F1.c > 1",
+            "E2.F2.c > 1",
+            "E1.F1.c <= 4",
+            "E2.F2.c <= 4",
+            "E1.F1.c >= E2.F2.c",
+            "E1.r.E2.c.to == 'one'",
+            "E2.F2.name not in E1.fields"
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template=f"How many <E1> are there, grouped by <E1.F1:n> and <E2.F2:n>?",
+        spec=(
+            Chart()
+            .source("<E1>", "<E1.url>")
+            .source("<E2>", "<E2.url>")
+            .join(
+                in_name=['<E1>', '<E2>'],
+                on=['<E1.r.E2.id.from>', '<E1.r.E2.id.to>'],
+                out_name='<E1>__<E2>',
+            )
+            .groupby(["<E2.F2>", "<E1.F1>"])
+            .rollup({"count <E1>": Op.count()})
+            .mark("bar")
+            .x(field="count <E1>", type="quantitative")
+            .color(field="<E1.F1>", type="nominal")
+            .y(field="<E2.F2>", type="nominal")
+        ),
+        constraints=[
+            "E1.F1.c * 2 < E1.c",
+            "E2.F2.c * 2 < E2.c",
+            "E1.F1.c > 1",
+            "E1.F1.c < 25",
+            "E2.F2.c > 1",
+            "E2.F2.c < 25",
+            "E1.F1.c > 4 or E2.F2.c > 4",
+            "E1.F1.c <= E2.F2.c",
+            "E1.r.E2.c.to == 'one'",
+            "E2.F2.name not in E1.fields"
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template=f"How many <E> are there, grouped by <F1:n> and <F2:n>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .groupby(["<F2>", "<F1>"])
+            .rollup({"count <E>": Op.count()})
+            .mark("bar")
+            .y(field="count <E>", type="quantitative")
+            .color(field="<F1>", type="nominal")
+            .x(field="<F2>", type="nominal")
+        ),
+        constraints=[
+            "F1.c * 2 < E.c",
+            "F2.c * 2 < E.c",
+            "F1.c > 1",
+            "F2.c > 1",
+            "F1.c <= 4",
+            "F2.c <= 4",
+            "F2.c >= F1.c",
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template=f"How many <E> are there, grouped by <F1:n> and <F2:n>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .groupby(["<F1>", "<F2>"])
+            .rollup({"count <E>": Op.count()})
+            .mark("bar")
+            .x(field="count <E>", type="quantitative")
+            .color(field="<F1>", type="nominal")
+            .y(field="<F2>", type="nominal")
+        ),
+        constraints=[
+            "F1.c * 2 < E.c",
+            "F2.c * 2 < E.c",
+            "F1.c > 4 or F2.c > 4",
+            "F1.c > 1",
+            "F1.c < 25",
+            "F2.c > 1",
+            "F2.c < 25",
+            "F2.c >= F1.c",
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template=f"What is the count of <F1:n> for each <F2:n>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .groupby(["<F1>", "<F2>"])
+            .rollup({"count <E>": Op.count()})
+            .mark("bar")
+            .y(field="count <E>", type="quantitative")
+            .xOffset(field="<F1>", type="nominal")
+            .color(field="<F1>", type="nominal")
+            .x(field="<F2>", type="nominal")
+        ),
+        constraints=[
+            "F1.c * 2 < E.c",
+            "F2.c * 2 < E.c",
+            "F1.c > 1",
+            "F2.c > 1",
+            "F1.c <= 4",
+            "F2.c <= 4",
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template=f"What is the count of <F1:n> for each <F2:n>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .groupby(["<F1>", "<F2>"])
+            .rollup({"count <E>": Op.count()})
+            .mark("bar")
+            .x(field="count <E>", type="quantitative")
+            .yOffset(field="<F1>", type="nominal")
+            .color(field="<F1>", type="nominal")
+            .y(field="<F2>", type="nominal")
+        ),
+        constraints=[
+            "F1.c * 2 < E.c",
+            "F2.c * 2 < E.c",
+            "F1.c > 4 or F2.c > 4",
+            "F1.c > 1",
+            "F1.c < 5",
+            "F2.c > 1",
+            "F2.c < 25",
+            "F2.c >= F1.c",
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template=f"What is the count of <F1:n> for each <F2:n>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .groupby(["<F1>", "<F2>"])
+            .rollup({"count <E>": Op.count()})
+            .mark("bar")
+            .x(field="count <E>", type="quantitative")
+            .color(field="<F1>", type="nominal")
+            .y(field="<F2>", type="nominal")
+        ),
+        constraints=[
+            "F1.c * 2 < E.c",
+            "F2.c * 2 < E.c",
+            "F1.c > 4 or F2.c > 4",
+            "F1.c > 1",
+            "F1.c < 10",
+            "F2.c > 1",
+            "F2.c < 25",
+            "F2.c >= F1.c",
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+
+    df = add_row(
+        df,
+        query_template=f"What is the frequency of <F1:n> for each <F2:n>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .groupby("<F2>", out_name="groupCounts")
+            .rollup({"<F2>_count": Op.count()})
+            .groupby(["<F1>", "<F2>"], in_name="<E>")
+            .rollup({"<F1>_and_<F2>_count": Op.count()})
+            .join(
+                in_name=["<E>", "groupCounts"],
+                on="<F2>",
+                out_name="datasets",
+            )
+            .derive({"frequency": "d.<F1>_and_<F2>_count / d.<F2>_count"})
+            .mark("bar")
+            .y(field="frequency", type="quantitative")
+            .color(field="<F1>", type="nominal")
+            .x(field="<F2>", type="nominal")
+        ),
+        constraints=[
+            "F1.c * 2 < E.c",
+            "F2.c * 2 < E.c",
+            "F1.c > 1",
+            "F2.c > 1",
+            "F1.c <= 4",
+            "F2.c <= 4",
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template=f"What is the frequency of <F1:n> for each <F2:n>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .groupby("<F2>", out_name="groupCounts")
+            .rollup({"<F2>_count": Op.count()})
+            .groupby(["<F1>", "<F2>"], in_name="<E>")
+            .rollup({"<F1>_and_<F2>_count": Op.count()})
+            .join(
+                in_name=["<E>", "groupCounts"],
+                on="<F2>",
+                out_name="datasets",
+            )
+            .derive({"frequency": "d.<F1>_and_<F2>_count / d.<F2>_count"})
+            .mark("bar")
+            .x(field="frequency", type="quantitative")
+            .color(field="<F1>", type="nominal")
+            .y(field="<F2>", type="nominal")
+        ),
+        constraints=[
+            "F1.c * 2 < E.c",
+            "F2.c * 2 < E.c",
+            "F1.c > 4 or F2.c > 4",
+            "F1.c > 1",
+            "F1.c < 25",
+            "F2.c > 1",
+            "F2.c < 25",
+        ],
+        query_type=QueryType.QUESTION,
+    )
 
     for name, op in [('minimum', Op.min), ('maximum', Op.max), ('average', Op.mean), ('median', Op.median), ('total', Op.sum)]:
         named_aggregate = f"{name} <F1>"
