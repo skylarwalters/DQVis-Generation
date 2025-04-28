@@ -59,7 +59,7 @@ def export(db_path, json_path):
                 print(f"Loaded {index} rows of {len(data)}", end="\r")
 
             if index > 0:
-                if row["query_template"] != data[index - 1]["query_template"] and row["constraints"] != data[index - 1]["constraints"]:
+                if row["query_template"] != data[index - 1]["query_template"] or row["constraints"] != data[index - 1]["constraints"]:
                     template_ID += 1
                     expanded_ID = 0
                     paraphrased_ID = 0
