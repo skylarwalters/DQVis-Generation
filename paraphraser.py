@@ -9,7 +9,7 @@ from langchain_core.prompts import PromptTemplate
 from pydantic import BaseModel, Field
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
-
+import json
 
 from dotenv import load_dotenv
 from rich import print
@@ -18,10 +18,11 @@ load_dotenv()
 CACHE_FILE = "./datasets/paraphrase_cache.pkl"
 
 
-def paraphrase(df, only_cached: Optional[bool] = False) -> pd.DataFrame:
+def paraphrase(df, schema_list, only_cached: Optional[bool] = False) -> pd.DataFrame:
     '''
     Input dataframe will have the following relevant columnns:
     - query_base: the original query
+    - dataset_schema: the name of the dataset schema
     
     Output dataframe will have the following relevant columns:
     - query: the paraphrased query
@@ -42,13 +43,22 @@ def paraphrase(df, only_cached: Optional[bool] = False) -> pd.DataFrame:
     progress_lock = threading.Lock()
     completed_rows = 0
 
-    max_worker_count = 25
+    max_worker_count = 1
 
     def worker(row, row_index):
         nonlocal interval_index, completed_rows
         query_base = row["query_base"]
+        role = 'Computational Biologist' # TODO: Vary this.
+        dataset_name = row["dataset_schema"]
+        dataset_schema = next((schema for schema in schema_list if schema['udi:name'] == dataset_name), None)
+        # convert nexted dict into json string
+        if dataset_schema is not None:
+            dataset_schema = json.dumps(dataset_schema, indent=0)
+            dataset_schema = "UNKNOWN" # TODO: Remove after done debugging
+        else:
+            raise ValueError(f"Dataset schema '{dataset_name}' not found in schema list.")
         try:
-            response, is_cached = paraphrase_query(llm, query_base, cache, only_cached)
+            response, is_cached = paraphrase_query(llm, query_base, role, dataset_schema, cache, only_cached)
             result_rows = []
             if response:
                 for sentence in response.sentences:
@@ -130,6 +140,16 @@ class ParaphrasedSentencesList(BaseModel):
 
 def construct_prompt_template():
     template = '''
+You are a paraphrasing assistant. Your task is to rewrite a given sentence with various styles of language usage.
+The sentence will either be a question about data, or request to construct a data visualization.
+
+The input sentence will include entity names and fields names from the data.
+The dataset schema will also be provided to you to enable better paraphrasing of the field and entity names.
+Dataset schema: {dataset_schema}
+
+Since the people interacting with the data have different roles, please paraphrase the sentence in a way that is appropriate for the given role.
+Role: {role}
+
 Score-A of 1 indicates a higher tendency to use {dim1_1} language and a Score-A of 5 indicates a higher tendency to use {dim1_5} language.
 Score-B of 1 indicates a higher tendency to use {dim2_1} language and a Score-B of 5 indicates a higher tendency to use {dim2_5} language.
 Rewrite the following sentence as if it were spoken by a person with a given score for language usage.
@@ -160,7 +180,7 @@ def init_llm():
     llm_chained = prompt_template | structured_llm
     return llm_chained
 
-def paraphrase_query(llm, query: str, cache: Dict[str, ParaphrasedSentencesList] = {}, only_cached = False) -> Tuple[ParaphrasedSentencesList, bool]:
+def paraphrase_query(llm, query: str, role: str, dataset_schema: str, cache: Dict[str, ParaphrasedSentencesList] = {}, only_cached = False) -> Tuple[ParaphrasedSentencesList, bool]:
     if query in cache:
         # print('FROM CACHE')
         return cache[query], True
@@ -177,6 +197,8 @@ def paraphrase_query(llm, query: str, cache: Dict[str, ParaphrasedSentencesList]
     
     response = llm.invoke({
         "sentence": query,
+        "role": role,
+        "dataset_schema": dataset_schema,
         "dim1_1": "Colloquial",
         "dim1_5": "Standard",
         "dim2_1": "Non-technical",
