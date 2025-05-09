@@ -19,6 +19,7 @@ UPLOAD_TO_HUGGINGFACE = False # Set to True if you want to upload the training d
 PERFORM_PARAPHRASING = False # paraphrasing is time consuming, so skipping makes it easier to test the rest of the pipeline
 ONLY_CACHED = False # if True, only cached data for paraphrasing will be used only matters if PERFORM_PARAPHRASING is True
 GENERATE_SQLITE = False # Set to True if you want to export the data to SQLite DB
+GENERATE_JSON = False # Set to True if you want to export the data to JSON
 
 def main():
 
@@ -59,8 +60,9 @@ def main():
     print(f"Generated {template_question_count:,} templates and expanded to {expanded_question_count:,} questions and paraphrased to {paraphrased_question_count:,}.")
 
     print_header("5. Export data")
-    print("exporting ./out/training_data.json...")
-    df.to_json('./out/training_data.json', orient='records')
+    if GENERATE_JSON:
+        print("exporting ./out/training_data.json...")
+        df.to_json('./out/training_data.json', orient='records')
 
 
     # ## Upload data to Huggging Face 
@@ -108,11 +110,13 @@ if __name__ == "__main__":
     parser.add_argument('--paraphrase', action='store_true', help='Perform paraphrasing')
     parser.add_argument('--only_cached', action='store_true', help='Use only cached data for paraphrasing')
     parser.add_argument('--sqlite', action='store_true', help='Export the data to SQLite DB')
+    parser.add_argument('--json', action='store_true', help='Export the data to JSON')
     args = parser.parse_args()
     UPDATE_SCHEMA = args.update_schema
     UPLOAD_TO_HUGGINGFACE = args.upload
     SAVE_HUGGINGFACE_LOCAL = args.hf_local
     PERFORM_PARAPHRASING = args.paraphrase
     GENERATE_SQLITE = args.sqlite
+    GENERATE_JSON = args.json
     ONLY_CACHED = args.only_cached
     main()
