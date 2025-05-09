@@ -18,11 +18,11 @@ def load_metadata(file_path):
     except Exception as e:
         raise ValueError(f"Error loading file {file_path}: {e}")
 
-def get_df_schema(df, primary_keys, foreign_keys):
-    fields = get_field_definitions(df)
+def get_df_schema(df, primary_keys, foreign_keys, descriptions):
+    fields = get_field_definitions(df, descriptions)
     return Schema(fields=fields, primary_key=primary_keys, foreign_keys=foreign_keys)
 
-def get_field_definitions(df):
+def get_field_definitions(df, descriptions):
     field_definitions = []
 
     [fields.StringField(name='id')]
@@ -30,7 +30,10 @@ def get_field_definitions(df):
     for col in df.columns:
         dtype = df[col].dtype
         # column_spec = {"name": col}
-        description = ''
+        description = descriptions[col]
+        # if is nan
+        if pd.isna(description):
+            description = ""
         if dtype == "object":
             # column_spec["data_type"] = "string"
             field = fields.StringField(name=col, description=description)
@@ -48,6 +51,26 @@ def create_frictionless_package(input_folder, output_path):
     """
     Create a frictionless data package from HubMAP metadata files.
     """
+    timestamped_data = {
+        "datasets": "hubmap-datasets-metadata-2025-05-06_04-30-42.tsv",
+        "donors": "hubmap-donors-metadata-2025-05-06_04-29-48.tsv",
+        "samples": "hubmap-samples-metadata-2025-05-06_04-29-50.tsv"
+        }
+    description_lookup = {}
+    
+    # for each timestamped file, open it as a df, save the first two rows as a dict
+    # and then save the rest of the file as a csv.
+    for key, value in timestamped_data.items():
+        # open the file
+        file_path = os.path.join(input_folder, value)
+        df = pd.read_csv(file_path, sep="\t")
+        # save the first two rows as a dict
+        descriptions = df.iloc[0:2].to_dict(orient="records")
+        description_lookup[key] = descriptions[0]
+        # print(metadata_dict)
+        # save the rest of the file as a csv
+        df.iloc[1:].to_csv(os.path.join(input_folder, f"{key}.csv"), index=False)
+
     dataset_info = [
         {
             "name": "datasets.csv",
@@ -104,8 +127,9 @@ def create_frictionless_package(input_folder, output_path):
         foreign_keys = dataset["foreign_keys"]
         dataset_path = os.path.join(input_folder, name)
         df = load_metadata(dataset_path)
+        key = os.path.splitext(name)[0]
         # get schema from the dataframe
-        schema = get_df_schema(df, primary_keys, foreign_keys)
+        schema = get_df_schema(df, primary_keys, foreign_keys, description_lookup[key])
         resource = frictionless.Resource(path=name, schema=schema)
         resources.append(resource)
     # resources = [frictionless.Resource(path) for path in dataset_paths]
