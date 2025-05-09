@@ -107,12 +107,12 @@ if __name__ == "__main__":
     parser.add_argument('--hf_local', action='store_true', help='Save the training data locally in a format similar to the HF upload')
     parser.add_argument('--paraphrase', action='store_true', help='Perform paraphrasing')
     parser.add_argument('--only_cached', action='store_true', help='Use only cached data for paraphrasing')
-    parser.add_argument('--generate_sqlite', action='store_true', help='Export the data to SQLite DB')
+    parser.add_argument('--sqlite', action='store_true', help='Export the data to SQLite DB')
     args = parser.parse_args()
     UPDATE_SCHEMA = args.update_schema
     UPLOAD_TO_HUGGINGFACE = args.upload
     SAVE_HUGGINGFACE_LOCAL = args.hf_local
     PERFORM_PARAPHRASING = args.paraphrase
-    GENERATE_SQLITE = args.generate_sqlite
+    GENERATE_SQLITE = args.sqlite
     ONLY_CACHED = args.only_cached
     main()
