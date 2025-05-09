@@ -1,3 +1,4 @@
+import time
 import pickle
 import sys
 from typing import Dict, Optional, Tuple
@@ -31,65 +32,83 @@ def paraphrase(df, schema_list, only_cached: Optional[bool] = False) -> pd.DataF
     '''
 
     cache = get_cache()
-    new_rows = []
-    total_rows = len(df)
     index = 0
     llm = init_llm()
-    cache_interval = 10
+    cache_interval = 100
     interval_index = 0
 
-    cache_lock = threading.Lock()
-    result_lock = threading.Lock()
-    progress_lock = threading.Lock()
+    lock = threading.Lock()
     completed_rows = 0
 
-    max_worker_count = 1
+    max_worker_count = 5
 
     def worker(row, row_index):
         nonlocal interval_index, completed_rows
         query_base = row["query_base"]
-        role = 'Computational Biologist' # TODO: Vary this.
         dataset_name = row["dataset_schema"]
         dataset_schema = next((schema for schema in schema_list if schema['udi:name'] == dataset_name), None)
         # convert nexted dict into json string
         if dataset_schema is not None:
             dataset_schema = json.dumps(dataset_schema, indent=0)
-            dataset_schema = "UNKNOWN" # TODO: Remove after done debugging
         else:
             raise ValueError(f"Dataset schema '{dataset_name}' not found in schema list.")
         try:
-            response, is_cached = paraphrase_query(llm, query_base, role, dataset_schema, cache, only_cached)
-            result_rows = []
-            if response:
-                for sentence in response.sentences:
-                    new_data = {
-                        "query": sentence.paraphrasedSentence,
-                        "expertise": sentence.expertise,
-                        "formality": sentence.formality
-                    }
-                    new_data.update(row)
-                    result_rows.append(new_data)
-            with progress_lock:
+            key = f"{dataset_name}¶{query_base}"
+            response, is_cached = paraphrase_query(lock, llm, key, query_base, dataset_schema, cache, only_cached)
+        except Exception as e:
+            print(f"Error in row {row_index}: {e}")
+            time.sleep(5)
+            return [], row_index
+            
+        if not is_cached and not only_cached:
+            time.sleep(1.5)
+        result_rows = []
+        if response:
+            for sentence in response.sentences:
+                new_data = {
+                    "query": sentence.paraphrasedSentence,
+                    "expertise": sentence.expertise,
+                    "formality": sentence.formality,
+                }
+                new_data.update(row)
+                result_rows.append(new_data)
+        with lock:
+            try:
                 completed_rows += 1
                 display_progress(df, completed_rows)
-            if not is_cached:
-                with cache_lock:
+            except Exception as e:
+                print(f"Error updating progress: {e}")
+        if not is_cached:
+            with lock:
+                try:
                     interval_index += 1
                     if interval_index % cache_interval == 0:
                         update_cache(cache)
-            return result_rows
-        except Exception as e:
-            print(f"Error in row {row_index}: {e}")
-            return []
+                except Exception as e:
+                    print(f"Error updating cache file: {e}")
+        return result_rows, row_index
 
+
+    total_rows = len(df)
+    new_rows = [None] * total_rows
 
     with ThreadPoolExecutor(max_workers=max_worker_count) as executor:
         futures = {executor.submit(worker, row, idx): idx for idx, (_, row) in enumerate(df.iterrows())}
 
         for future in as_completed(futures):
-            result_rows = future.result()
-            with result_lock:
-                new_rows.extend(result_rows)
+            try:
+                result_rows, index = future.result(timeout=90)
+            except Exception as e:
+                print(f"Timeout or error in future {futures[future]}: {e}")
+                continue
+            with lock:
+                try:
+                    new_rows[index] = result_rows
+                except Exception as e:
+                    print(f"Error updating new_rows list: {e}")
+
+    # Flatten the list of lists
+    new_rows = [item for sublist in new_rows if sublist is not None for item in sublist]
 
     update_cache(cache)
     df = pd.DataFrame(new_rows)
@@ -145,10 +164,10 @@ The sentence will either be a question about data, or request to construct a dat
 
 The input sentence will include entity names and fields names from the data.
 The dataset schema will also be provided to you to enable better paraphrasing of the field and entity names.
+More technical language may use the exact field names, while more colloquial language may use more general terms, synonyms, and
+will likely not use the exact field names.
+e.g. "What is the value of the age_value field?" vs "How old is the person?".
 Dataset schema: {dataset_schema}
-
-Since the people interacting with the data have different roles, please paraphrase the sentence in a way that is appropriate for the given role.
-Role: {role}
 
 Score-A of 1 indicates a higher tendency to use {dim1_1} language and a Score-A of 5 indicates a higher tendency to use {dim1_5} language.
 Score-B of 1 indicates a higher tendency to use {dim2_1} language and a Score-B of 5 indicates a higher tendency to use {dim2_5} language.
@@ -170,7 +189,8 @@ def init_llm():
     llm = AzureChatOpenAI(
         azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
         openai_api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
-        deployment_name="o1",
+        deployment_name="gpt-4o",
+        # deployment_name="o1",
         api_key=os.getenv("AZURE_OPENAI_API_KEY"),
     )
 
@@ -180,10 +200,9 @@ def init_llm():
     llm_chained = prompt_template | structured_llm
     return llm_chained
 
-def paraphrase_query(llm, query: str, role: str, dataset_schema: str, cache: Dict[str, ParaphrasedSentencesList] = {}, only_cached = False) -> Tuple[ParaphrasedSentencesList, bool]:
-    if query in cache:
-        # print('FROM CACHE')
-        return cache[query], True
+def paraphrase_query(cache_lock, llm, key, query: str, dataset_schema: str, cache: Dict[str, ParaphrasedSentencesList] = {}, only_cached = False) -> Tuple[ParaphrasedSentencesList, bool]:
+    if key in cache:
+        return cache[key], True
     if only_cached:
         not_paraphrased = ParaphrasedSentence(
             paraphrasedSentence=query,
@@ -197,12 +216,15 @@ def paraphrase_query(llm, query: str, role: str, dataset_schema: str, cache: Dic
     
     response = llm.invoke({
         "sentence": query,
-        "role": role,
         "dataset_schema": dataset_schema,
         "dim1_1": "Colloquial",
         "dim1_5": "Standard",
         "dim2_1": "Non-technical",
         "dim2_5": "Technical"
     })
-    cache[query] = response
+    with cache_lock:
+        try:
+            cache[key] = response
+        except Exception as e:
+            print(f"Error updating cache object: {e}")
     return response, False
