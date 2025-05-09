@@ -60,19 +60,24 @@ def main():
     print(f"Generated {template_question_count:,} templates and expanded to {expanded_question_count:,} questions and paraphrased to {paraphrased_question_count:,}.")
 
     print_header("5. Export data")
+    if GENERATE_SQLITE:
+        print_header('Exporting data to SQLite DB')
+        # ## Export as SQLite DB
+        export_sqlite.export('./out/database.sqlite', df)
+
     if GENERATE_JSON:
-        print("exporting ./out/training_data.json...")
+        print_header("exporting ./out/training_data.json...")
         df.to_json('./out/training_data.json', orient='records')
 
 
     # ## Upload data to Huggging Face 
     if UPLOAD_TO_HUGGINGFACE or SAVE_HUGGINGFACE_LOCAL:
         if UPLOAD_TO_HUGGINGFACE and SAVE_HUGGINGFACE_LOCAL:
-            print('6. Uploading to Hugging Face and saving locally')
+            print('Uploading to Hugging Face and saving locally')
         elif UPLOAD_TO_HUGGINGFACE:
-            print_header('6. Uploading to Hugging Face')
+            print_header('Uploading to Hugging Face')
         elif SAVE_HUGGINGFACE_LOCAL:
-            print_header('6. Saving data locally in format for Hugging Face')
+            print_header('Saving data locally in format for Hugging Face')
 
         placeholder_df = pd.DataFrame([
             {'testing': 'test1', 'development': 'dev1', 'process': 'proc1'},
@@ -89,12 +94,6 @@ def main():
             save_local=SAVE_HUGGINGFACE_LOCAL,
             push_to_hub=UPLOAD_TO_HUGGINGFACE
     )
-
-
-    if GENERATE_SQLITE:
-        print_header('7. Exporting data to SQLite DB')
-        # ## Export as SQLite DB
-        export_sqlite.export('./out/database.sqlite', './out/training_data.json',)
 
 def print_header(message):
     print("\n" + "#" * 80)
