@@ -542,8 +542,6 @@ def generate():
             Chart()
             .source("<E>", "<E.url>")
             .rollup({"<E> Records": Op.count()})
-            .mark("row")
-            .text(field='*', mark='text', type='nominal')
         ),
         constraints=[
             "E.c > 0"
@@ -558,8 +556,6 @@ def generate():
         spec=(
             Chart()
             .source("<E>", "<E.url>")
-            .mark("row")
-            .text(field='*', mark='text', type='nominal')
         ),
         constraints=[
             "E.c > 0"
