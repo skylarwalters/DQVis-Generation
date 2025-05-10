@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 from datasets import  Dataset
 from huggingface_hub import  upload_file
 
@@ -18,8 +19,17 @@ def save(main_df, reviewed_df, dataset_schema_list_filename, grammar_schema_file
     Save DQVis dataset to Hugging Face and or locally.
     """
 
+    def row_generator():
+        for i in range(len(main_df)):
+            row =  main_df.iloc[i].to_dict()
+              # Serialize nested structures to JSON strings
+            for nested_key in ['constraints', 'solution']:
+                row[nested_key] = json.dumps(row.get(nested_key, None))
+ 
+            yield row
+
     # Convert the DataFrame to a Dataset
-    main_dataset = Dataset.from_pandas(main_df)
+    main_dataset = Dataset.from_generator(row_generator)
     reviewed_dataset = Dataset.from_pandas(reviewed_df)
     # dataset = DatasetDict({"data": dataset1, "testing_fake_data": dataset2})
     if push_to_hub:
