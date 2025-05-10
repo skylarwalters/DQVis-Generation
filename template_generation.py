@@ -15,7 +15,7 @@ def generate():
     )
 
     # Define recurring constraints
-    overlap = "F1['name'] in E.F2['udi:overlapping_fields'] or E.F2['udi:overlapping_fields'] == 'all'"
+    overlap = "F1['name'] in F2['udi:overlapping_fields'] or F2['udi:overlapping_fields'] == 'all'"
 
 
     df = add_row(
@@ -465,47 +465,6 @@ def generate():
         query_type=QueryType.UTTERANCE,
     )
 
-    # TODO: add a division for histogram here and adjust constraints on F.c
-    # also, does filtering here make a difference? YES should add this.
-    df = add_row(
-        df,
-        query_template="What is the distribution of <F:q>?",
-        spec=(
-            Chart()
-            .source("<E>", "<E.url>")
-            .kde(
-                field="<F>", 
-                output={
-                    "sample": "<F>",
-                    "density": "density"},)
-            .mark("area")
-            .x(field="<F>", type="quantitative")
-            .y(field="density", type="quantitative")
-        ),
-        constraints=[
-            "E.c > 20",
-            "F.c > 1",
-            ],
-        query_type=QueryType.QUESTION,
-    )
-
-    df = add_row(
-        df,
-        query_template="What is the distribution of <F:q>?",
-        spec=(
-            Chart()
-            .source("<E>", "<E.url>")
-            .mark("point")
-            .x(field="<F>", type="quantitative")
-        ),
-        constraints=[
-            "E.c <= 20",
-            "E.c > 3",
-            "F.c > 1",
-        ],
-        query_type=QueryType.QUESTION,
-    )
-
     df = add_row(
         df,
         query_template="Make a stacked bar chart of <F1:n> and <F2:n>?",
@@ -615,7 +574,7 @@ def generate():
         spec=(
             Chart()
             .source("<E>", "<E.url>")
-            .filter("d['<F>'] !== null")
+            .filter("d['<F>'] != null")
             .orderby("<F>", ascending=False)
             .derive({"largest": "rank() == 1 ? 'largest' : 'not'"})
             .mark("row")
@@ -634,7 +593,7 @@ def generate():
         spec=(
             Chart()
             .source("<E>", "<E.url>")
-            .filter("d['<F>'] !== null")
+            .filter("d['<F>'] != null")
             .orderby("<F>")
             .derive({"smallest": "rank() == 1 ? 'smallest' : 'not'"})
             .mark("row")
@@ -653,7 +612,7 @@ def generate():
         spec=(
             Chart()
             .source("<E>", "<E.url>")
-            .filter("d['<F>'] !== null")
+            .filter("d['<F>'] != null")
             .orderby("<F>")
             .mark("row")
             .x(column='<F>', mark='bar', field='<F>', type='quantitative', range={'min': 0.2, 'max': 1})
@@ -672,7 +631,7 @@ def generate():
         spec=(
             Chart()
             .source("<E>", "<E.url>")
-            .filter("d['<F>'] !== null")
+            .filter("d['<F>'] != null")
             .rollup({
                 "<F> min": Op.min("<F>"),
                 "<F> max": Op.max("<F>")
@@ -693,7 +652,7 @@ def generate():
         spec=(
             Chart()
             .source("<E>", "<E.url>")
-            .filter("d['<F>'] !== null")
+            .filter("d['<F>'] != null")
             .groupby("<F>")
             .rollup({ "count": Op.count() })
             .mark("row")
@@ -715,7 +674,7 @@ def generate():
         spec=(
             Chart()
             .source("<E>", "<E.url>")
-            .filter("d['<F1>'] !== null")
+            .filter("d['<F1>'] != null")
             .groupby("<F2>")
             .rollup({
                 "<F1> min": Op.min("<F1>"),
@@ -770,7 +729,7 @@ def generate():
         spec=(
             Chart()
             .source("<E>", "<E.url>")
-            .filter("d['<F>'] !== null")
+            .filter("d['<F>'] != null")
             .orderby("<F>")
             .derive({ "total": "count()" })
             .derive({"percentile": rolling("count() / d.total")})
@@ -790,7 +749,7 @@ def generate():
         spec=(
             Chart()
             .source("<E>", "<E.url>")
-            .filter("d['<F1>'] !== null")
+            .filter("d['<F1>'] != null")
             .orderby("<F1>")
             .groupby("<F2>")
             .derive({ "total": "count()" })
@@ -820,30 +779,326 @@ def generate():
     #     ]
     # )
 
-    # df = add_row(
-    #     df,
-    #     query_template="Are the values of <F1:q> and <F2:q> for <E> similar or different when grouped by <F3:n>?",
-    #     spec=(
-    #         Chart()
-    #         .source("<E>", "<E.url>")
-    #         .mark("point")
-    #         .x(field="<F1>", type="quantitative")
-    #         .y(field="<F2>", type="quantitative")
-    #         .color(field="<F3>", type="nominal")
-    #     ),
-    #     constraints=[
-    #         "F1.c > 10",
-    #         "F2.c > 10",
-    #         "F3.c > 1",
-    #         "F3.c < 8",
-    #         "F1['name'] in E.F2['udi:overlapping_fields']",
-    #         "F1['name'] in E.F3['udi:overlapping_fields']",
-    #         "F2['name'] in E.F3['udi:overlapping_fields']"
-    #     ],
-    #     query_type=QueryType.QUESTION,
-    # )
+    df = add_row(
+        df,
+        query_template=f"Are there any clusters with respect to <E> counts of <F1:n> and <F2:n>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .groupby(["<F2>", "<F1>"])
+            .rollup({"count <E>": Op.count()})
+            .derive({"udi_internal_percentile": "d['count <E>'] / max(d['count <E>'])"})
+            .derive({"udi_internal_text_color_threshold": "d.udi_internal_percentile > .5 ? 'large' : 'small'"})
+            .mark("rect")
+            .color(field="count <E>", type="quantitative")
+            .y(field="<F1>", type="nominal")
+            .x(field="<F2>", type="nominal")
+            .mark("text")
+            .text(field="count <E>", type="quantitative")
+            .y(field="<F1>", type="nominal")
+            .x(field="<F2>", type="nominal")
+            .color(field="udi_internal_text_color_threshold", type="nominal", domain=["large", "small"], range=["white", "black"], omitLegend=True)
+        ),
+        constraints=[
+            "F1.c * 2 < E.c",
+            "F2.c * 2 < E.c",
+            "F1.c > 1",
+            "F2.c > 1",
+            "F1.c <= 30",
+            "F2.c <= 30",
+            "F1.c >= F2.c",
+            overlap,
+        ],
+        query_type=QueryType.QUESTION,
+    )
 
 
+    # Heatmap of aggregates over two nominal fields.
+    for name, op in [('average', Op.mean)]:
+            named_aggregate = f"{name} <F1>"
+            df = add_row(
+                df,
+                query_template=f"What is the {name} <F1:q> for each <F2:n> and <F3:n>?",
+                
+                spec=(
+                    Chart()
+                    .source("<E>", "<E.url>")
+                    .groupby(["<F3>", "<F2>"])
+                    .rollup({named_aggregate: op("<F1>")})
+                    .mark("rect")
+                    .color(field=named_aggregate, type="quantitative")
+                    .y(field="<F2>", type="nominal")
+                    .x(field="<F3>", type="nominal")
+                ),
+                constraints=[
+                    "F1.c > 100",
+                    "F2.c * 2 < E.c",
+                    "F3.c * 2 < E.c",
+                    "F2.c > 1",
+                    "F2.c < 25", # TODO: test small number while debugging
+                    "F3.c > 1",
+                    "F3.c < 25", # TODO: test small number while debugging
+                    "F2.c >= F3.c",
+                    overlap,
+                    "F1['name'] in F3['udi:overlapping_fields'] or F3['udi:overlapping_fields'] == 'all'",
+                    "F2['name'] in F3['udi:overlapping_fields'] or F3['udi:overlapping_fields'] == 'all'"
+                ],
+                query_type=QueryType.QUESTION,
+            )
+
+
+    # scatterplot with color
+    df = add_row(
+        df,
+        query_template="Are there clusters of <E> <F1:q> and <F2:q> values across different <F3:n> groups?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .mark("point")
+            .x(field="<F1>", type="quantitative")
+            .y(field="<F2>", type="quantitative")
+            .color(field="<F3>", type="nominal")
+        ),
+        constraints=[
+            "F1.c > 10",
+            "F2.c > 10",
+            "F3.c > 1",
+            "F3.c < 8",
+            overlap,
+            "F1['name'] in F3['udi:overlapping_fields'] or F3['udi:overlapping_fields'] == 'all'",
+            "F2['name'] in F3['udi:overlapping_fields'] or F3['udi:overlapping_fields'] == 'all'"
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    # Histogram
+    df = add_row(
+        df,
+        query_template="What is the distribution of <F:q>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .filter("d['<F>'] != null")
+            .binby(
+                field="<F>", 
+                output={
+                    "bin_start": "start",
+                    "bin_end": "end"})
+            .rollup({"count": Op.count()})
+            .mark("rect")
+            .x(field="start", type="quantitative")
+            .x2(field="end", type="quantitative")
+            .y(field="count", type="quantitative")
+        ),
+        constraints=[
+            "F.c > 250",
+            ],
+        query_type=QueryType.QUESTION,
+    )
+
+    # KDE
+    df = add_row(
+        df,
+        query_template="What is the distribution of <F:q>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .filter("d['<F>'] != null")
+            .kde(
+                field="<F>", 
+                output={
+                    "sample": "<F>",
+                    "density": "density"},)
+            .mark("area")
+            .x(field="<F>", type="quantitative")
+            .y(field="density", type="quantitative")
+        ),
+        constraints=[
+            "F.c > 50",
+            "F.c <= 250",
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    # Dot plot
+    df = add_row(
+        df,
+        query_template="What is the distribution of <F:q>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .mark("point")
+            .x(field="<F>", type="quantitative")
+        ),
+        constraints=[
+            "F.c > 1",
+            "F.c <= 50",
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+
+    df = add_row(
+        df,
+        query_template="Is the distribution of <F1:q> similar for each <F2:n>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .filter("d['<F1>'] != null")
+            .groupby("<F2>")
+            .kde(
+                field="<F1>", 
+                output={
+                    "sample": "<F1>",
+                    "density": "density"},)
+            .mark("area")
+            .x(field="<F1>", type="quantitative")
+            .color(field="<F2>", type="nominal")
+            .y(field="density", type="quantitative")
+            .opacity(value=0.25)
+            .mark('line')
+            .x(field="<F1>", type="quantitative")
+            .color(field="<F2>", type="nominal")
+            .y(field="density", type="quantitative")
+        ),
+        constraints=[
+            "F1.c > 50",
+            "F1.c < 250",
+            "F2.c < 4",
+            overlap,
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template="Is the distribution of <F1:q> similar for each <F2:n>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .mark("point")
+            .x(field="<F1>", type="quantitative")
+            .y(field="<F2>", type="nominal")
+            .color(field="<F2>", type="nominal")
+        ),
+        constraints=[
+            "F1.c > 1",
+            "F1.c <= 50",
+            "F2.c < 8",
+            overlap,
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template="How many <E> records have a non-null <F:q|o|n>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .derive({"<E> Count": "count()"})
+            .filter("d['<F>'] != null")
+            .rollup({
+                "Valid <F> Count": Op.count(),
+                "<E> Count": Op.median("<E> Count")
+            })
+            .derive({"Valid <F> %": "d['Valid <F> Count'] / d['<E> Count']"})
+            .mark("row")
+            .text(field="Valid <F> Count", mark='text', type='nominal')
+            .text(field="<E> Count", mark='text', type='nominal')
+            .x(field="Valid <F> %", mark='bar', type='quantitative', domain={"min": 0, "max": 1})
+            .y(field="Valid <F> %", mark='line', type='quantitative', range={"min": 0.5, "max": 0.5})
+        ),
+        constraints=[
+            "E.c > 0",
+            "F.c > 0",
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template="What percentage of <E> records have a non-null <F:q|o|n>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .derive({"<E> Count": "count()"})
+            .filter("d['<F>'] != null")
+            .rollup({
+                "Valid <F> Count": Op.count(),
+                "<E> Count": Op.median("<E> Count")
+            })
+            .derive({"Valid <F> %": "d['Valid <F> Count'] / d['<E> Count']"})
+            .mark("row")
+            .text(field="Valid <F> Count", mark='text', type='nominal')
+            .text(field="<E> Count", mark='text', type='nominal')
+            .x(field="Valid <F> %", mark='bar', type='quantitative', domain={"min": 0, "max": 1})
+            .y(field="Valid <F> %", mark='line', type='quantitative', range={"min": 0.5, "max": 0.5})
+        ),
+        constraints=[
+            "E.c > 0",
+            "F.c > 0",
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template="How many <E> records have a null <F:q|o|n>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .derive({"<E> Count": "count()"})
+            .filter("d['<F>'] != null")
+            .rollup({
+                "Valid <F> Count": Op.count(),
+                "<E> Count": Op.median("<E> Count")
+            })
+            .derive({
+                "Null <F> Count": "d['<E> Count'] - d['Valid <F> Count']",
+                "Null <F> %": "1 - d['Valid <F> Count'] / d['<E> Count']"
+            })
+            .mark("row")
+            .text(field="Null <F> Count", mark='text', type='nominal')
+            .text(field="<E> Count", mark='text', type='nominal')
+            .x(field="Null <F> %", mark='bar', type='quantitative', domain={"min": 0, "max": 1})
+            .y(field="Null <F> %", mark='line', type='quantitative', range={"min": 0.5, "max": 0.5})
+        ),
+        constraints=[
+            "E.c > 0",
+            "F.c > 0",
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template="What percentage of <E> records have a null <F:q|o|n>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .derive({"<E> Count": "count()"})
+            .filter("d['<F>'] != null")
+            .rollup({
+                "Valid <F> Count": Op.count(),
+                "<E> Count": Op.median("<E> Count")
+            })
+            .derive({
+                "Null <F> Count": "d['<E> Count'] - d['Valid <F> Count']",
+                "Null <F> %": "1 - d['Valid <F> Count'] / d['<E> Count']"
+            })
+            .mark("row")
+            .text(field="Null <F> Count", mark='text', type='nominal')
+            .text(field="<E> Count", mark='text', type='nominal')
+            .x(field="Null <F> %", mark='bar', type='quantitative', domain={"min": 0, "max": 1})
+            .y(field="Null <F> %", mark='line', type='quantitative', range={"min": 0.5, "max": 0.5})
+        ),
+        constraints=[
+            "E.c > 0",
+            "F.c > 0",
+        ],
+        query_type=QueryType.QUESTION,
+    )
 
     return df
 
