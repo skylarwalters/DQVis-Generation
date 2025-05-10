@@ -112,32 +112,6 @@ def generate():
 
     df = add_row(
         df,
-        query_template="What is the most frequent <F:n>?",
-        spec=(
-            Chart()
-            .source("<E>", "<E.url>")
-            .filter("d['<F>']")
-            .groupby("<F>")
-            .rollup({"count": Op.count()})
-            .derive({"negativeCount": "-d.count"})
-            .orderby("negativeCount")
-            .derive({"rank": "rank()"})
-            .filter("d.rank {lte} 5")
-            .derive({"most frequent": "d.rank == 1 ? 'Most Frequent' : 'Other Frequent'"})
-            .mark("bar")
-            .x(field="count", type="quantitative")
-            .y(field="<F>", type="nominal")
-            .color(field="most frequent", type="nominal")
-        ),
-        constraints=[
-            "F.c * 2 < E.c",
-            "F.c > 1",
-        ],
-        query_type=QueryType.QUESTION,
-    )
-
-    df = add_row(
-        df,
         query_template=f"How many <E1> are there, grouped by <E1.F1:n> and <E2.F2:n>?",
         spec=(
             Chart()
@@ -477,7 +451,8 @@ def generate():
         query_type=QueryType.UTTERANCE,
     )
 
-    
+    # TODO: add a division for histogram here and adjust constraints on F.c
+    # also, does filtering here make a difference? YES should add this.
     df = add_row(
         df,
         query_template="What is the distribution of <F:q>?",
@@ -584,6 +559,278 @@ def generate():
         ],
         query_type=QueryType.UTTERANCE,
     )
+
+    # TODO: reset for testing
+    # df = pd.DataFrame(
+    #     columns=[
+    #         "query_template",
+    #         "constraints",
+    #         "spec_template",
+    #         "query_type",
+    #         "creation_method",
+    #     ]
+    # )
+
+    df = add_row(
+        df,
+        query_template="How many <E> records are there?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .rollup({"<E> Records": Op.count()})
+            .mark("row")
+            .text(field='*', mark='text', type='nominal')
+        ),
+        constraints=[
+            "E.c > 0"
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+
+    df = add_row(
+        df,
+        query_template="Show me all the <E> data?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .mark("row")
+            .text(field='*', mark='text', type='nominal')
+        ),
+        constraints=[
+            "E.c > 0"
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    # TODO: this with multiple tables, consider with other tables as well.
+    df = add_row(
+        df,
+        query_template="What Record in <E> has the largest <F:q>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .filter("d['<F>'] !== null")
+            .orderby("<F>", ascending=False)
+            .derive({"largest": "rank() == 1 ? 'largest' : 'not'"})
+            .mark("row")
+            .color(column='<F>', mark='rect', field='largest', type='nominal', domain=['largest', 'not'], range=['#ffdb9a', 'white'])
+            .text(field='*', mark='text', type='nominal')
+        ),
+        constraints=[
+            "F.c > 1",
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template="What Record in <E> has the smallest <F:q>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .filter("d['<F>'] !== null")
+            .orderby("<F>")
+            .derive({"smallest": "rank() == 1 ? 'smallest' : 'not'"})
+            .mark("row")
+            .color(column='<F>', mark='rect', field='smallest', type='nominal', domain=['smallest', 'not'], range=['#ffdb9a', 'white'])
+            .text(field='*', mark='text', type='nominal')
+        ),
+        constraints=[
+            "F.c > 1",
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template="Order the <E> by <F:q>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .filter("d['<F>'] !== null")
+            .orderby("<F>")
+            .mark("row")
+            .x(column='<F>', mark='bar', field='<F>', type='quantitative', range={'min': 0.2, 'max': 1})
+            .text(field='*', mark='text', type='nominal')
+        ),
+        constraints=[
+            "F.c > 1",
+        ],
+        query_type=QueryType.UTTERANCE,
+    )
+
+
+    df = add_row(
+        df,
+        query_template="What is the range of <E> <F:q> values?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .filter("d['<F>'] !== null")
+            .rollup({
+                "<F> min": Op.min("<F>"),
+                "<F> max": Op.max("<F>")
+            })
+            .mark("row")
+            .text(field="<F> min", mark='text', type='nominal')
+            .text(field="<F> max", mark='text', type='nominal')
+        ),
+        constraints=[
+            "F.c > 1",
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template="What is the range of <E> <F:n> values?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .filter("d['<F>'] !== null")
+            .groupby("<F>")
+            .rollup({ "count": Op.count() })
+            .mark("row")
+            .text(field="<F>", mark='text', type='nominal')
+            .x(field="count", mark='bar', type='quantitative', range={'min': 0.1, 'max': 1})
+        ),
+        constraints=[
+            "F.c > 1",
+            "F.c < 50",
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+
+
+    df = add_row(
+        df,
+        query_template="What is the range of <E> <F1:q> values for every <F2:n>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .filter("d['<F1>'] !== null")
+            .groupby("<F2>")
+            .rollup({
+                "<F1> min": Op.min("<F1>"),
+                "<F1> max": Op.max("<F1>")
+            })
+            .derive({"range": "d['<F1> max'] - d['<F1> min']"})
+            .orderby("range", ascending=False)
+            .mark("row")
+            .text(field="<F2>", mark='text', type='nominal')
+            .text(field="<F1> min", mark='text', type='nominal')
+            .x(column="range", mark='bar', field="<F1> min", type='quantitative', domain={"numberFields": ["<F1> min", "<F1> max"]})
+            .x2(column="range", mark='bar', field="<F1> max", type='quantitative', domain={"numberFields": ["<F1> min", "<F1> max"]})
+            .text(field="<F1> max", mark='text', type='nominal')
+        ),
+        constraints=[
+            "F1.c > 1",
+            "F2.c > 1",
+            "F2.c < F1.c",
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template="What is the most frequent <F:n>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .filter("d['<F>']")
+            .groupby("<F>")
+            .rollup({"count": Op.count()})
+            .orderby("count", ascending=False)
+            .derive({"rank": "rank()"})
+            .filter("d.rank {lte} 5")
+            .derive({"most frequent": "d.rank == 1 ? 'yes' : 'no'"})
+            .mark("row")
+            .text(field="<F>", mark="text", type="nominal")
+            .x(field="count", mark="bar", type="quantitative")
+            .color(column="count", mark="bar", field="most frequent", type="nominal", domain=["yes", "no"], range=["#FFA500", "#c6cfd8"])
+        ),
+        constraints=[
+            "F.c * 2 < E.c",
+            "F.c > 1",
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template="What is the cumulative distribution of <F:q>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .filter("d['<F>'] !== null")
+            .orderby("<F>")
+            .derive({ "total": "count()" })
+            .derive({"percentile": rolling("count() / d.total")})
+            .mark("line")
+            .x(field="<F>", type="quantitative")
+            .y(field="percentile", type="quantitative")
+        ),
+        constraints=[
+            "F.c > 10",
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template="What is the cumulative distribution of <F1:q> for each <F2:n>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .filter("d['<F1>'] !== null")
+            .orderby("<F1>")
+            .groupby("<F2>")
+            .derive({ "total": "count()" })
+            .derive({"percentile": rolling("count() / d.total")})
+            .mark("line")
+            .x(field="<F1>", type="quantitative")
+            .y(field="percentile", type="quantitative")
+            .color(field="<F2>", type="nominal")
+        ),
+        constraints=[
+            "F1.c > 10",
+            "F2.c > 1",
+            "F2.c < 5",
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    # TODO: constrain with overlaps attribute
+    # df = add_row(
+    #     df,
+    #     query_template="Are the values of <F1:q> and <F2:q> for <E> similar or different when grouped by <F3:n>?",
+    #     spec=(
+    #         Chart()
+    #         .source("<E>", "<E.url>")
+    #         .mark("point")
+    #         .x(field="<F1>", type="quantitative")
+    #         .y(field="<F2>", type="quantitative")
+    #         .color(field="<F3>", type="nominal")
+    #     ),
+    #     constraints=[
+    #         "F1.c > 10",
+    #         "F2.c > 10",
+    #         "F3.c > 1",
+    #         "F3.c < 8",
+    #     ],
+    #     query_type=QueryType.QUESTION,
+    # )
+
+    # clusters / groups / scatterplot with color
+
+    # multi range with facets
+
+    # revise distributions + more distributions (comparison)
+
+    # multi sort
+
 
     return df
 
