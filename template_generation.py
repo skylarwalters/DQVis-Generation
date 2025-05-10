@@ -14,6 +14,10 @@ def generate():
         ]
     )
 
+    # Define recurring constraints
+    overlap = "F1['name'] in E.F2['udi:overlapping_fields'] or E.F2['udi:overlapping_fields'] == 'all'"
+
+
     df = add_row(
         df,
         query_template="How many <E> are there, grouped by <F:n>?",
@@ -200,6 +204,7 @@ def generate():
             "F1.c <= 4",
             "F2.c <= 4",
             "F2.c >= F1.c",
+            overlap,
         ],
         query_type=QueryType.QUESTION,
     )
@@ -226,6 +231,7 @@ def generate():
             "F2.c > 1",
             "F2.c < 25",
             "F2.c >= F1.c",
+            overlap,
         ],
         query_type=QueryType.QUESTION,
     )
@@ -251,6 +257,7 @@ def generate():
             "F2.c > 1",
             "F1.c <= 4",
             "F2.c <= 4",
+            overlap,
         ],
         query_type=QueryType.QUESTION,
     )
@@ -278,6 +285,7 @@ def generate():
             "F2.c > 1",
             "F2.c < 25",
             "F2.c >= F1.c",
+            overlap,
         ],
         query_type=QueryType.QUESTION,
     )
@@ -304,6 +312,7 @@ def generate():
             "F2.c > 1",
             "F2.c < 25",
             "F2.c >= F1.c",
+            overlap,
         ],
         query_type=QueryType.QUESTION,
     )
@@ -337,6 +346,7 @@ def generate():
             "F2.c > 1",
             "F1.c <= 4",
             "F2.c <= 4",
+            overlap,
         ],
         query_type=QueryType.QUESTION,
     )
@@ -370,6 +380,7 @@ def generate():
             "F1.c < 25",
             "F2.c > 1",
             "F2.c < 25",
+            overlap,
         ],
         query_type=QueryType.QUESTION,
     )
@@ -393,6 +404,7 @@ def generate():
                 "F2.c * 2 < E.c",
                 "F2.c > 4",
                 "F2.c < 25",
+                overlap,
             ],
             query_type=QueryType.QUESTION,
         )
@@ -414,6 +426,7 @@ def generate():
                 "F2.c * 2 < E.c",
                 "F2.c <= 4",
                 "F2.c > 1",
+                overlap,
             ],
             query_type=QueryType.QUESTION,
         )
@@ -421,7 +434,8 @@ def generate():
     scatterplot_constraints=[
         "F1.c > 10",
         "F2.c > 10",
-        "E.c < 100000"
+        "E.c < 100000",
+        overlap,
     ]
     df = add_row(
         df,
@@ -512,6 +526,7 @@ def generate():
             "1 < F2.c",
             "F2.c < 8",
             "F1.c <= 4",
+            overlap,
         ],
         query_type=QueryType.UTTERANCE,
     )
@@ -536,6 +551,7 @@ def generate():
             "1 < F2.c",
             "F2.c < 8",
             "F1.c > 4",
+            overlap,
         ],
         query_type=QueryType.UTTERANCE,
     )
@@ -559,17 +575,6 @@ def generate():
         ],
         query_type=QueryType.UTTERANCE,
     )
-
-    # TODO: reset for testing
-    # df = pd.DataFrame(
-    #     columns=[
-    #         "query_template",
-    #         "constraints",
-    #         "spec_template",
-    #         "query_type",
-    #         "creation_method",
-    #     ]
-    # )
 
     df = add_row(
         df,
@@ -729,6 +734,7 @@ def generate():
             "F1.c > 1",
             "F2.c > 1",
             "F2.c < F1.c",
+            overlap,
         ],
         query_type=QueryType.QUESTION,
     )
@@ -798,11 +804,22 @@ def generate():
             "F1.c > 10",
             "F2.c > 1",
             "F2.c < 5",
+            overlap,
         ],
         query_type=QueryType.QUESTION,
     )
 
-    # TODO: constrain with overlaps attribute
+    # # TODO: reset for testing
+    # df = pd.DataFrame(
+    #     columns=[
+    #         "query_template",
+    #         "constraints",
+    #         "spec_template",
+    #         "query_type",
+    #         "creation_method",
+    #     ]
+    # )
+
     # df = add_row(
     #     df,
     #     query_template="Are the values of <F1:q> and <F2:q> for <E> similar or different when grouped by <F3:n>?",
@@ -819,17 +836,13 @@ def generate():
     #         "F2.c > 10",
     #         "F3.c > 1",
     #         "F3.c < 8",
+    #         "F1['name'] in E.F2['udi:overlapping_fields']",
+    #         "F1['name'] in E.F3['udi:overlapping_fields']",
+    #         "F2['name'] in E.F3['udi:overlapping_fields']"
     #     ],
     #     query_type=QueryType.QUESTION,
     # )
 
-    # clusters / groups / scatterplot with color
-
-    # multi range with facets
-
-    # revise distributions + more distributions (comparison)
-
-    # multi sort
 
 
     return df

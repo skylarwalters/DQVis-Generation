@@ -65,6 +65,30 @@ def augment_datapackage(in_path, out_path):
             field.custom['udi:unique'] = cardinality == rows
             field.custom['udi:data_type'] = infer_data_type(field)
 
+        print('\n...finding field overlap')
+        df = df.notnull()
+        df = df.drop_duplicates()
+        empty_cols = df.any(axis='index')
+        empty_cols = empty_cols.to_dict().items()
+        empty_cols = {k: v for k, v in empty_cols if not v}
+
+        num_empty_cols = len(empty_cols)
+        for field in resource.schema.fields:
+            if field.type == 'array':
+                cardinality = 0
+            overlapping_df = df[df[field.name]]
+            if overlapping_df.empty:
+                # No overlapping fields
+                field.custom['udi:overlapping_fields'] = []
+                continue
+
+            overlapping_df = overlapping_df.any(axis='index')
+            overlapping_items = overlapping_df.to_dict().items()
+            related_fields = [k for k,v in overlapping_items if v]
+            if (len(related_fields) == cols - num_empty_cols):
+                related_fields = 'all'
+            field.custom['udi:overlapping_fields'] = related_fields
+
     print('\n...updating relationships')
     # handle relationships in another pass so we can assume udi fields are populated
     for resource in package.resources:
