@@ -1,6 +1,7 @@
 import sqlite3
 import json
 import pandas as pd
+import os
 
 def export(db_path, df):
     """
@@ -30,6 +31,10 @@ def export(db_path, df):
     ]
 
     all_columns = text_columns + number_columns
+
+    # if db_path exists, delete it
+    if os.path.exists(db_path):
+        os.remove(db_path)
 
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
