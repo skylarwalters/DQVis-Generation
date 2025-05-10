@@ -103,7 +103,7 @@ def print_header(message):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description='Generate training data for UDI Grammar')
-    parser.add_argument('--update_schema', action='store_true', help='Update the data package schema based on files in ./datasets folder')
+    parser.add_argument('--schema', action='store_true', help='Update the data package schema based on files in ./datasets folder')
     parser.add_argument('--upload', action='store_true', help='Upload the training data to Hugging Face')
     parser.add_argument('--hf_local', action='store_true', help='Save the training data locally in a format similar to the HF upload')
     parser.add_argument('--paraphrase', action='store_true', help='Perform paraphrasing')
@@ -111,7 +111,7 @@ if __name__ == "__main__":
     parser.add_argument('--sqlite', action='store_true', help='Export the data to SQLite DB')
     parser.add_argument('--json', action='store_true', help='Export the data to JSON')
     args = parser.parse_args()
-    UPDATE_SCHEMA = args.update_schema
+    UPDATE_SCHEMA = args.schema
     UPLOAD_TO_HUGGINGFACE = args.upload
     SAVE_HUGGINGFACE_LOCAL = args.hf_local
     PERFORM_PARAPHRASING = args.paraphrase
