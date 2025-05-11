@@ -615,7 +615,7 @@ def generate():
 
     df = add_row(
         df,
-        query_template="Show me all the <E> data?",
+        query_template="What does the <E> data look like?",
         spec=(
             Chart()
             .source("<E>", "<E.url>")
@@ -639,7 +639,80 @@ def generate():
         query_type=QueryType.UTTERANCE,
     )
 
-    # TODO: this with multiple tables, consider with other tables as well.
+    df = add_row(
+        df,
+        query_template="What does the combined data of <E1> and <E2> look like?",
+        spec=(
+            Chart()
+            .source("<E1>", "<E1.url>")
+            .source("<E2>", "<E2.url>")
+            .join(
+                in_name=['<E1>', '<E2>'],
+                on=['<E1.r.E2.id.from>', '<E1.r.E2.id.to>'],
+                out_name='<E1>__<E2>',
+            )
+        ),
+        constraints=[
+            "E1.c > 0",
+            "E2.c > 0",
+            "E1.r.E2.c.to == 'one'",
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template="Make a table that combines <E1> and <E2>.",
+        spec=(
+            Chart()
+            .source("<E1>", "<E1.url>")
+            .source("<E2>", "<E2.url>")
+            .join(
+                in_name=['<E1>', '<E2>'],
+                on=['<E1.r.E2.id.from>', '<E1.r.E2.id.to>'],
+                out_name='<E1>__<E2>',
+            )
+        ),
+        constraints=[
+            "E1.c > 0",
+            "E2.c > 0",
+            "E1.r.E2.c.to == 'one`'",
+        ],
+        query_type=QueryType.UTTERANCE,
+    )
+
+    df = add_row(
+        df,
+        query_template="What <E2> has the most <E1>?",
+        spec=(
+            Chart()
+            .source("<E1>", "<E1.url>")
+            .source("<E2>", "<E2.url>")
+            .join(
+                in_name=['<E1>', '<E2>'],
+                on=['<E1.r.E2.id.from>', '<E1.r.E2.id.to>'],
+                out_name='<E1>__<E2>',
+            )
+            .groupby("<E1.r.E2.id.from>")
+            .rollup({"<E1> count": Op.count()})
+            .orderby("<E1> count", ascending=False)
+            .derive({"rank": "rank()"})
+            .derive({"most frequent": "d.rank == 1 ? 'yes' : 'no'"})
+            .mark("row")
+            .x(field="<E1> count", mark="bar", type="quantitative", domain={"min": 0})
+            .color(column="<E1> count", mark="bar", field="most frequent", type="nominal", domain=["yes", "no"], range=["#FFA500", "#c6cfd8"])
+            .mark("row")
+            .text(field="*", mark="text", type="nominal")
+        ),
+        constraints=[
+            "E1.c > 0",
+            "E2.c > 0",
+            "E1.r.E2.c.from == 'many'",
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+
     df = add_row(
         df,
         query_template="What Record in <E> has the largest <F:q>?",
@@ -650,11 +723,44 @@ def generate():
             .orderby("<F>", ascending=False)
             .derive({"largest": "rank() == 1 ? 'largest' : 'not'"})
             .mark("row")
-            .color(column='<F>', mark='rect', field='largest', type='nominal', domain=['largest', 'not'], range=['#ffdb9a', 'white'])
+            .x(field="<F>", mark="bar", type="quantitative")
+            .color(column='<F>', mark='bar', field='largest', type='nominal', domain=['largest', 'not'], range=['#FFA500', 'c6cfd8'])
             .text(field='*', mark='text', type='nominal')
         ),
         constraints=[
             "F.c > 1",
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template="What Record in <E2> has the largest <E1> <E1.F:q>?",
+        spec=(
+            Chart()
+            .source("<E1>", "<E1.url>")
+            .source("<E2>", "<E2.url>")
+            .join(
+                in_name=['<E1>', '<E2>'],
+                on=['<E1.r.E2.id.from>', '<E1.r.E2.id.to>'],
+                out_name='<E1>__<E2>',
+            )
+            .groupby("<E1.r.E2.id.from>")
+            .rollup({"Largest <E1.F>": Op.max('<E1.F>')})
+            .filter("d['Largest <E1.F>'] != null")
+            .orderby("Largest <E1.F>", ascending=False)
+            .derive({"rank": "rank()"})
+            .derive({"largest": "d.rank == 1 ? 'yes' : 'no'"})
+            .mark("row")
+            .x(field="Largest <E1.F>", mark="bar", type="quantitative")
+            .color(column="Largest <E1.F>", mark="bar", field="largest", type="nominal", domain=["yes", "no"], range=["#FFA500", "#c6cfd8"])
+            .text(field="*", mark="text", type="nominal")
+        ),
+        constraints=[
+            "E1.c > 0",
+            "E2.c > 0",
+            "E1.r.E2.c.from == 'many'",
+            "E1.F.name not in E2.fields",
         ],
         query_type=QueryType.QUESTION,
     )
@@ -669,11 +775,42 @@ def generate():
             .orderby("<F>")
             .derive({"smallest": "rank() == 1 ? 'smallest' : 'not'"})
             .mark("row")
-            .color(column='<F>', mark='rect', field='smallest', type='nominal', domain=['smallest', 'not'], range=['#ffdb9a', 'white'])
+            .color(column='<F>', mark='rect', orderby='<F>', field='smallest', type='nominal', domain=['smallest', 'not'], range=['#ffdb9a', 'white'])
             .text(field='*', mark='text', type='nominal')
         ),
         constraints=[
             "F.c > 1",
+        ],
+        query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template="What Record in <E2> has the smallest <E1> <E1.F:q>?",
+        spec=(
+            Chart()
+            .source("<E1>", "<E1.url>")
+            .source("<E2>", "<E2.url>")
+            .join(
+                in_name=['<E1>', '<E2>'],
+                on=['<E1.r.E2.id.from>', '<E1.r.E2.id.to>'],
+                out_name='<E1>__<E2>',
+            )
+            .groupby("<E1.r.E2.id.from>")
+            .rollup({"Smallest <E1.F>": Op.min('<E1.F>')})
+            .filter("d['Smallest <E1.F>'] != null")
+            .orderby("Smallest <E1.F>", ascending=True)
+            .derive({"rank": "rank()"})
+            .derive({"smallest": "d.rank == 1 ? 'yes' : 'no'"})
+            .mark("row")
+            .color(column="Smallest <E1.F>", mark="bar", orderby="Smallest <E1.F>", field="smallest", type="nominal", domain=["yes", "no"], range=["#ffdb9a", "white"])
+            .text(field="*", mark="text", type="nominal")
+        ),
+        constraints=[
+            "E1.c > 0",
+            "E2.c > 0",
+            "E1.r.E2.c.from == 'many'",
+            "E1.F.name not in E2.fields",
         ],
         query_type=QueryType.QUESTION,
     )
@@ -738,8 +875,6 @@ def generate():
         query_type=QueryType.QUESTION,
     )
 
-
-
     df = add_row(
         df,
         query_template="What is the range of <E> <F1:q> values for every <F2:n>?",
@@ -781,11 +916,11 @@ def generate():
             .rollup({"count": Op.count()})
             .orderby("count", ascending=False)
             .derive({"rank": "rank()"})
-            .filter("d.rank {lte} 5")
             .derive({"most frequent": "d.rank == 1 ? 'yes' : 'no'"})
             .mark("row")
+            .color(column="<F>", mark="bar", orderby="<F>", field="most frequent", type="nominal", domain=["yes", "no"], range=["#ffdb9a", "white"])
             .text(field="<F>", mark="text", type="nominal")
-            .x(field="count", mark="bar", type="quantitative")
+            .x(field="count", mark="bar", type="quantitative", domain={"min": 0})
             .color(column="count", mark="bar", field="most frequent", type="nominal", domain=["yes", "no"], range=["#FFA500", "#c6cfd8"])
         ),
         constraints=[
