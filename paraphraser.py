@@ -30,11 +30,24 @@ def paraphrase(df, schema_list, only_cached: Optional[bool] = False) -> pd.DataF
     - expertise: the expertise score of the paraphrased query
     - formality: the formality score of the paraphrased query
     '''
+    # simplify the schema_list by removing long attributes that aren't needed in the prompt
+    schema_list = [json.loads(json.dumps(schema)) for schema in schema_list]
+    for dataset_schema in schema_list:
+        resources = dataset_schema.get("resources", [])
+        if not isinstance(resources, list):
+            raise ValueError(f"Expected a list of resources, but got {type(resources)}")
+        for resource in resources:
+            resource_schema = resource.get("schema", {})
+            if not isinstance(resource_schema, dict):
+                raise ValueError(f"Expected a dict for schema, but got {type(resource_schema)}")
+            fields = resource_schema.get("fields", [])
+            for field in fields:
+                field.pop("udi:overlapping_fields")
 
     cache = get_cache()
     index = 0
     llm = init_llm()
-    cache_interval = 100
+    cache_interval = 25
     interval_index = 0
 
     lock = threading.Lock()
