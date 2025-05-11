@@ -58,6 +58,47 @@ def generate():
         query_type=QueryType.QUESTION,
     )
 
+
+    df = add_row(
+        df,
+        query_template="Make a bar chart of <E> <F:n>.",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .groupby("<F>")
+            .rollup({"<E> count": Op.count()})
+            .mark("bar")
+            .x(field="<F>", type="nominal")
+            .y(field="<E> count", type="quantitative")
+        ),
+        constraints=[
+            "F.c * 2 < E.c",
+            "F.c <= 4",
+            "F.c > 1",
+        ],
+        query_type=QueryType.UTTERANCE,
+    )
+
+    df = add_row(
+        df,
+        query_template="Make a bar chart of <E> <F:n>.",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .groupby("<F>")
+            .rollup({"<E> count": Op.count()})
+            .mark("bar")
+            .x(field="<E> count", type="quantitative")
+            .y(field="<F>", type="nominal")
+        ),
+        constraints=[
+            "F.c * 2 < E.c",
+            "F.c > 4",
+            "F.c < 25",
+        ],
+        query_type=QueryType.UTTERANCE,
+    )
+
     df = add_row(
         df,
         query_template="How many <E1> are there, grouped by <E2.F:n>?",
@@ -537,6 +578,28 @@ def generate():
 
     df = add_row(
         df,
+        query_template="Make a donut chart of <F:n>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .groupby('<F>')
+            .rollup({"frequency": Op.frequency()})
+            .mark("arc")
+            .theta(field="frequency", type="quantitative")
+            .color(field="<F>", type="nominal")
+            .radius(value=60)
+            .radius2(value=80)
+        ),
+        constraints=[
+            "F.c * 2 < E.c",
+            "F.c > 1",
+            "F.c < 8",
+        ],
+        query_type=QueryType.UTTERANCE,
+    )
+
+    df = add_row(
+        df,
         query_template="How many <E> records are there?",
         spec=(
             Chart()
@@ -561,6 +624,19 @@ def generate():
             "E.c > 0"
         ],
         query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template="Make a table of <E>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+        ),
+        constraints=[
+            "E.c > 0"
+        ],
+        query_type=QueryType.UTTERANCE,
     )
 
     # TODO: this with multiple tables, consider with other tables as well.
@@ -741,6 +817,26 @@ def generate():
 
     df = add_row(
         df,
+        query_template="Make a CDF plot of <F:q>.",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .filter("d['<F>'] != null")
+            .orderby("<F>")
+            .derive({ "total": "count()" })
+            .derive({"percentile": rolling("count() / d.total")})
+            .mark("line")
+            .x(field="<F>", type="quantitative")
+            .y(field="percentile", type="quantitative")
+        ),
+        constraints=[
+            "F.c > 10",
+        ],
+        query_type=QueryType.UTTERANCE,
+    )
+
+    df = add_row(
+        df,
         query_template="What is the cumulative distribution of <F1:q> for each <F2:n>?",
         spec=(
             Chart()
@@ -764,16 +860,30 @@ def generate():
         query_type=QueryType.QUESTION,
     )
 
-    # # TODO: reset for testing
-    # df = pd.DataFrame(
-    #     columns=[
-    #         "query_template",
-    #         "constraints",
-    #         "spec_template",
-    #         "query_type",
-    #         "creation_method",
-    #     ]
-    # )
+    df = add_row(
+        df,
+        query_template="Make a CDF plot of <F1:q> with a line for each <F2:n>.",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .filter("d['<F1>'] != null")
+            .orderby("<F1>")
+            .groupby("<F2>")
+            .derive({ "total": "count()" })
+            .derive({"percentile": rolling("count() / d.total")})
+            .mark("line")
+            .x(field="<F1>", type="quantitative")
+            .y(field="percentile", type="quantitative")
+            .color(field="<F2>", type="nominal")
+        ),
+        constraints=[
+            "F1.c > 10",
+            "F2.c > 1",
+            "F2.c < 5",
+            overlap,
+        ],
+        query_type=QueryType.UTTERANCE,
+    )
 
     df = add_row(
         df,
@@ -806,6 +916,39 @@ def generate():
             overlap,
         ],
         query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template=f"Make a heatmap of <E> <F1:n> and <F2:n>.",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .groupby(["<F2>", "<F1>"])
+            .rollup({"count <E>": Op.count()})
+            .derive({"udi_internal_percentile": "d['count <E>'] / max(d['count <E>'])"})
+            .derive({"udi_internal_text_color_threshold": "d.udi_internal_percentile > .5 ? 'large' : 'small'"})
+            .mark("rect")
+            .color(field="count <E>", type="quantitative")
+            .y(field="<F1>", type="nominal")
+            .x(field="<F2>", type="nominal")
+            .mark("text")
+            .text(field="count <E>", type="quantitative")
+            .y(field="<F1>", type="nominal")
+            .x(field="<F2>", type="nominal")
+            .color(field="udi_internal_text_color_threshold", type="nominal", domain=["large", "small"], range=["white", "black"], omitLegend=True)
+        ),
+        constraints=[
+            "F1.c * 2 < E.c",
+            "F2.c * 2 < E.c",
+            "F1.c > 1",
+            "F2.c > 1",
+            "F1.c <= 30",
+            "F2.c <= 30",
+            "F1.c >= F2.c",
+            overlap,
+        ],
+        query_type=QueryType.UTTERANCE,
     )
 
 
@@ -890,6 +1033,30 @@ def generate():
             "F.c > 250",
             ],
         query_type=QueryType.QUESTION,
+    )
+
+    df = add_row(
+        df,
+        query_template="Make a histogram of <F:q>?",
+        spec=(
+            Chart()
+            .source("<E>", "<E.url>")
+            .filter("d['<F>'] != null")
+            .binby(
+                field="<F>", 
+                output={
+                    "bin_start": "start",
+                    "bin_end": "end"})
+            .rollup({"count": Op.count()})
+            .mark("rect")
+            .x(field="start", type="quantitative")
+            .x2(field="end", type="quantitative")
+            .y(field="count", type="quantitative")
+        ),
+        constraints=[
+            "F.c > 5",
+            ],
+        query_type=QueryType.UTTERANCE,
     )
 
     # KDE
