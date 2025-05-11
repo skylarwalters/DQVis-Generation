@@ -53,7 +53,7 @@ def paraphrase(df, schema_list, only_cached: Optional[bool] = False) -> pd.DataF
     lock = threading.Lock()
     completed_rows = 0
 
-    max_worker_count = 5
+    max_worker_count = 10
 
     def worker(row, row_index):
         nonlocal interval_index, completed_rows
