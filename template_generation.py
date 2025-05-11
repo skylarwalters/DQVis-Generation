@@ -974,9 +974,9 @@ def generate():
                     "F2.c * 2 < E.c",
                     "F3.c * 2 < E.c",
                     "F2.c > 1",
-                    "F2.c < 25", # TODO: test small number while debugging
+                    "F2.c < 25",
                     "F3.c > 1",
-                    "F3.c < 25", # TODO: test small number while debugging
+                    "F3.c < 25",
                     "F2.c >= F3.c",
                     overlap,
                     "F1['name'] in F3['udi:overlapping_fields'] or F3['udi:overlapping_fields'] == 'all'",
