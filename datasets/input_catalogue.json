@@ -1,0 +1,32 @@
+[
+  {
+    "name": "./datasets/hubmap_2025-05-05/datapackage.json",
+    "outName": "./datasets/hubmap_2025-05-05/datapackage_udi.json",
+    "c2m2": false,
+    "process": true
+  },
+  {
+    "name": "./datasets/SenNet/C2M2_datapackage.json",
+    "outName": "./datasets/SenNet/C2M2_datapackage_udi.json",
+    "c2m2": true,
+    "process": true
+  },
+  {
+    "name": "./datasets/MetabolomicsWorkbench/C2M2_datapackage.json",
+    "outName": "./datasets/MetabolomicsWorkbench/C2M2_datapackage_udi.json",
+    "c2m2": true,
+    "process": true
+  },
+  {
+    "name": "./datasets/MoTrPAC/C2M2_datapackage.json",
+    "outName": "./datasets/MoTrPAC/C2M2_datapackage_udi.json",
+    "c2m2": true,
+    "process": true
+  },
+  {
+    "name": "./datasets/4DN/datapackage.json",
+    "outName": "./datasets/4DN/datapackage_udi.json",
+    "c2m2": true,
+    "process": true
+  }
+]

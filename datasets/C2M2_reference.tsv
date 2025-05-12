@@ -1,0 +1,31 @@
+id	name	description
+cfde_disease_association_type:0	not observed	disease explicitly ruled out
+cfde_disease_association_type:1	observed	disease positively observed
+cfde_phenotype_association_type:0	not observed	phenotype explicitly ruled out
+cfde_phenotype_association_type:1	observed	phenotype positively observed
+cfde_subject_ethnicity:0	Hispanic or Latino	Hispanic or Latino
+cfde_subject_ethnicity:1	not Hispanic or Latino	not Hispanic or Latino
+cfde_subject_granularity:0	single organism	One organism
+cfde_subject_granularity:1	symbiont system	A mixed system of consisting of two or more organisms (symbionts) in symbiosis (living colocated in time and space): one such symbiont may optionally be identified as a host
+cfde_subject_granularity:2	host-pathogen system	A special case of a symbiont system consisting of one symbiont, designated as a host, plus one or more other symbionts acting to create or sustain disease within the host organism
+cfde_subject_granularity:3	microbiome	A symbiont system consisting of a collection of (potentially unknown or partially characterized) taxa, where the environment in which the system resides is well-characterized, but the taxonomic composition of the system may be unknown; optionally contains one symbiont specially identified as a host
+cfde_subject_granularity:4	cell line	A cell line derived from one or more species or strains
+cfde_subject_granularity:5	synthetic	A synthetic biological entity
+cfde_subject_race:0	American Indian or Alaska Native	American Indian or Alaska Native
+cfde_subject_race:1	Asian or Pacific Islander	Asian or Pacific Islander (legacy term)
+cfde_subject_race:2	Black or African American	Black or African American
+cfde_subject_race:3	White	White
+cfde_subject_race:4	Other	Other
+cfde_subject_race:5	Asian	Asian
+cfde_subject_race:6	Native Hawaiian or Other Pacific Islander	Native Hawaiian or Other Pacific Islander
+cfde_subject_role:0	single organism	The organism represented by a subject in the 'single organism' granularity category
+cfde_subject_role:1	host	Any organism identified as a host for a subject assigned to the 'symbiont system', 'host-pathogen system', or 'microbiome' granularity categories
+cfde_subject_role:2	symbiont	An organism identified as a symbiont within a subject assigned to the 'symbiont system' granularity category
+cfde_subject_role:3	pathogen	An organism identified as a pathogen symbiont in a subject assigned to the 'host-pathogen system' granularity category
+cfde_subject_role:4	microbiome taxon	A constituent taxon of either (a) a subject assigned to the 'environmental microbiome' granularity category or (b) the microbiome (non-host) portion of a subject assigned to the 'host-associated microbiome' granularity category [NB: This role is probably not appropriate for Level 1, because it necessitates the post-facto attachment of downstream analysis procedures (subject -> sample -> library prep -> sequencing -> bioinformatics -> taxonomic classification results) to a subject which was originally uncharacterized at this level]
+cfde_subject_role:5	cell line ancestor	A taxon identified as a source organism for a subject assigned to the 'cell line' granularity category
+cfde_subject_role:6	synthetic	A synthetic biological entity
+cfde_subject_role:7	expression system	A biological environment used to produce gene products not native to it: for example, E. coli used to produce custom recombinant proteins
+cfde_subject_sex:0	Indeterminate	Indeterminate
+cfde_subject_sex:1	Female	Female
+cfde_subject_sex:2	Male	Male
