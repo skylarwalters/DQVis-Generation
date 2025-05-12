@@ -2,7 +2,7 @@ import os
 import sys
 import json
 from datasets import  Dataset
-from huggingface_hub import  upload_file
+from huggingface_hub import  upload_file, upload_folder
 
 def display_progress(df, index):
     total_rows = len(df)
@@ -62,6 +62,13 @@ def save(main_df, reviewed_df, dataset_schema_list_filename, grammar_schema_file
         upload_file(
             path_or_fileobj=hf_readme_filename,
             path_in_repo="README.md",
+            repo_id=repo_id,
+            repo_type="dataset"
+        )
+
+        upload_folder(
+            folder_path='./out/data_packages',
+            path_in_repo="data_packages",
             repo_id=repo_id,
             repo_type="dataset"
         )

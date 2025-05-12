@@ -110,6 +110,14 @@ A JSON list of dataset schemas used across the DQVis entries. Each schema define
 
 ---
 
+---
+
+### `data_packages/`
+
+The folder containing the data referenced by the dataset_schema_list.json. `udi:name` for a single data package will match the name of the subfolder inside `data_packages`
+
+---
+
 ### `multi_step_links.json`
 
 Links between entries in `dqvis/` that can be grouped into **multi-turn or multi-step interactions**, useful for studying dialog-based or iterative visualization systems.
