@@ -123,3 +123,16 @@ _TODO: Add a citation if you plan to publish or release a paper._
 - [Data Creation Framework (udi-training-data)](https://github.com/hms-dbmi/udi-training-data)
 - [Data Review Interface (udi-dataset-review)](https://github.com/hms-dbmi/udi-dataset-review)
 - [Visualization Rendering Library (udi-grammar)](https://github.com/hms-dbmi/udi-grammar)
+
+## 📝 Changelog
+
+### Initial Release
+
+- corresponds to version: 0.0.24 of the udi-toolkit: https://www.npmjs.com/package/udi-toolkit
+- Added the `dqvis` dataset with 1.08 million query-visualization pairs.
+- Included `reviewed` dataset with user review metadata.
+- Provided `UDIGrammarSchema.json` for visualization spec grammar.
+- Added `dataset_schema_list.json` for dataset schema definitions.
+- Introduced `multi_step_links.json` for multi-step interaction studies.
+
+---
