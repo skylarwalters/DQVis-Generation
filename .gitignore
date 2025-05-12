@@ -1,3 +1,5 @@
+datasets/archive
+datasets/paraphrase_cache.pkl
 out
 # Byte-compiled / optimized / DLL files
 __pycache__/
