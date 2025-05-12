@@ -1,9 +1,12 @@
+import random
 import sqlite3
 import json
 import pandas as pd
 import os
+RANDOM_SEED = 56235
+random.seed(RANDOM_SEED)
 
-def export(db_path, df):
+def export(db_path, df, sample=False):
     """
     Load data from a pandas DataFrame into an SQLite database.
 
@@ -11,6 +14,8 @@ def export(db_path, df):
         db_path (str): Path to the SQLite database file.
         df (pd.DataFrame): DataFrame containing the data.
     """
+
+    df['original_index'] = df.reset_index().index
 
     text_columns = [
         "query_template",
@@ -41,6 +46,7 @@ def export(db_path, df):
 
     # Define table schema
     columns = ["id INTEGER PRIMARY KEY"] + \
+              ["original_id INTEGER"] + \
               ["combined_id TEXT UNIQUE"] + \
               ["template_id INTEGER"] + \
               ["expanded_id INTEGER"] + \
@@ -58,6 +64,11 @@ def export(db_path, df):
     prev_row = None
     index = 0
     for _, row in df.iterrows():
+        if sample:
+            # Sample 10% of the data
+            if random.random() > 0.1:
+                continue
+        original_index = row.get('original_index', None)
         row = row.to_dict()  # Convert row to dictionary for easier access
         row['constraints'] = json.dumps(row.get('constraints', None))
         row['solution'] = json.dumps(row.get('solution', None))
@@ -78,14 +89,14 @@ def export(db_path, df):
 
         combined_ID = f"{template_ID}_{expanded_ID}_{paraphrased_ID}"
 
-        values = [index, combined_ID, template_ID, expanded_ID, paraphrased_ID] + [
+        values = [index, original_index, combined_ID, template_ID, expanded_ID, paraphrased_ID] + [
             row.get(col, None)
             for col in all_columns
         ]
         prev_row = row
         index += 1
         placeholders = ", ".join(["?"] * len(values))
-        execute_command = f"INSERT INTO data (id, combined_id, template_id, expanded_id, paraphrased_id, {', '.join(all_columns)}) VALUES ({placeholders});"
+        execute_command = f"INSERT INTO data (id, original_id, combined_id, template_id, expanded_id, paraphrased_id, {', '.join(all_columns)}) VALUES ({placeholders});"
         cur.execute(execute_command, values)
 
     # Create index

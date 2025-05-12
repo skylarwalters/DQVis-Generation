@@ -20,6 +20,7 @@ PERFORM_PARAPHRASING = False # paraphrasing is time consuming, so skipping makes
 ONLY_CACHED = False # if True, only cached data for paraphrasing will be used only matters if PERFORM_PARAPHRASING is True
 GENERATE_SQLITE = False # Set to True if you want to export the data to SQLite DB
 GENERATE_JSON = False # Set to True if you want to export the data to JSON
+SAMPLE_SQLITE = False # Set to True if you want to subsample the data for SQLite DB
 
 def main():
 
@@ -63,7 +64,7 @@ def main():
     if GENERATE_SQLITE:
         print_header('Exporting data to SQLite DB')
         # ## Export as SQLite DB
-        export_sqlite.export('./out/database.sqlite', df)
+        export_sqlite.export('./out/database.sqlite', df, sample=SAMPLE_SQLITE)
 
     if GENERATE_JSON:
         print_header("exporting ./out/training_data.json...")
@@ -109,6 +110,7 @@ if __name__ == "__main__":
     parser.add_argument('--paraphrase', action='store_true', help='Perform paraphrasing')
     parser.add_argument('--only_cached', action='store_true', help='Use only cached data for paraphrasing')
     parser.add_argument('--sqlite', action='store_true', help='Export the data to SQLite DB')
+    parser.add_argument('--sample', action='store_true', help='Sample the data for SQLite DB')
     parser.add_argument('--json', action='store_true', help='Export the data to JSON')
     args = parser.parse_args()
     UPDATE_SCHEMA = args.schema
@@ -116,6 +118,7 @@ if __name__ == "__main__":
     SAVE_HUGGINGFACE_LOCAL = args.hf_local
     PERFORM_PARAPHRASING = args.paraphrase
     GENERATE_SQLITE = args.sqlite
+    SAMPLE_SQLITE = args.sample
     GENERATE_JSON = args.json
     ONLY_CACHED = args.only_cached
     main()
