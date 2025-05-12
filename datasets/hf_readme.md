@@ -73,12 +73,13 @@ print(df.shape)
 ### Load Dataset Schemas
 
 ```python
+import json
 from huggingface_hub import hf_hub_download
 
 # download the dataset schema list
 dataset_schemas = hf_hub_download(
     repo_id="HIDIVE/DQVis",
-    filename="dataset_schema_list.json",  # use exact filename
+    filename="dataset_schema_list.json",
     repo_type="dataset"
 )
 
@@ -87,6 +88,23 @@ with open(dataset_schemas, "r") as f:
     dataset_schema_list = json.load(f)
     dataset_schema_map = {schema["udi:name"]: schema for schema in dataset_schema_list}
     df['dataset_schema_value'] = df['dataset_schema'].map(dataset_schema_map)
+```
+
+### Load Multi-step Interaction Links
+
+```python
+import json
+from huggingface_hub import hf_hub_download
+
+dataset_schemas = hf_hub_download(
+    repo_id="HIDIVE/DQVis",
+    filename="multi_step_links.json",
+    repo_type="dataset"
+)
+
+with open(dataset_schemas) as f:
+    multi_step_links = json.load(f)
+
 ```
 
 <!-- ### Placeholder: Load Multi-step Interaction Links
