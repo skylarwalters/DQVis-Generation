@@ -61,7 +61,7 @@ def save(main_df, reviewed_df, dataset_schema_list_filename, grammar_schema_file
         
         upload_file(
             path_or_fileobj=hf_readme_filename,
-            path_in_repo="readme.md",
+            path_in_repo="README.md",
             repo_id=repo_id,
             repo_type="dataset"
         )
