@@ -91,7 +91,7 @@ def main():
             './datasets/output_catalogue.json',
             './datasets/UDIGrammarSchema.json',
             './out/huggingface/',
-            'DevLan/DQVis',
+            'HIDIVE/DQVis',
             save_local=SAVE_HUGGINGFACE_LOCAL,
             push_to_hub=UPLOAD_TO_HUGGINGFACE
     )
