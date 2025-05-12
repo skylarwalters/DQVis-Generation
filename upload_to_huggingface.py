@@ -14,7 +14,7 @@ def display_progress(df, index):
     sys.stdout.flush()
 
 
-def save(main_df, reviewed_df, dataset_schema_list_filename, grammar_schema_filename, local_path, repo_id, save_local=False, push_to_hub=False):
+def save(main_df, reviewed_df, dataset_schema_list_filename, grammar_schema_filename, multi_step_links_filename, hf_readme_filename, local_path, repo_id, save_local=False, push_to_hub=False):
     """
     Save DQVis dataset to Hugging Face and or locally.
     """
@@ -50,6 +50,23 @@ def save(main_df, reviewed_df, dataset_schema_list_filename, grammar_schema_file
             repo_id=repo_id,
             repo_type="dataset"
         )
+
+        upload_file(
+            path_or_fileobj=multi_step_links_filename,
+            path_in_repo="multi_step_links.json",
+            repo_id=repo_id,
+            repo_type="dataset"
+        )
+
+        
+        upload_file(
+            path_or_fileobj=hf_readme_filename,
+            path_in_repo="readme.md",
+            repo_id=repo_id,
+            repo_type="dataset"
+        )
+
+        
 
     if save_local:
         main_dataset.save_to_disk(os.path.join(local_path, "dqvis"))

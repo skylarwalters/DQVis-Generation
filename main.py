@@ -90,6 +90,8 @@ def main():
             placeholder_df,
             './datasets/output_catalogue.json',
             './datasets/UDIGrammarSchema.json',
+            './datasets/multi_step_links.json',
+            './datasets/hf_readme.md',
             './out/huggingface/',
             'HIDIVE/DQVis',
             save_local=SAVE_HUGGINGFACE_LOCAL,
