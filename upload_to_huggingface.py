@@ -67,7 +67,7 @@ def save(main_df, reviewed_df, dataset_schema_list_filename, grammar_schema_file
         )
 
         upload_folder(
-            folder_path='./out/data_packages',
+            folder_path='./out/datasets',
             path_in_repo="data_packages",
             repo_id=repo_id,
             repo_type="dataset"

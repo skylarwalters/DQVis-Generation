@@ -6,7 +6,7 @@ import pandas as pd
 import json
 
 def main():
-    datasets_path = "./data_packages"
+    datasets_path = "./datasets"
     input_catalogue = os.path.join(datasets_path, "input_catalogue.json")
     datapackage_list = []
     with open(input_catalogue, 'r') as f:
