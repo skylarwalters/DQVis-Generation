@@ -21,6 +21,7 @@ ONLY_CACHED = False # if True, only cached data for paraphrasing will be used on
 GENERATE_SQLITE = False # Set to True if you want to export the data to SQLite DB
 GENERATE_JSON = False # Set to True if you want to export the data to JSON
 SAMPLE_SQLITE = False # Set to True if you want to subsample the data for SQLite DB
+GENERATE_PARQUET = False # Set to True if you want to export the data to parquet
 
 def main():
 
@@ -70,6 +71,11 @@ def main():
         print_header("exporting ./out/training_data.json...")
         df.to_json('./out/training_data.json', orient='records')
 
+    if GENERATE_PARQUET:
+        print_header("exporting ./out/training_data.parquet...")
+        # drop solution since parquet is not supported
+        df.drop(["solution"], axis=1).to_parquet('./out/training_data.parquet')
+
 
     # ## Upload data to Huggging Face 
     if UPLOAD_TO_HUGGINGFACE or SAVE_HUGGINGFACE_LOCAL:
@@ -114,6 +120,7 @@ if __name__ == "__main__":
     parser.add_argument('--sqlite', action='store_true', help='Export the data to SQLite DB')
     parser.add_argument('--sample', action='store_true', help='Sample the data for SQLite DB')
     parser.add_argument('--json', action='store_true', help='Export the data to JSON')
+    parser.add_argument('--parquet', action='store_true', help='Export the data to parquet')
     args = parser.parse_args()
     UPDATE_SCHEMA = args.schema
     UPLOAD_TO_HUGGINGFACE = args.upload
@@ -122,5 +129,6 @@ if __name__ == "__main__":
     GENERATE_SQLITE = args.sqlite
     SAMPLE_SQLITE = args.sample
     GENERATE_JSON = args.json
+    GENERATE_PARQUET = args.parquet
     ONLY_CACHED = args.only_cached
     main()
