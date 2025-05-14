@@ -1,16 +1,6 @@
 [
   {
     "template": {
-      "start": "What is the distribution of <F:q>?",
-      "end": "Is the distribution of <F1:q> similar for each <F2:n>?"
-    },
-    "match": [
-      { "start": "E", "end": "E", "on": "entity" },
-      { "start": "E.F", "end": "E.F1", "on": "name" }
-    ]
-  },
-  {
-    "template": {
       "start": "How many <E> records are there?",
       "end": "How many <E1> are there, grouped by <E2.F:n>?"
     },
@@ -204,18 +194,6 @@
     "match": [
       { "start": "E", "end": "E", "on": "entity" },
       { "start": "E.F", "end": "E.F1", "on": "name" }
-    ]
-  },
-
-  {
-    "template": {
-      "start": "What is the average <F1:q> for each <F2:n>?",
-      "end": "What is the average <F1:q> for each <F2:n> and <F3:n>?"
-    },
-    "match": [
-      { "start": "E", "end": "E", "on": "entity" },
-      { "start": "E.F1", "end": "E.F1", "on": "name" },
-      { "start": "E.F2", "end": "E.F2", "on": "name" }
     ]
   }
 ]
