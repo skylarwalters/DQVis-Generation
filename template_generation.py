@@ -2,6 +2,58 @@ import pandas as pd
 from udi_grammar_py import Chart, Op, rolling
 from enum import Enum
 
+class QueryType(Enum):
+    QUESTION = "question"
+    UTTERANCE = "utterance"
+
+class ChartType(Enum):
+    SCATTERPLOT = "scatterplot"
+    BARCHART = "barchart"
+    GROUPED_BAR = "stacked_bar"
+    STACKED_BAR = "stacked_bar"
+    NORMALIZED_BAR = "stacked_bar"
+    CIRCULAR = "circular"
+    TABLE = "table"
+    LINE = "line"
+    AREA = "area"
+    GROUPED_LINE = "grouped_line"
+    GROUPED_AREA = "grouped_area"
+    GROUPED_SCATTER = "grouped_scatter"
+    HEATMAP = "heatmap"
+    HISTOGRAM = "histogram"
+    DOT = "dot"
+    GROUPED_DOT = "grouped_dot"
+
+
+def add_row(df, query_template, spec, constraints, query_type: QueryType, chart_type: ChartType):
+    spec_key_count = get_total_key_count(spec.to_dict())
+    if spec_key_count <= 12:
+        complexity = "simple"
+    elif spec_key_count <= 24:
+        complexity = "medium"
+    elif spec_key_count <= 36:
+        complexity = "complex"
+    else:
+        complexity = "extra complex"
+    df.loc[len(df)] = {
+        "query_template": query_template,
+        "constraints": constraints,
+        "spec_template": spec.to_json(),
+        "query_type": query_type.value,
+        "creation_method": "template",
+        "chart_type": chart_type.value,
+        "chart_complexity": complexity,
+        "spec_key_count": spec_key_count
+    }
+    return df
+
+def get_total_key_count(nested_dict):
+    if isinstance(nested_dict, dict):
+        return sum(get_total_key_count(value) for value in nested_dict.values())
+    elif isinstance(nested_dict, list):
+        return sum(get_total_key_count(item) for item in nested_dict)
+    else:
+        return 1
 
 def generate():
     df = pd.DataFrame(
@@ -11,6 +63,9 @@ def generate():
             "spec_template",
             "query_type",
             "creation_method",
+            "chart_type",
+            "chart_complexity",
+            "spec_key_count",
         ]
     )
 
@@ -36,6 +91,7 @@ def generate():
             "F.c > 1",
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.BARCHART,
     )
 
     df = add_row(
@@ -56,6 +112,7 @@ def generate():
             "F.c < 25",
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.BARCHART,
     )
 
 
@@ -77,6 +134,7 @@ def generate():
             "F.c > 1",
         ],
         query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.BARCHART,
     )
 
     df = add_row(
@@ -97,6 +155,7 @@ def generate():
             "F.c < 25",
         ],
         query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.BARCHART,
     )
 
     df = add_row(
@@ -125,6 +184,7 @@ def generate():
             "E2.F.name not in E1.fields"
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.BARCHART,
     )
 
     df = add_row(
@@ -153,6 +213,7 @@ def generate():
             "E2.F.name not in E1.fields"
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.BARCHART,
     )
 
     df = add_row(
@@ -187,6 +248,7 @@ def generate():
             "E1.F1.name not in E2.fields",
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.STACKED_BAR,
     )
 
     df = add_row(
@@ -222,6 +284,7 @@ def generate():
             "E1.F1.name not in E2.fields",
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.STACKED_BAR,
     )
 
     df = add_row(
@@ -248,6 +311,7 @@ def generate():
             overlap,
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.STACKED_BAR,
     )
 
     df = add_row(
@@ -275,6 +339,7 @@ def generate():
             overlap,
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.STACKED_BAR,
     )
 
     df = add_row(
@@ -301,6 +366,7 @@ def generate():
             overlap,
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.GROUPED_BAR
     )
 
     df = add_row(
@@ -329,6 +395,7 @@ def generate():
             overlap,
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.GROUPED_BAR,
     )
 
     df = add_row(
@@ -356,6 +423,7 @@ def generate():
             overlap,
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.STACKED_BAR,
     )
 
 
@@ -390,6 +458,7 @@ def generate():
             overlap,
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.NORMALIZED_BAR,
     )
 
     df = add_row(
@@ -424,6 +493,7 @@ def generate():
             overlap,
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.NORMALIZED_BAR,
     )
 
     for name, op in [('minimum', Op.min), ('maximum', Op.max), ('average', Op.mean), ('median', Op.median), ('total', Op.sum)]:
@@ -448,6 +518,7 @@ def generate():
                 overlap,
             ],
             query_type=QueryType.QUESTION,
+            chart_type=ChartType.BARCHART,
         )
 
         df = add_row(
@@ -470,6 +541,7 @@ def generate():
                 overlap,
             ],
             query_type=QueryType.QUESTION,
+            chart_type=ChartType.BARCHART,
         )
 
     scatterplot_constraints=[
@@ -490,6 +562,7 @@ def generate():
         ),
         constraints=scatterplot_constraints,
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.SCATTERPLOT,
     )
 
     df = add_row(
@@ -504,6 +577,7 @@ def generate():
         ),
         constraints=scatterplot_constraints,
         query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.SCATTERPLOT
     )
 
     df = add_row(
@@ -529,6 +603,7 @@ def generate():
             overlap,
         ],
         query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.STACKED_BAR,
     )
 
     df = add_row(
@@ -554,6 +629,7 @@ def generate():
             overlap,
         ],
         query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.STACKED_BAR,
     )
 
     df = add_row(
@@ -574,6 +650,7 @@ def generate():
             "F.c < 8",
         ],
         query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.CIRCULAR,
     )
 
     df = add_row(
@@ -596,6 +673,7 @@ def generate():
             "F.c < 8",
         ],
         query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.CIRCULAR,
     )
 
     df = add_row(
@@ -610,6 +688,7 @@ def generate():
             "E.c > 0"
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.TABLE,
     )
 
 
@@ -624,6 +703,7 @@ def generate():
             "E.c > 0"
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.TABLE,
     )
 
     df = add_row(
@@ -637,6 +717,7 @@ def generate():
             "E.c > 0"
         ],
         query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.TABLE,
     )
 
     df = add_row(
@@ -658,6 +739,7 @@ def generate():
             "E1.r.E2.c.to == 'one'",
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.TABLE,
     )
 
     df = add_row(
@@ -679,6 +761,7 @@ def generate():
             "E1.r.E2.c.to == 'one`'",
         ],
         query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.TABLE,
     )
 
     df = add_row(
@@ -710,6 +793,7 @@ def generate():
             "E1.r.E2.c.from == 'many'",
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.TABLE,
     )
 
 
@@ -731,6 +815,7 @@ def generate():
             "F.c > 1",
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.TABLE,
     )
 
     df = add_row(
@@ -763,6 +848,7 @@ def generate():
             "E1.F.name not in E2.fields",
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.TABLE,
     )
 
     df = add_row(
@@ -782,6 +868,7 @@ def generate():
             "F.c > 1",
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.TABLE,
     )
 
     df = add_row(
@@ -813,6 +900,7 @@ def generate():
             "E1.F.name not in E2.fields",
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.TABLE,
     )
 
     df = add_row(
@@ -831,6 +919,7 @@ def generate():
             "F.c > 1",
         ],
         query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.TABLE,
     )
 
 
@@ -853,6 +942,7 @@ def generate():
             "F.c > 1",
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.TABLE,
     )
 
     df = add_row(
@@ -873,6 +963,7 @@ def generate():
             "F.c < 50",
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.TABLE,
     )
 
     df = add_row(
@@ -903,6 +994,7 @@ def generate():
             overlap,
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.TABLE,
     )
 
     df = add_row(
@@ -928,6 +1020,7 @@ def generate():
             "F.c > 1",
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.TABLE,
     )
 
     df = add_row(
@@ -948,6 +1041,7 @@ def generate():
             "F.c > 10",
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.LINE,
     )
 
     df = add_row(
@@ -968,6 +1062,7 @@ def generate():
             "F.c > 10",
         ],
         query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.LINE,
     )
 
     df = add_row(
@@ -993,6 +1088,7 @@ def generate():
             overlap,
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.GROUPED_LINE
     )
 
     df = add_row(
@@ -1018,6 +1114,7 @@ def generate():
             overlap,
         ],
         query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.GROUPED_LINE
     )
 
     df = add_row(
@@ -1051,6 +1148,7 @@ def generate():
             overlap,
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.HEATMAP,
     )
 
     df = add_row(
@@ -1084,6 +1182,7 @@ def generate():
             overlap,
         ],
         query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.HEATMAP,
     )
 
 
@@ -1118,6 +1217,7 @@ def generate():
                     "F2['name'] in F3['udi:overlapping_fields'] or F3['udi:overlapping_fields'] == 'all'"
                 ],
                 query_type=QueryType.QUESTION,
+                chart_type=ChartType.HEATMAP,
             )
 
 
@@ -1143,6 +1243,7 @@ def generate():
             "F2['name'] in F3['udi:overlapping_fields'] or F3['udi:overlapping_fields'] == 'all'"
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.GROUPED_SCATTER,
     )
 
     # Histogram
@@ -1168,6 +1269,7 @@ def generate():
             "F.c > 250",
             ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.HISTOGRAM,
     )
 
     df = add_row(
@@ -1192,6 +1294,7 @@ def generate():
             "F.c > 5",
             ],
         query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.HISTOGRAM,
     )
 
     # KDE
@@ -1216,6 +1319,7 @@ def generate():
             "F.c <= 250",
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.AREA,
     )
 
     # Dot plot
@@ -1233,6 +1337,7 @@ def generate():
             "F.c <= 50",
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.DOT,
     )
 
 
@@ -1266,6 +1371,7 @@ def generate():
             overlap,
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.GROUPED_AREA,
     )
 
     df = add_row(
@@ -1286,6 +1392,7 @@ def generate():
             overlap,
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.GROUPED_DOT,
     )
 
     df = add_row(
@@ -1312,6 +1419,7 @@ def generate():
             "F.c > 0",
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.TABLE,
     )
 
     df = add_row(
@@ -1338,6 +1446,7 @@ def generate():
             "F.c > 0",
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.TABLE,
     )
 
     df = add_row(
@@ -1367,6 +1476,7 @@ def generate():
             "F.c > 0",
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.TABLE,
     )
 
     df = add_row(
@@ -1396,24 +1506,8 @@ def generate():
             "F.c > 0",
         ],
         query_type=QueryType.QUESTION,
+        chart_type=ChartType.TABLE,
     )
-
-    return df
-
-
-class QueryType(Enum):
-    QUESTION = "question"
-    UTTERANCE = "utterance"
-
-
-def add_row(df, query_template, spec, constraints, query_type: QueryType):
-    df.loc[len(df)] = {
-        "query_template": query_template,
-        "constraints": constraints,
-        "spec_template": spec.to_json(),
-        "query_type": query_type.value,
-        "creation_method": "template",
-    }
 
     return df
 
