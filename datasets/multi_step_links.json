@@ -15,37 +15,6 @@
   },
   {
     "template": {
-      "start": "How many <E> are there, grouped by <F:n>?",
-      "end": "How many <E> are there, grouped by <F1:n> and <F2:n>?"
-    },
-    "match": [
-      { "start": "E", "end": "E", "on": "entity" },
-      { "start": "E.F", "end": "E.F1", "on": "name" }
-    ]
-  },
-  {
-    "template": {
-      "start": "How many <E> are there, grouped by <F:n>?",
-      "end": "How many <E1> are there, grouped by <E1.F1:n> and <E2.F2:n>?"
-    },
-    "match": [
-      { "start": "E", "end": "E1", "on": "entity" },
-      { "start": "E.F", "end": "E1.F1", "on": "name" }
-    ]
-  },
-  {
-    "template": {
-      "start": "Is there a correlation between <F1:q> and <F2:q>?",
-      "end": "Are there clusters of <E> <F1:q> and <F2:q> values across different <F3:n> groups?"
-    },
-    "match": [
-      { "start": "E", "end": "E", "on": "entity" },
-      { "start": "E.F1", "end": "E.F1", "on": "name" },
-      { "start": "E.F2", "end": "E.F2", "on": "name" }
-    ]
-  },
-  {
-    "template": {
       "start": "What does the <E> data look like?",
       "end": "What does the combined data of <E1> and <E2> look like?"
     },
@@ -155,45 +124,5 @@
       "end": "What is the range of <E> <F:n> values?"
     },
     "match": [{ "start": "E", "end": "E", "on": "entity" }]
-  },
-  {
-    "template": {
-      "start": "What is the range of <E> <F:q> values?",
-      "end": "What is the range of <E> <F1:q> values for every <F2:n>?"
-    },
-    "match": [
-      { "start": "E", "end": "E", "on": "entity" },
-      { "start": "E.F", "end": "E.F1", "on": "name" }
-    ]
-  },
-  {
-    "template": {
-      "start": "What is the range of <E> <F:n> values?",
-      "end": "What is the range of <E> <F1:q> values for every <F2:n>?"
-    },
-    "match": [
-      { "start": "E", "end": "E", "on": "entity" },
-      { "start": "E.F", "end": "E.F2", "on": "name" }
-    ]
-  },
-  {
-    "template": {
-      "start": "What is the cumulative distribution of <F:q>?",
-      "end": "What is the cumulative distribution of <F1:q> for each <F2:n>?"
-    },
-    "match": [
-      { "start": "E", "end": "E", "on": "entity" },
-      { "start": "E.F", "end": "E.F1", "on": "name" }
-    ]
-  },
-  {
-    "template": {
-      "start": "Make a CDF plot of <F:q>.",
-      "end": "Make a CDF plot of <F1:q> with a line for each <F2:n>."
-    },
-    "match": [
-      { "start": "E", "end": "E", "on": "entity" },
-      { "start": "E.F", "end": "E.F1", "on": "name" }
-    ]
   }
 ]
