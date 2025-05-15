@@ -14,27 +14,37 @@ def display_progress(df, index):
     sys.stdout.flush()
 
 
-def save(main_df, reviewed_df, dataset_schema_list_filename, grammar_schema_filename, multi_step_links_filename, hf_readme_filename, local_path, repo_id, save_local=False, push_to_hub=False):
+def save(
+    main_df, 
+    reviewed_df, 
+    dataset_schema_list_filename, 
+    grammar_schema_filename, 
+    multi_step_links_filename, 
+    reviews_filename, 
+    hf_readme_filename, 
+    local_path, 
+    repo_id, 
+    save_local=False, 
+    push_to_hub=False
+):
     """
     Save DQVis dataset to Hugging Face and or locally.
     """
 
     def row_generator():
         for i in range(len(main_df)):
-            row =  main_df.iloc[i].to_dict()
-              # Serialize nested structures to JSON strings
+            row = main_df.iloc[i].to_dict()
+            # Serialize nested structures to JSON strings
             for nested_key in ['constraints', 'solution']:
                 row[nested_key] = json.dumps(row.get(nested_key, None))
- 
             yield row
 
     # Convert the DataFrame to a Dataset
     main_dataset = Dataset.from_generator(row_generator)
     reviewed_dataset = Dataset.from_pandas(reviewed_df)
-    # dataset = DatasetDict({"data": dataset1, "testing_fake_data": dataset2})
+
     if push_to_hub:
         main_dataset.push_to_hub(repo_id, config_name="dqvis")
-
         reviewed_dataset.push_to_hub(repo_id, config_name="reviewed")
 
         upload_file(
@@ -43,37 +53,36 @@ def save(main_df, reviewed_df, dataset_schema_list_filename, grammar_schema_file
             repo_id=repo_id,
             repo_type="dataset"
         )
-
         upload_file(
             path_or_fileobj=dataset_schema_list_filename,
             path_in_repo="dataset_schema_list.json",
             repo_id=repo_id,
             repo_type="dataset"
         )
-
         upload_file(
             path_or_fileobj=multi_step_links_filename,
             path_in_repo="multi_step_links.json",
             repo_id=repo_id,
             repo_type="dataset"
         )
-
-        
+        upload_file(
+            path_or_fileobj=reviews_filename,
+            path_in_repo="reviews.json",
+            repo_id=repo_id,
+            repo_type="dataset"
+        )
         upload_file(
             path_or_fileobj=hf_readme_filename,
             path_in_repo="README.md",
             repo_id=repo_id,
             repo_type="dataset"
         )
-
         upload_folder(
             folder_path='./out/datasets',
             path_in_repo="data_packages",
             repo_id=repo_id,
             repo_type="dataset"
         )
-
-        
 
     if save_local:
         main_dataset.save_to_disk(os.path.join(local_path, "dqvis"))

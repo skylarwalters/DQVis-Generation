@@ -97,6 +97,7 @@ def main():
             './datasets/output_catalogue.json',
             './datasets/UDIGrammarSchema.json',
             './datasets/multi_step_links.json',
+            './datasets/reviews.json',
             './datasets/hf_readme.md',
             './out/huggingface/',
             'HIDIVE/DQVis',
