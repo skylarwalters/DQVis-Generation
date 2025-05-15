@@ -16,7 +16,6 @@ def display_progress(df, index):
 
 def save(
     main_df, 
-    reviewed_df, 
     dataset_schema_list_filename, 
     grammar_schema_filename, 
     multi_step_links_filename, 
@@ -41,11 +40,9 @@ def save(
 
     # Convert the DataFrame to a Dataset
     main_dataset = Dataset.from_generator(row_generator)
-    reviewed_dataset = Dataset.from_pandas(reviewed_df)
 
     if push_to_hub:
         main_dataset.push_to_hub(repo_id, config_name="dqvis")
-        reviewed_dataset.push_to_hub(repo_id, config_name="reviewed")
 
         upload_file(
             path_or_fileobj=grammar_schema_filename,

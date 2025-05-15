@@ -86,14 +86,9 @@ def main():
         elif SAVE_HUGGINGFACE_LOCAL:
             print_header('Saving data locally in format for Hugging Face')
 
-        placeholder_df = pd.DataFrame([
-            {'testing': 'test1', 'development': 'dev1', 'process': 'proc1'},
-            {'testing': 'test2', 'development': 'dev2', 'process': 'proc2'},
-            {'testing': 'test3', 'development': 'dev3', 'process': 'proc3'}
-        ])
+
         upload_to_huggingface.save(
             df,
-            placeholder_df,
             './datasets/output_catalogue.json',
             './datasets/UDIGrammarSchema.json',
             './datasets/multi_step_links.json',

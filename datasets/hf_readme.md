@@ -27,13 +27,14 @@ A DataFrame (`test`) containing **1.08 million rows** of query-visualization pai
 
 ---
 
-### `reviewed`
+### `reviews.json`
 
 A version of the dataset with additional human reviews.
 
-- Similar schema to `dqvis/`
-- Includes columns with **user review metadata** (e.g., clarity, correctness, usefulness).
-- _Note: This file is incomplete. Final schema to be documented upon release._
+- Similar schema to `dqvis` but in json format. In addition
+- `reviewer`: A uuid to identify the different reviewers.
+- `review_status`: The score for the data point (good|improve|bad)
+- `review_categories`: A list of predefined issues (Bad Question|Malformed Visualization|Question Not Answered|Other) or "[null]".
 
 ---
 
