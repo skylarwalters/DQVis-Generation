@@ -28,6 +28,8 @@ def export(db_path, df, sample=False):
         "solution",
         "dataset_schema",
         "query",
+        "chart_type",
+        "chart_complexity",
     ]
 
     number_columns = [
