@@ -5,7 +5,7 @@ This repository contains the code for generating the **DQVis** dataset available
 The code generates a collection of natural language **Q**ueries on biomedical research **D**ata and responds with a visualization specification in the form of the [Universal Discovery Interface](https://github.com/hms-dbmi/udi-grammar) grammar.
 
 📂 **Dataset on Hugging Face**: [HIDIVE/DQVis](https://huggingface.co/datasets/HIDIVE/DQVis)  
-🔍 **Dataset Review Softwar**: [hms-dbmi/DQVis-review](https://github.com/hms-dbmi/DQVis-review)
+🔍 **Dataset Review Software**: [hms-dbmi/DQVis-review](https://github.com/hms-dbmi/DQVis-review)
 
 ---
 
