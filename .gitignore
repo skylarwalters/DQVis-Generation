@@ -1,6 +1,11 @@
 datasets/archive
 datasets/paraphrase_cache.pkl
 out
+
+# Skylar playing with data
+data_config.json
+test_generation.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
