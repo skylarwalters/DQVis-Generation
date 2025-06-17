@@ -1231,7 +1231,7 @@ def generate():
             .mark("point")
             .x(field="<F1>", type="quantitative")
             .y(field="<F2>", type="quantitative")
-            .color(field="<F3>", type="nominal")
+            .color(field="<F3>", type="nominal") 
         ),
         constraints=[
             "F1.c > 10",
