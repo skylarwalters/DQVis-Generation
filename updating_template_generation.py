@@ -1,6 +1,7 @@
 import pandas as pd
 #from udi_grammar_py import Chart, Op, rolling
 from enum import Enum
+import json
 #import gosling as gos
 
 class QueryType(Enum):
@@ -10,6 +11,8 @@ class QueryType(Enum):
 class ChartType(Enum):
     #SCATTERPLOT = "scatterplot"
     BARCHART = "barchart"
+    POINT = 'point'
+    LINE = 'line'
     #GROUPED_BAR = "stacked_bar"
     #STACKED_BAR = "stacked_bar"
     #NORMALIZED_BAR = "stacked_bar"
@@ -27,7 +30,7 @@ class ChartType(Enum):
 
 
 def add_row(df, query_template, spec, constraints, query_type: QueryType, chart_type: ChartType):
-    spec_key_count = get_total_key_count(spec.to_dict())
+    spec_key_count = get_total_key_count(spec)
     if spec_key_count <= 12:
         complexity = "simple"
     elif spec_key_count <= 24:
@@ -39,7 +42,7 @@ def add_row(df, query_template, spec, constraints, query_type: QueryType, chart_
     df.loc[len(df)] = {
         "query_template": query_template,
         "constraints": constraints,
-        "spec_template": spec.to_json(),
+        "spec_template": json.dumps(spec),
         "query_type": query_type.value,
         "creation_method": "template",
         "chart_type": chart_type.value,
@@ -87,7 +90,9 @@ def generate():
             {
                 'mark':'point',
                 'x':'position:G',
-                'y':'peak:Q',
+                #'y':'peak:Q',# is this F
+                'y':'<F>',
+                'data_source':'<F.url>' # refer to the data for the feature
             }
         ),
         constraints=[
@@ -106,7 +111,8 @@ def generate():
             { 
              'mark':'line',
              'x':'position:G',
-             'y':'peak:Q'
+             'y':'<F>',
+             'data_source':'<F.url>'
             }
         ),
         constraints=[
@@ -115,7 +121,7 @@ def generate():
             
         ],
         query_type=QueryType.QUESTION,
-        chart_type=ChartType.POINT,
+        chart_type=ChartType.LINE,
     )
 
     return df
