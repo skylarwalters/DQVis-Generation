@@ -92,11 +92,10 @@ def generate():
                 'x':'position:G',
                 #'y':'peak:Q',# is this F
                 'y':'<F>',
-                'data_source':'<F.url>' # refer to the data for the feature
+                'data_source':'<F.url>'
             }
         ),
         constraints=[
-            # show a max of 1000 points
             '<F:p.q>.c < 1000',
         ],
         query_type=QueryType.QUESTION,
@@ -129,4 +128,5 @@ def generate():
 
 if __name__ == "__main__":
     df = generate()
+    pd.DataFrame.to_csv(df, 'dataframe_for_presentation.csv')
     print(df.head())

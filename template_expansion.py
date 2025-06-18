@@ -6,7 +6,6 @@ from constraint import *
 # from parsimonious.grammar import Grammar
 from pprint import pprint
 
-
 def expand(df, dataset_schemas):
     expanded_rows = []
     for _, row in df.iterrows():

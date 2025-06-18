@@ -1,0 +1,3 @@
+,query_template,constraints,spec_template,query_type,creation_method,chart_type,chart_complexity,spec_key_count
+0,Where are <F:p.q> in <S>?,['<F:p.q>.c < 1000'],"{""mark"": ""point"", ""x"": ""position:G"", ""y"": ""<F>"", ""data_source"": ""<F.url>""}",question,template,point,simple,4
+1,Is the <F:p.q|s.q> at <L> a peak or a valley?,['F.c > 20'],"{""mark"": ""line"", ""x"": ""position:G"", ""y"": ""<F>"", ""data_source"": ""<F.url>""}",question,template,line,simple,4
