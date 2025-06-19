@@ -1,0 +1,72 @@
+{
+    "name": "cervix-adenocarcinoma-chromoscope",
+    "description": "PCAWG Genomic data configuration for Cervix Adenocarcinoma in Chromoscope.",
+    "sources": [
+      {
+        "name": "PCAWG",
+        "title": "Pan-Cancer Analysis of Whole Genomes",
+        "path": "https://somatic-browser-test.s3.amazonaws.com/PCAWG/Cervix-AdenoCA/configs/Cervix-AdenoCA.all.config.json"
+      }
+    ],
+    "resources": [
+      {
+        "name": "sv",
+        "path": "https://somatic-browser-test.s3.amazonaws.com/PCAWG/Cervix-AdenoCA/b9d1a64e-d445-4174-a5b4-76dd6ea69419.pcawg_consensus_1.6.161116.somatic.sv.bedpe",
+        "schema": {
+          "fields": [
+            {"name":"chrom1", "type":"string", "description":""},
+            {"name":"start1", "type":"integer", "description":""},
+            {"name":"end1", "type":"integer", "description":""},
+            {"name":"chrom2", "type":"string", "description":""},
+            {"name":"start2", "type":"integer", "description":""},
+            {"name":"end2", "type":"integer", "description":""},
+            {"name":"sv_id", "type":"string", "description":""},
+            {"name":"pe_support", "type":"integer", "description":""}, M
+            {"name":"strand1", "type":"string", "description":""},
+            {"name":"strand2svclass", "type":"string", "description":""},
+            {"name":"svmethod", "type":"string", "description":""}
+          ],
+          "primaryKey": ["chrom1", "start1", "end1", "chrom2", "start2", "end2"]
+        },
+        "format":"bedpe",
+        "assembly": "hg19"
+      },
+      {
+        "name": "cna",
+        "path": "https://somatic-browser-test.s3.amazonaws.com/PCAWG/Cervix-AdenoCA/b9d1a64e-d445-4174-a5b4-76dd6ea69419.consensus.20170119.somatic.cna.txt",
+        "schema": {
+          "fields": [
+            { "name": "chromosome", "type": "string"},
+            { "name": "start", "type": "integer" },
+            { "name": "end", "type": "integer" },
+            { "name": "total_cn", "type": "integer"},
+            { "name": "major_cn", "type": "integer"},
+            { "name": "minor_cn", "type": "integer"}
+          ],
+          "primaryKey": ["chromosome","start","end"]
+        },
+        "format": "txt",
+        "assembly": "hg19"
+      },
+      {
+        "name": "vcf",
+        "path": "https://somatic-browser-test.s3.amazonaws.com/PCAWG/Cervix-AdenoCA/b9d1a64e-d445-4174-a5b4-76dd6ea69419.sorted.vcf.gz",
+        "schema": {
+          "fields": [
+            { "name": "CHROM", "type": "string" },
+            { "name": "POS", "type": "integer" },
+            { "name": "ID", "type": "integer" },
+            { "name": "REF", "type": "string" },
+            { "name": "ALT", "type": "string" },
+            { "name": "QUAL", "type": "string" },
+            { "name": "FILTER", "type": "numstringber" },
+            { "name": "INFO", "type": "string" },
+          ],
+          "primaryKey": ["CHROM","POS","ID"]
+        },
+        "format": "gz",
+        "assembly": "hg19"
+      }
+    ]
+  }
+  
