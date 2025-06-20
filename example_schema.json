@@ -1,12 +1,22 @@
 {
     "name": "cervix-adenocarcinoma-chromoscope",
     "description": "PCAWG Genomic data configuration for Cervix Adenocarcinoma in Chromoscope.",
+    "sample-id":"b9d1a64e-d445-4174-a5b4-76dd6ea69419",
     "sources": [
       {
         "name": "PCAWG",
         "title": "Pan-Cancer Analysis of Whole Genomes",
         "path": "https://somatic-browser-test.s3.amazonaws.com/PCAWG/Cervix-AdenoCA/configs/Cervix-AdenoCA.all.config.json"
       }
+    ],
+    "assembly": "hg19",
+    "cancer-type":"adenocarcinoma",
+    "genes":[
+        {"name":"SMAD4", "chr":18, "pos":48575080},
+        {"name":"SMAD4", "chr":18, "pos":48494410},
+        {"name":"KMT2C", "chr":7, "pos":151873935},
+        {"name":"FBXW7", "chr":4, "pos":153245393},
+        {"name":"FBXW7", "chr":4, "pos":153242410}
     ],
     "resources": [
       {
@@ -28,8 +38,7 @@
           ],
           "primaryKey": ["chrom1", "start1", "end1", "chrom2", "start2", "end2"]
         },
-        "format":"bedpe",
-        "assembly": "hg19"
+        "format":"bedpe"
       },
       {
         "name": "cna",
@@ -45,8 +54,7 @@
           ],
           "primaryKey": ["chromosome","start","end"]
         },
-        "format": "txt",
-        "assembly": "hg19"
+        "format": "txt"
       },
       {
         "name": "vcf",
@@ -64,8 +72,7 @@
           ],
           "primaryKey": ["CHROM","POS","ID"]
         },
-        "format": "gz",
-        "assembly": "hg19"
+        "format": "vcf"
       }
     ]
   }
