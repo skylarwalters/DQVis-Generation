@@ -24,61 +24,69 @@ def expand(df, dataset_schemas):
             schema_cancer = schema["udi:cancer-type"]
             schema_genes = schema["udi:genes"]
             
-            for file in schema_genes:
-                genes_name = file["name"]
-                genes_chr = file["chr"]
-                genes_pos = file ["pos"] #review
-                
+            gene_list = []
+            for elem in schema_genes:
+                gene_list.append({'name':elem["name"],'chr':elem["chr"], 'pos':elem["pos"]})
 
-            schema_def = schema["resources"]
-            sources_flattened = [] 
+            resource_def = schema["resources"]
+            #sources_flattened = [] 
 
             # flatten schema_deft
-            schema_flattened = []
-            for file in schema_def:
+            resource_flattened = []
+            for file in resource_def:
                 sample = file["name"]
-                file_path = file["path"]
-                primary_key = file["primary_key"] #review
-                format_g = file["format"]
-                file_schema = file["schema"]
-                #foreignKeys = file_schema.get("foreignKeys", [])
+                url = file["path"]
+                
+                resources_schema = file["schema"]
+                foreignKeys = resources_schema.get("foreignKeys", [])
                 #url = base_path + file_path
-                for col in file_schema["fields"]:
+                for col in resources_schema["fields"]:
                     expanded_col = col.copy()
                     expanded_col.update(
                         {
-                            "name": name,
-                            #"type": type -> cant use word type,
-                            "description": description,
+                            "sample": sample,
                             "url": url,
-                            
+                            "foreignKeys":foreignKeys
                         }
                     )
-                    schema_flattened.append(expanded_col)
-            field_options = schema_flattened
+                    resource_flattened.append(expanded_col)
+                
+                #primary_key = resources_schema["primary_key"] 
+                #file_format = file["format"]
             # unique_entities = set([x["entity"] for x in schema_flattened])
-            row_count_lookup = {x["entity"]: x["row_count"] for x in schema_flattened}
-            url_lookup = {x["entity"]: x["url"] for x in schema_flattened}
-            er_lookup = {x["entity"]: x["foreignKeys"] for x in schema_flattened}
-            unique_entities = url_lookup.keys()
+            #row_count_lookup = {x["sample"]: x["name"] for x in resource_flattened}
+            url_lookup = {x["sample"]: x["url"] for x in resource_flattened}
+            er_lookup = {x["sample"]: x["foreignKeys"] for x in resource_flattened}
+            unique_samples = url_lookup.keys()
 
-            entity_options = [
+            sample_options = [
                 {
-                    "entity": entity,
-                    "url": url_lookup[entity],
-                    "udi:cardinality": row_count_lookup[entity],
-                    "foreignKeys":  er_lookup[entity],
-                    "fields": [ x["name"] for x in schema_flattened if x["entity"] == entity]
+                    "sample": sample,
+                    "url": url_lookup[sample], 
+                    # "udi:cardinality": row_count_lookup[sample],
+                    "foreignKeys":  er_lookup[sample],
+                    "fields": [ x["name"] for x in resource_flattened if x["sample"] == sample],
+                    "assembly":schema_assembly
                 }
-                for entity in unique_entities
+                for sample in unique_samples
             ]
-            new_rows = expand_template(row, entity_options, field_options)
+            
+            location_options = [
+                {
+                    'genes':gene_list,
+                    'positions':[pos for gene_info in gene_list for pos in gene_info['pos']],
+                    'chromosomes':[chromosome for gene_info in gene_list for chromosome in gene_info['chr']],
+                }
+            ]
+            
+            field_options=resource_flattened
+
+            new_rows = expand_template(row, sample_options, field_options, location_options)
             for new_row in new_rows:
                 new_row["dataset_schema"] = schema_name
             expanded_rows.extend(new_rows)
     expanded_df = pd.DataFrame(expanded_rows)
     return expanded_df
-
 
 def expand_template(row, sample_options, field_options, location_options):
     extract = extract_tags(row["query_template"])
@@ -466,9 +474,7 @@ def constraint_solver(
     for constraint in constraints:
         problem.addConstraint(constraint)
     s = problem.getSolutions()
-    # pprint("⭐ solutions ⭐")
-    # pprint(s)
-    return s
+    # pn s
 
 def test_constraint_solver():
     problem = Problem()
@@ -578,7 +584,7 @@ if __name__ == "__main__":
     #     }
     # ]
     
-    schema=json.open('example_schema.json')
+    schema=json.load('example_schema.json',)
     df=pd.read_csv('DQVis-Generation/dataframe_for_presentation.csv')
 
     expanded_df = expand(df, schema)

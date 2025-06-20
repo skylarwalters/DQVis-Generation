@@ -24,17 +24,17 @@
         "path": "https://somatic-browser-test.s3.amazonaws.com/PCAWG/Cervix-AdenoCA/b9d1a64e-d445-4174-a5b4-76dd6ea69419.pcawg_consensus_1.6.161116.somatic.sv.bedpe",
         "schema": {
           "fields": [
-            {"name":"chrom1", "type":"string", "description":""},
-            {"name":"start1", "type":"integer", "description":""},
-            {"name":"end1", "type":"integer", "description":""},
-            {"name":"chrom2", "type":"string", "description":""},
-            {"name":"start2", "type":"integer", "description":""},
-            {"name":"end2", "type":"integer", "description":""},
-            {"name":"sv_id", "type":"string", "description":""},
-            {"name":"pe_support", "type":"integer", "description":""}, 
-            {"name":"strand1", "type":"string", "description":""},
-            {"name":"strand2svclass", "type":"string", "description":""},
-            {"name":"svmethod", "type":"string", "description":""}
+            {"name":"chrom1", "type":"string"},
+            {"name":"start1", "type":"integer"},
+            {"name":"end1", "type":"integer"},
+            {"name":"chrom2", "type":"string"},
+            {"name":"start2", "type":"integer"},
+            {"name":"end2", "type":"integer"},
+            {"name":"sv_id", "type":"string"},
+            {"name":"pe_support", "type":"integer"}, 
+            {"name":"strand1", "type":"string"},
+            {"name":"strand2svclass", "type":"string"},
+            {"name":"svmethod", "type":"string"}
           ],
           "primaryKey": ["chrom1", "start1", "end1", "chrom2", "start2", "end2"]
         },
