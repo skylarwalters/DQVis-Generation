@@ -2,6 +2,7 @@ from typing import List, Dict, Union
 import pandas as pd
 import re
 from constraint import *
+import json
 
 # from parsimonious.grammar import Grammar
 from pprint import pprint
@@ -13,7 +14,7 @@ def expand(df, dataset_schemas):
             schema_name = schema["udi:name"]
             base_path = schema["udi:path"]
             schema_def = schema["resources"]
-            # flatten schema_def
+            # flatten schema_deft
             schema_flattened = []
             for file in schema_def:
                 entity = file["name"]
@@ -192,6 +193,7 @@ def extract_tags(text: str) -> List[Dict[str, Union[str, List[str]]]]:
             {"original": "E1.F1:n", "entity": "E1", "field": "F1", "field_type": ["n"]},
             {"original": "E2.F2:o|n", "entity": "E2", "field": "F2", "field_type": ["o", "n"]}
         ]
+        
     """
     pattern = r"<([^>]+)>"
     matches = re.findall(pattern, text)
@@ -517,6 +519,9 @@ if __name__ == "__main__":
     #         "City": ["Population", "Area"]
     #     }
     # ]
+    
+    schema=json.open('example_schema.json')
+    df=pd.read_csv('DQVis-Generation/dataframe_for_presentation.csv')
 
-    # expanded_df = expand(df, dataset_schemas)
-    # print(expanded_df)
+    expanded_df = expand(df, schema)
+    print(expanded_df)
