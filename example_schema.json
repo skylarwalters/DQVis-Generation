@@ -1,7 +1,7 @@
 {
     "name": "cervix-adenocarcinoma-chromoscope",
     "description": "PCAWG Genomic data configuration for Cervix Adenocarcinoma in Chromoscope.",
-    "sample-id":"b9d1a64e-d445-4174-a5b4-76dd6ea69419",
+    "udi:sample-id":"b9d1a64e-d445-4174-a5b4-76dd6ea69419",
     "sources": [
       {
         "name": "PCAWG",
@@ -9,9 +9,9 @@
         "path": "https://somatic-browser-test.s3.amazonaws.com/PCAWG/Cervix-AdenoCA/configs/Cervix-AdenoCA.all.config.json"
       }
     ],
-    "assembly": "hg19",
-    "cancer-type":"adenocarcinoma",
-    "genes":[
+    "udi:assembly": "hg19",
+    "udi:cancer-type":"adenocarcinoma",
+    "udi:genes":[
         {"name":"SMAD4", "chr":18, "pos":48575080},
         {"name":"SMAD4", "chr":18, "pos":48494410},
         {"name":"KMT2C", "chr":7, "pos":151873935},
