@@ -261,10 +261,10 @@ def extract_tags(text: str) -> List[Dict[str, Union[str, List[str]]]]:
                         for t in field_type.split("|")
                     ]
                 
-            else:
-                raise ValueError(
-                    f"Invalid match: {match}. Field type must be specified"
-                )
+                else:
+                    raise ValueError(
+                        f"Invalid match: {match}. Field type must be specified"
+                    )
 
         tags.append(
             {
