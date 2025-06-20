@@ -14,34 +14,44 @@ def expand(df, dataset_schemas):
             schema_name = schema["name"] #sample id instead of name? 
             schema_id = schema["udi:sample-id"] #point to sample id path
             sources = schema["sources"]  #call to sources [ path ], flatten sources?
-            sources_flattened = [] 
-
+            
             for file in sources:
-                sources_name= sources["name"]
-                sources_title= sources["title"]
-                sources_path = sources["path"]
+                sources_name= file["name"]
+                sources_title= file["title"]
+                sources_path = file["path"]
+            
+            schema_assembly = schema["udi:assembly"]
+            schema_cancer = schema["udi:cancer-type"]
+            schema_genes = schema["udi:genes"]
+            
+            for file in schema_genes:
+                genes_name = file["name"]
+                genes_chr = file["chr"]
+                genes_pos = file ["pos"] #review
+                
 
             schema_def = schema["resources"]
+            sources_flattened = [] 
 
             # flatten schema_deft
             schema_flattened = []
             for file in schema_def:
-                entity = file["name"]
-                row_count = file["udi:row_count"]
-                column_count = file["udi:column_count"]
-                file_schema = file["schema"]
-                foreignKeys = file_schema.get("foreignKeys", [])
+                sample = file["name"]
                 file_path = file["path"]
-                url = base_path + file_path
+                primary_key = file["primary_key"] #review
+                format_g = file["format"]
+                file_schema = file["schema"]
+                #foreignKeys = file_schema.get("foreignKeys", [])
+                #url = base_path + file_path
                 for col in file_schema["fields"]:
                     expanded_col = col.copy()
                     expanded_col.update(
                         {
-                            "entity": entity,
-                            "row_count": row_count,
-                            "column_count": column_count,
+                            "name": name,
+                            #"type": type -> cant use word type,
+                            "description": description,
                             "url": url,
-                            "foreignKeys": foreignKeys
+                            
                         }
                     )
                     schema_flattened.append(expanded_col)
@@ -129,11 +139,11 @@ def resolve_spec_template(spec_template, tags, solution):
         parts = content.split(".")
         if len(parts) == 1:
             content = parts[0]
-            if content.startswith("E"):
-                entity = content
-                resolved = solution[entity]["entity"]
+            if content.startswith("S"):
+                sample = content
+                resolved = solution[sample]["sample"]
             else:
-                resolved = solution["E_" + parts[0]]["name"]
+                resolved = solution["S_" + parts[0]]["name"]
         elif len(parts) == 2:
             left, right = parts
             if right == "url":
@@ -141,23 +151,23 @@ def resolve_spec_template(spec_template, tags, solution):
             else:
                 resolved = solution[left + "_" + right]["name"]
         elif len(parts) == 5:
-            E1, r, E2, id, source = parts
-            if E1[0] != "E" or E2[0] != "E" or r != "r" or id != "id" or source not in ["from", "to"]:
+            S1, r, S2, id, source = parts
+            if S1[0] != "S" or S2[0] != "S" or r != "r" or id != "id" or source not in ["from", "to"]:
                 raise ValueError(
                     f"Invalid match: {match}. Unexpected formatting of spec template tag."
                 )
-            E2_name = solution[E2]["entity"]
+            S2_name = solution[S2]["source"]
             # resolved = solution[E1]["foreignKeys"][E2_name]["id"][source]
             # What needs to happen here, is it should loop over foreign keys to find if reference.resource matches E2_name
             # and then if source is 'from' return fields else return reference.fields
-            foreignKeys = solution[E1]["foreignKeys"]
+            foreignKeys = solution[S1]["foreignKeys"]
             matchedKey = next(
-                (fk for fk in foreignKeys if fk["reference"]["resource"] == E2_name),
+                (fk for fk in foreignKeys if fk["reference"]["resource"] == S2_name),
                 None,
             )
             if matchedKey is None:
                 raise ValueError(
-                    f"Invalid match: {match}. Could not find foreign key for {E1} to {E2}"
+                    f"Invalid match: {match}. Could not find foreign key for {S1} to {S2}"
                 )
             if source == "from":
                 resolved = matchedKey["fields"]
@@ -397,10 +407,10 @@ def create_relationship_existence_constraint(constraint: str) -> str:
     parts = constraint.split('.')
     if len(parts) < 3:
         raise ValueError("Unexpected relationship constraint length:", constraint)
-    E1, r, E2 = parts[:3]
-    if (E1[0] != 'E') or (E2[0] != 'E') or (r != 'r'):
+    S1, r, S2 = parts[:3]
+    if (S1[0] != 'S') or (S2[0] != 'S') or (r != 'r'):
         raise ValueError("Unexpected relationship constraint:", constraint)
-    existence_constraint =  f"{E2}['entity'] in [fk['reference']['resource'] for fk in {E1}['foreignKeys']]"
+    existence_constraint =  f"{S2}['entity'] in [fk['reference']['resource'] for fk in {S1}['foreignKeys']]"
     return existence_constraint
 
 def resolve_related_entity(text): 
@@ -409,24 +419,26 @@ def resolve_related_entity(text):
     # other things (.c, .to) well be resolved elsewhere
     # assumes that the only time .E exists is when finding a relationship
     foundConstraint = False
-    pattern = r'\.E[0-9]*'
+    pattern = r'\.S[0-9]*'
     while re.search(pattern, text):
         foundConstraint = True
         match = re.search(pattern, text).group(0)
-        resolved = f"[{match.lstrip('.')}['entity']]"
+        resolved = f"[{match.lstrip('.')}['sample']]"
         text = text.replace(match, resolved)
     if foundConstraint:
         pattern = r'E[0-9]*\.r'
         while re.search(pattern, text):
             match = re.search(pattern, text).group(0)
-            E_number = match.split(".")[0].lstrip("E")
-            resolved = "{fk['reference']['resource']:fk for fk in E" + str(E_number) + "['foreignKeys']}"
+            S_number = match.split(".")[0].lstrip("S")
+            resolved = "{fk['reference']['resource']:fk for fk in S" + str(S_number) + "['foreignKeys']}"
             text = text.replace(match, resolved)
     return text, foundConstraint
 
 def add_default_entity(text):
-    # Use regex to match "F" that is not preceded by "_" and replace it with "E_F"
-    modified_text = re.sub(r'(?<!_)F', r'E_F', text)
+    # Use regex to match "F" that is not preceded by "_" and replace it with "S_F"
+    modified_text = re.sub(r'(?<!_)F', r'S_F', text)
+    # replace L that does not have _ to replace with S_L
+    modified_text = re.sub(r'(?<!_)L', r'S_L', modified_text)
     return modified_text
 
 def constraint_solver(
@@ -501,56 +513,56 @@ if __name__ == "__main__":
     # test_grammar_parser()
     # test_constraint_solver()
     # def expand_template(row, entity_options, field_options):
-    expand_template(
-        row={
-            "constraints": [],
-            "query_template": "How many <E> are there <F:Q>?",
-            "spec_template": "{ source: '<E>', '<E.url> rep: <F>'}",
-        },
-        entity_options=[
-            {
-                "url": "./data/fake_sample.csv",
-                "entity": "fake_sample",
-                "name": None,
-                "data_type": None,
-                "cardinality": None,
-            },
-            {
-                "url": "./data/fake_donor.csv",
-                "entity": "fake_donor",
-                "name": None,
-                "data_type": None,
-                "cardinality": None,
-            },
-            {
-                "url": "./data/fake_file.csv",
-                "entity": "fake_file",
-                "name": None,
-                "data_type": None,
-                "cardinality": None,
-            },
-        ],
-        field_options=[
-            {
-                "entity": "fake_sample",
-                "name": "organ",
-                "data_type": "nominal",
-                "cardinality": 6,
-            },
-            {
-                "entity": "fake_donor",
-                "name": "weight",
-                "data_type": "quantitative",
-                "cardinality": 27,
-            },
-            {
-                "entity": "fake_donor",
-                "name": "height",
-                "data_type": "quantitative",
-                "cardinality": 27,
-            },
-        ],
-    )
+    # expand_template(
+    #     row={
+    #         "constraints": [],
+    #         "query_template": "How many <E> are there <F:Q>?",
+    #         "spec_template": "{ source: '<E>', '<E.url> rep: <F>'}",
+    #     },
+    #     entity_options=[
+    #         {
+    #             "url": "./data/fake_sample.csv",
+    #             "entity": "fake_sample",
+    #             "name": None,
+    #             "data_type": None,
+    #             "cardinality": None,
+    #         },
+    #         {
+    #             "url": "./data/fake_donor.csv",
+    #             "entity": "fake_donor",
+    #             "name": None,
+    #             "data_type": None,
+    #             "cardinality": None,
+    #         },
+    #         {
+    #             "url": "./data/fake_file.csv",
+    #             "entity": "fake_file",
+    #             "name": None,
+    #             "data_type": None,
+    #             "cardinality": None,
+    #         },
+    #     ],
+    #     field_options=[
+    #         {
+    #             "entity": "fake_sample",
+    #             "name": "organ",
+    #             "data_type": "nominal",
+    #             "cardinality": 6,
+    #         },
+    #         {
+    #             "entity": "fake_donor",
+    #             "name": "weight",
+    #             "data_type": "quantitative",
+    #             "cardinality": 27,
+    #         },
+    #         {
+    #             "entity": "fake_donor",
+    #             "name": "height",
+    #             "data_type": "quantitative",
+    #             "cardinality": 27,
+    #         },
+    #     ],
+    # )
 
     # # Example usage
     # data = {
