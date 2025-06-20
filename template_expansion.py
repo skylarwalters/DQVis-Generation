@@ -11,9 +11,18 @@ def expand(df, dataset_schemas):
     expanded_rows = []
     for _, row in df.iterrows():
         for schema in dataset_schemas:
-            schema_name = schema["udi:name"]
-            base_path = schema["udi:path"]
+            schema_name = schema["name"] #sample id instead of name? 
+            schema_id = schema["udi:sample-id"] #point to sample id path
+            sources = schema["sources"]  #call to sources [ path ], flatten sources?
+            sources_flattened = [] 
+
+            for file in sources:
+                sources_name= sources["name"]
+                sources_title= sources["title"]
+                sources_path = sources["path"]
+
             schema_def = schema["resources"]
+
             # flatten schema_deft
             schema_flattened = []
             for file in schema_def:
@@ -61,15 +70,16 @@ def expand(df, dataset_schemas):
     return expanded_df
 
 
-def expand_template(row, entity_options, field_options):
+def expand_template(row, sample_options, field_options, location_options):
     extract = extract_tags(row["query_template"])
     tags = extract["tags"]
-    entities = extract["entities"]
+    samples = extract["samples"]
+    locations = extract["location"]
     fields = extract["fields"]
     constraints = expand_constraints(row["constraints"], tags)
     # print("⭐ expanded constraints ⭐")
     # print(row)
-    s = constraint_solver(entities, fields, constraints, entity_options, field_options)
+    s = constraint_solver(samples, fields, locations, constraints, sample_options, field_options, location_options)
 
     return expand_solutions(row, tags, s)
 
@@ -100,10 +110,10 @@ def resolve_query_template(query_template, tags, solution):
     query_base = query_template
     for tag in tags:
         if tag["field"]:
-            k = tag["entity"] + "_" + tag["field"]
+            k = tag["sample"] + "_" + tag["field"] 
             resolved = solution[k]["name"]
         else:
-            resolved = solution[tag["entity"]]["entity"]
+            resolved = solution[tag["sample"]]["sample"] #redefine entity as sample
         query_base = query_base.replace(f"<{tag['original']}>", resolved, 1)
     return query_base
 
@@ -199,17 +209,27 @@ def extract_tags(text: str) -> List[Dict[str, Union[str, List[str]]]]:
     matches = re.findall(pattern, text)
 
     tags = []
+    # match: each time the pattern appears in the text
+    # <F.p.q> or <F.p>
+    # <F.g>
     for match in matches:
         parts = match.split(".")
-        entity, field, field_type = None, None, None
+        sample, field, location, field_type = None, None, None, None
         if len(parts) == 1:
             first = parts[0]
-            if first.startswith("E"):
-                entity = first
+            if first.startswith("S"):
+                sample = first
+            elif first.startswith("L"):
+                location = first
             else:
-                field = first
+                field=first
         elif len(parts) == 2:
-            entity, field = parts
+            first, second = parts
+            sample=first
+            if first.startswith("L"):
+                location = second
+            else:
+                field=second
         else:
             raise ValueError(
                 f"Invalid match: {match}. There should only be a single '.'"
@@ -217,12 +237,30 @@ def extract_tags(text: str) -> List[Dict[str, Union[str, List[str]]]]:
 
         if field:
             field_parts = field.split(":")
+
             if len(field_parts) == 2:
-                field, field_type = field_parts
-                field_type = [
-                    {"n": "nominal", "o": "ordinal", "q": "quantitative"}[t]
-                    for t in field_type.split("|")
-                ]
+                field, field_type = field_parts                
+                
+                if len(field_type)==1:
+                    field_type = [
+                        {"n": "nominal", 
+                        "o": "ordinal", 
+                        "q": "quantitative", 
+                        "g": "genomic",
+                        "g&q": "quantitative genomic",
+                        "g&c": "categorical genomic",
+                        "p": "point",
+                        "p&n": "nominal point",
+                        "p&o":"ordinal point",
+                        "p&q": "quantiative point",
+                        "s": "segment",
+                        "s&n": "nominal segment",
+                        "s&o":"ordinal segment",
+                        "s&q": "quantiative segment",
+                        "c": "connective"}[t]
+                        for t in field_type.split("|")
+                    ]
+                
             else:
                 raise ValueError(
                     f"Invalid match: {match}. Field type must be specified"
@@ -230,19 +268,23 @@ def extract_tags(text: str) -> List[Dict[str, Union[str, List[str]]]]:
 
         tags.append(
             {
-                "entity": entity,
+                "sample": sample,
                 "field": field,
+                "location": location,
                 "allowed_fields": field_type,
                 "original": match,
             }
         )
     infer_entity(tags)
-    entities = set([tag["entity"] for tag in tags])
+    samples = set([tag["sample"] for tag in tags])
     # fields = set([tag["field"] for tag in tags if tag["field"]])
     fields = set(
-        [str(tag["entity"]) + "_" + tag["field"] for tag in tags if tag["field"]]
+        [str(tag["sample"]) + "_" + tag["field"] for tag in tags if tag["field"]]
     )
-    return {"tags": tags, "entities": list(entities), "fields": list(fields)}
+    locations = set(
+        [str(tag["sample"]) + "_" + tag["location"] for tag in tags if tag["location"]]
+    )
+    return {"tags": tags, "samples": list(samples), "locations": list(locations), "fields": list(fields)}
 
 
 def infer_entity(
@@ -252,13 +294,13 @@ def infer_entity(
     Infer the based on the other entities. If none is provided, default to E.
     If there is an empty entity and multiple other entities defined, thwrow an error.
     """
-    defined_entities = [tag["entity"] for tag in tags if tag["entity"]]
+    defined_entities = [tag["sample"] for tag in tags if tag["sample"]]
     unique_entities = set(defined_entities)
 
-    if len(unique_entities) > 1 and any(not tag["entity"] for tag in tags):
-        raise ValueError("Multiple entities defined, cannot infer empty entity.")
-    for tag in [x for x in tags if not x["entity"]]:
-        tag["entity"] = "E"
+    if len(unique_entities) > 1 and any(not tag["sample"] for tag in tags):
+        raise ValueError("Multiple entities defined, cannot infer empty sample.")
+    for tag in [x for x in tags if not x["sample"]]:
+        tag["sample"] = "S"
     return tags
 
 
@@ -275,6 +317,7 @@ def expand_constraints(
     for constraint in constraints:
         # E1.r.E2.c.to → E1.r.E2['cardinality'].to
         resolved = constraint.replace(".c", "['udi:cardinality']")
+        
         # E1.r.E2['cardinality'].to → E1.r[E2['entity']]['cardinality'].to
         resolved, isErConstraint = resolve_related_entity(resolved)
         if isErConstraint:
@@ -386,13 +429,14 @@ def add_default_entity(text):
     modified_text = re.sub(r'(?<!_)F', r'E_F', text)
     return modified_text
 
-
 def constraint_solver(
-    entities: List[str],
+    samples: List[str],
     fields: List[str],
+    locations: List[str],
     constraints: List[str],
-    entity_options: List[Dict[str, Union[str, int]]],
+    sample_options: List[Dict[str, Union[str, int]]],
     field_options: List[Dict[str, Union[str, int]]],
+    location_options:  List[Dict[str, Union[str, int]]]
 ) -> List[Dict[str, str]]:
     problem = Problem()
     # print("⭐ constraints ⭐")
@@ -404,14 +448,15 @@ def constraint_solver(
     # pprint(fields)
     # pprint(field_options)
     problem.addVariables(fields, field_options)
-    problem.addVariables(entities, entity_options)
+    problem.addVariables(samples, sample_options)
+
+    problem.addVariables(locations, location_options)
     for constraint in constraints:
         problem.addConstraint(constraint)
     s = problem.getSolutions()
     # pprint("⭐ solutions ⭐")
     # pprint(s)
     return s
-
 
 def test_constraint_solver():
     problem = Problem()
@@ -431,6 +476,7 @@ def test_constraint_solver():
             "cardinality": 23,
         },
     ]
+
     entities = [
         {"entity": "donors", "data_type": None, "name": None, "cardinality": 200},
         {"entity": "samples", "data_type": None, "name": None, "cardinality": 200},
