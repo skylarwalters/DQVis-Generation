@@ -31,7 +31,7 @@
             {"name":"start2", "type":"integer", "description":""},
             {"name":"end2", "type":"integer", "description":""},
             {"name":"sv_id", "type":"string", "description":""},
-            {"name":"pe_support", "type":"integer", "description":""}, M
+            {"name":"pe_support", "type":"integer", "description":""}, 
             {"name":"strand1", "type":"string", "description":""},
             {"name":"strand2svclass", "type":"string", "description":""},
             {"name":"svmethod", "type":"string", "description":""}
@@ -68,7 +68,7 @@
             { "name": "ALT", "type": "string" },
             { "name": "QUAL", "type": "string" },
             { "name": "FILTER", "type": "numstringber" },
-            { "name": "INFO", "type": "string" },
+            { "name": "INFO", "type": "string" }
           ],
           "primaryKey": ["CHROM","POS","ID"]
         },
