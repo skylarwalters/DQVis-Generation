@@ -36,7 +36,6 @@ def expand(df, dataset_schemas):
                 file_path = file["path"]
 
                 for col in file_schema["fields"]:
-                    print(col.get("type"))
                     schema_flattened.append({
                         "file": file_name,
                         "field": col["name"],  
@@ -58,21 +57,28 @@ def expand(df, dataset_schemas):
                 gene_positions.append(gene_info['pos'])
                 gene_chr.append(gene_info['chr'])
                 gene_names.append(gene_info['name'])
-            
+                
             location_options = [
-                {
-                    'genes':gene_names,
-                    'positions':gene_positions,
-                    'chromosomes':gene_chr,
-                    # [ { gene, position, chr} per gene]
-                    # ex of how triplets go together --> size and type annotations, names by context
-                    # collect example genes across chromoscope data
-                }
+                {'gene': gene_name, 'position': position, 'chromosome': chromo}
+                for gene_name, position, chromo in zip(gene_names, gene_positions, gene_chr)
             ]
+            
+            #pprint(location_options)
+            
+            # location_options = [
+            #     {
+            #         'genes':gene_names,
+            #         'positions':gene_positions,
+            #         'chromosomes':gene_chr,
+            #         # [ { gene, position, chr} per gene]
+            #         # ex of how triplets go together --> size and type annotations, names by context
+            #         # collect example genes across chromoscope data
+            #     }
+            # ]
             
             # 6. Create field options
             field_options=schema_flattened
-            
+                                    
             new_rows = expand_template(row, sample_options, field_options, location_options)
             for new_row in new_rows:
                 new_row["dataset_schema"] = sample_name
@@ -229,16 +235,13 @@ def expand_old(df, dataset_schemas):
 def expand_template(row, sample_options, field_options, location_options):
     extract = extract_tags(row["query_template"])
     tags = extract["tags"]
-    #print(f'Tags: {tags}')
+    #pprint(tags)
     samples = extract["samples"]
-    #print(f'Samples: {samples}')
     locations = extract["location"]
     fields = extract["fields"]
     #pprint(fields)
-    #print(f'fields: {samples}')
     constraints = expand_constraints(row["constraints"], tags) # added to convert to a list
     # print("⭐ expanded constraints ⭐")
-    # print(row)
     s = constraint_solver(samples, fields, locations, constraints, sample_options, field_options, location_options)
 
 
@@ -255,7 +258,6 @@ def expand_solutions(row, tags, solutions):
         expanded_row["spec"] = resolve_spec_template(row["spec_template"], tags, s)
         expanded_row["solution"] = cleanup_solution(s)
         result.append(expanded_row)
-    # pprint(result)
     return result
 
 def cleanup_solution(solution):
@@ -272,8 +274,10 @@ def resolve_query_template(query_template, tags, solution):
     for tag in tags:
         if tag["field"]:
             k = tag["sample"] + "_" + tag["field"] 
-            pprint(solution[k])
             resolved = solution[k]["field"]
+        elif tag["location"]:
+            k = tag["sample"] + "_" + tag["location"] 
+            resolved = solution[k]["gene"] # integrate chromosome here too?
         else:
             resolved = solution[tag["sample"]]["sample"] #redefine entity as sample
         query_base = query_base.replace(f"<{tag['original']}>", resolved, 1)
@@ -299,7 +303,6 @@ def resolve_spec_template(spec_template, tags, solution):
                 resolved = solution["S_" + parts[0]]["sample"]
         elif len(parts) == 2:
             left, right = parts
-            print('parts: ' + str(parts))
             if right == "url":
                 resolved = solution[left]["url"]
             else:
@@ -351,7 +354,6 @@ def resolve_spec_template(spec_template, tags, solution):
     for comparison in comparisons:
         spec = spec.replace(comparison["content"], comparison["resolved"])
     
-    #print(f'Fixed spec: {spec}')
     return spec
 
 
@@ -372,7 +374,6 @@ def extract_tags(text: str) -> List[Dict[str, Union[str, List[str]]]]:
     """
     pattern = r"<([^>]+)>"
     matches = re.findall(pattern, text)
-    #print(f'text matches: {matches}')
 
     tags = []
     # match: each time the pattern appears in the text
@@ -403,13 +404,9 @@ def extract_tags(text: str) -> List[Dict[str, Union[str, List[str]]]]:
 
         if field:
             field_parts = field.split(":")
-            #print(f'field parts: {field_parts}')
 
             if len(field_parts) == 2:
-                field, field_type = field_parts    
-                #print(f'Field: {field}')
-               # print(f'Field type: {field_type}')    
-                #print(f'field type split: {field_type.split('|')}')        
+                field, field_type = field_parts          
                 
                 #if len(field_type)==1:
                 field_type = [
@@ -430,13 +427,11 @@ def extract_tags(text: str) -> List[Dict[str, Union[str, List[str]]]]:
                     "c": "connective"}[t]
                     for t in field_type.split("|")
                 ]
-                #print(field_type)
                 
                 #else:
                 #    raise ValueError(
                 #        f"Invalid match: {match}. Field type must be specified"
                 #    )
-
         tags.append(
             {
                 "sample": sample,
@@ -446,21 +441,18 @@ def extract_tags(text: str) -> List[Dict[str, Union[str, List[str]]]]:
                 "original": match,
             }
         )
-        #print(tags[0]['allowed_fields'])
-        #print(f'Current tags: {tags}')
         
     infer_entity(tags)
     
     samples = set([tag["sample"] for tag in tags])
-    #print(f'samples: {samples}')
     #fields = set([tag["field"] for tag in tags if tag["field"]])
     fields = set(
         [str(tag["sample"]) + "_" + tag["field"] for tag in tags if tag["field"]]
     )
-    #print(f'fields: {fields}')
     locations = set(
         [str(tag["sample"]) + "_" + tag["location"] for tag in tags if tag["location"]]
     )
+    print(f'Locations: {locations}')
     
     #print(str({"tags": tags, "samples": list(samples), "location": list(locations), "fields": list(fields)}))
     return {"tags": tags, "samples": list(samples), "location": list(locations), "fields": list(fields)}
@@ -498,20 +490,18 @@ def expand_constraints(
     #constraints.split(',')
     if isinstance(constraints, str):
         constraints = ast.literal_eval(constraints)
-        print(f'Entered constraint solver. Constraints: {constraints}')
+        #print(f'Entered constraint solver. Constraints: {constraints}')
         
     for constraint in constraints:
         # E1.r.E2.c.to → E1.r.E2['cardinality'].to
-        print(f'Current constraint: {constraint}')
+        #print(f'Current constraint: {constraint}')
         resolved = constraint.replace(".c", "['udi:cardinality']")
         
         resolved = constraint.replace(".a", "['udi:assembly']")
         
         # E1.r.E2['cardinality'].to → E1.r[E2['entity']]['cardinality'].to
         resolved, isErConstraint = resolve_related_entity(resolved)
-        print(f'Resolved: {resolved}')
-        print(f'isErConstraint: {isErConstraint}')
-        
+       
         if isErConstraint:
             relationship_existance = create_relationship_existence_constraint(constraint)
             expanded_constraints.append(relationship_existance)
@@ -547,9 +537,7 @@ def expand_constraints(
             if tag["field"]
         ]
     )
-    #print(f'expanded_constraints: {expanded_constraints[-1]}')
-    #print(f'expanded_constraints: {expanded_constraints[-2]}')
-
+    
     # Ensure fields are not repeated
     unique_fields = set(
         [str(tag["sample"]) + "_" + tag["field"] for tag in tags if tag["field"]]
@@ -562,7 +550,7 @@ def expand_constraints(
     if len(unique_fields) > 1:
         for field in unique_fields:
             other_fields = unique_fields - {field}
-            name_str = "['name']"
+            name_str = "['field']"
             other_fields_string = (
                 "[" + ",".join([str(x) + name_str for x in other_fields]) + "]"
             )
@@ -588,7 +576,7 @@ def expand_constraints(
         sample = field.split("_")[0]
         expanded_constraints.append(f"{field}['sample'] == {sample}['sample']")
 
-    #print(f'Expanded constraints: {expanded_constraints}')
+    pprint(expanded_constraints)
     return expanded_constraints
 
 
@@ -618,9 +606,9 @@ def resolve_related_entity(text):
         foundConstraint = True
         match = re.search(pattern, text).group(0)
         resolved = f"[{match.lstrip('.')}['sample']]"
-        (f'Text before: {text}')
+        #(f'Text before: {text}')
         text = text.replace(match, resolved)
-        print(f'Text after: {text}')
+        #print(f'Text after: {text}')
         
     if foundConstraint:
         pattern = r'S[0-9]*\.r'
@@ -676,15 +664,13 @@ def constraint_solver(
             )
     
     for constraint in constraints:
-        print(constraint)
-        problem.addConstraint(constraint)
-        
-    #print(f'vars: {problem._variables}')
-        
+        #(constraint)
+        problem.addConstraint(constraint)        
+    
     s = problem.getSolutions()
     
     #print('------------------')
-    #pprint([dic.keys() for dic in s])
+    #pprint(s)
     return s
 
 # def test_constraint_solver():
@@ -797,7 +783,7 @@ if __name__ == "__main__":
     
     with open('example_schema.json', 'r') as f:
         schema=json.load(f)
-    df=pd.read_csv('dataframe_for_presentation.csv')
+    df=pd.read_csv('multi-feature.tsv', sep='\t')
 
     expanded_df = expand(df, [schema])
     print(expanded_df)
