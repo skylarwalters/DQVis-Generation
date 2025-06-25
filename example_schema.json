@@ -38,7 +38,11 @@
           ],
           "primaryKey": ["chrom1", "start1", "end1", "chrom2", "start2", "end2"]
         },
-        "format":"bedpe"
+        "format":"bedpe",
+        "position-fields": [
+          {"chromosome-field": "chrom1", "genomic-fields":["start1", "end1"]},
+          {"chromosome-field": "chrom2", "genomic-fields":["start2", "end2"]}
+        ]
       },
       {
         "name": "cna",
@@ -54,7 +58,10 @@
           ],
           "primaryKey": ["chromosome","start","end"]
         },
-        "format": "txt"
+        "format": "txt",
+        "position-fields": [
+          {"chromosome-field": "chromosome", "genomic-fields":["start", "end"]}
+        ]
       },
       {
         "name": "vcf",
@@ -72,7 +79,11 @@
           ],
           "primaryKey": ["CHROM","POS","ID"]
         },
-        "format": "vcf"
+        "format": "vcf",
+        "position-fields": [
+          {"chromosome-field": "", "genomic-fields":[]},
+          {"chromosome-field": "", "genomic-fields":[]}
+        ]
       }
     ]
   }
