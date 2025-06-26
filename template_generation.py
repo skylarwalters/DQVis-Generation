@@ -14,6 +14,7 @@ class ChartType(Enum):
     POINT = 'point'
     LINE = 'line',
     CONNECTIVITY = 'connectivity',
+    COMPARATIVE_STACK = 'comparative_stack'
     #GROUPED_BAR = "stacked_bar"
     #STACKED_BAR = "stacked_bar"
     #NORMALIZED_BAR = "stacked_bar"
@@ -76,60 +77,94 @@ def generate():
 
     # Define recurring constraints
     overlap = "F1['name'] in F2['udi:overlapping_fields'] or F2['udi:overlapping_fields'] == 'all'"
-    assembly = "S1['udi:assembly] == S2['udi:assembly]"
+    sample_assembly = "S1['udi:assembly] == S2['udi:assembly]"
+    
+    entities_have_same_sample="E1['sample'] == E2['sample']"
+    fields_have_same_type="F1['udi:data_type'] == F2['udi:data_type']"
+    
 
-    # Example query: Where are point mutations in chromosome 1?
-    # Visual: dots overlaid on genome track.
-
-    '''
-    Constraints:
-        S is some genomic data --> ie., sample
-    '''
+    # df = add_row(
+    #     df,
+    #     query_template="Map the <E> data along <L>",
+    #     spec=(
+    #         {
+    #             "tracks": [
+    #                 {
+    #                 "data": {
+    #                     "url": "E.url",
+    #                     "type": "E['format']",
+    #                     "genomicFieldsToConvert": [
+    #                         {"chromosomeField": "E.chr1", "genomicFields":"E.genomicfields1"},
+    #                         {"chromosomeField": "E.chr2", "genomicFields":"E.genomicfields2"},
+    #                        # {"chromosomeField": "E['position-fields'][0]['chromosome-field]", "genomicFields": "E['posision-fields'][0]['genomic-fields']"},
+    #                        # {"chromosomeField": "E['position-fields'][1]['chromosome-field]", "genomicFields": "E['posision-fields'][1]['genomic-fields']"}
+    #                     ]
+    #                 },
+    #                 "mark": "withinLink",
+    #                 "x": {"field": "E['position-fields-start']", "type": "genomic"},
+    #                 "xe": {"field": "E['position-fields-end']", "type": "genomic"},
+    #                 # CHeck how to acces sv method
+    #                 "stroke": {"field": "svmethod", "type": "nominal"},
+    #                 "strokeWidth": {"value": 1},
+    #                 "opacity": {"value": 0.7}
+    #                 }
+    #             ]
+    #         }
+    #     ),
+    #     constraints=[
+    #         "E['format'] == 'BEDPE'",
+    #     ],
+    #     query_type=QueryType.QUESTION,
+    #     chart_type=ChartType.CONNECTIVITY,
+    # )
+    
     df = add_row(
         df,
-        query_template="Map the <E> data",
+        query_template="Where are <F:q> at <L> for <S>",
         spec=(
             {
-                'mark':'point',
-                'x':'position:G',
-                #'y':'peak:Q',# is this F
-                'y':'<F>',
-                'data_source':'<F.url>',
-                'start triple':'...',
-                'end triple':'...'
+                "tracks": [
+                    {
+                    "data": {
+                        "url": "<F.url>",
+                        "type":"vcf",
+                        "indexUrl":"https://somatic-browser-test.s3.amazonaws.com/PCAWG/Cervix-AdenoCA/b9d1a64e-d445-4174-a5b4-76dd6ea69419.sorted.vcf.gz.tbi",
+                        "sampleLength":1000 
+                    },
+                    "mark": "point",
+                    "x": {"field": "<F.field>", "type": "genomic", "axis":"bottom"},
+                    "y":{"field": "peak", "type": "quantitative"}
+                    }
+                ]
             }
         ),
         constraints=[
-            "E['file'] == 'BEDPE'",
+            "F['field'] == 'POS'",
         ],
         query_type=QueryType.QUESTION,
-        chart_type=ChartType.CONNECTIVITY,
+        chart_type=ChartType.POINT,
     )
-    df = add_row(
-        df,
-        # can represent with pipe character1
-        query_template="Is the <F:p.q|s.q> at <L> a peak or a valley?",
-        spec=(
-            { 
-             'mark':'line',
-             'x':'position:G',
-             'y':'<F>',
-             'data_source':'<F.url>'
-            }
-        ),
-        constraints=[
-            # location
-            'F.c > 20' #have at least 20 marks to make a line 
-            
-        ],
-        query_type=QueryType.QUESTION,
-        chart_type=ChartType.LINE,
-    )
+   
+   
+    # df = add_row(
+    #     df,
+    #     query_template="How do <E1> and <E2> compare on <L>?",
+    #     spec=(
+    #         { 
+    #          'data_source':'<F.url>',
+    #         }
+    #     ),
+    #     constraints=[
+    #         entities_have_same_sample,
+    #     ],
+    #     query_type=QueryType.QUESTION,
+    #     chart_type=ChartType.COMPARATIVE_STACK,
+    # )
 
     return df
 
 
 if __name__ == "__main__":
     df = generate()
-    pd.DataFrame.to_csv(df, 'dataframe_for_presentation.csv')
+    df.to_csv('spec_generation_test.tsv', sep='\t')
     print(df.head())

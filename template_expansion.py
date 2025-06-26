@@ -137,16 +137,10 @@ def expand_template(row, sample_options, entity_options, field_options, location
     entities = extract["entities"]
     locations = extract["location"]
     fields = extract["fields"]
-    
-    print(f'Samples: {samples}')
-    print(f'Entities: {entities}')
-    print(f'locations: {locations}')
-    print(f'fields: {fields}')
-    
-    
         
     constraints = expand_constraints(row["constraints"], tags) # added to convert to a list
     # print("⭐ expanded constraints ⭐")
+
     s = constraint_solver(samples, entities, fields, locations, constraints, sample_options, entity_options, field_options, location_options)
 
     return expand_solutions(row, tags, s)
@@ -159,6 +153,8 @@ def expand_solutions(row, tags, solutions):
         expanded_row["query_base"] = resolve_query_template(
             row["query_template"], tags, s
         )
+        #pprint(s)
+        #pprint(f'tags: {tags}')
         expanded_row["spec"] = resolve_spec_template(row["spec_template"], tags, s)
         expanded_row["solution"] = cleanup_solution(s)
         result.append(expanded_row)
@@ -175,45 +171,75 @@ def cleanup_solution(solution):
 
 def resolve_query_template(query_template, tags, solution):
     query_base = query_template
-    pprint(tags)
     for tag in tags:
-        print(tag)
         if tag["field"]:
             k = tag["sample"] + "_" + tag["entity"] + "_" + tag["field"] 
             resolved = solution[k]["field"]
-        elif tag["entity"]:
-            k = tag["sample"] + "_" + tag["entity"]
-            resolved = solution[k]["name"]
         elif tag["location"]:
             k = tag["sample"] + "_" + tag["location"] 
             resolved = solution[k]["gene"] # integrate chromosome here too?
+        elif tag["entity"]:
+            k = tag["sample"] + "_" + tag["entity"]
+            resolved = solution[k]["name"]
         else:
-            print('uesadf')
             resolved = solution[tag["sample"]]["sample"] #redefine entity as sample
         query_base = query_base.replace(f"<{tag['original']}>", resolved, 1)
-    return query_base
+    return query_base  
 
+def expand_field(field, tags):
+    for tag in tags:
+        if tag['field'] == field:
+            return tag['sample'] + '_' + tag['entity'] + '_' + tag['field']
+    
 def resolve_spec_template(spec_template, tags, solution):
     spec = spec_template
     pattern = r"<([^>]+)>"
+    
     while True:
         match = re.search(pattern, spec)
+        
         if match == None:
             break
         match = match.group(0)
         content = match.strip("<>")
         parts = content.split(".")
+        
+        print(f'match: {match}')
+        print(f'content: {content}')
+        print(f'parts: {parts}')
+
         if len(parts) == 1:
             content = parts[0]
             if content.startswith("S"):
                 sample = content
                 resolved = solution[sample]["sample"]
-            else:
+            elif content.startswith("E") or content.startswith('L'):
                 resolved = solution["S_" + parts[0]]["sample"]
+            else:
+                resolved = solution[expand_field(content, tags)]["sample"]
+                
         elif len(parts) == 2:
             left, right = parts
+            
+            if left.startswith("S"):
+                left = content
+            elif left.startswith("E") or content.startswith('L'):
+                left = solution["S_" + left[0]]
+            else:
+                left = expand_field(left, tags)
+                            
             if right == "url":
-                resolved = solution[left]["url"]
+                resolved = solution[left]['url']
+            elif right == "field":
+                resolved = solution[left]["field"]
+            elif right == 'chr1':
+                resolved = solution[left]["E['position-fields'][0]['chromosome-field]"]
+            elif right == 'chr2':
+                resolved = solution[left]["E['position-fields'][1]['chromosome-field]"]
+            elif right == 'genomicfields1':
+                resolved = solution[left]["E['posision-fields'][0]['genomic-fields']"]
+            elif right == 'genomicfields2':
+                resolved = solution[left]["E['posision-fields'][1]['genomic-fields']"]
             else:
                 resolved = solution[left + "_" + right]["name"]
         elif len(parts) == 5:
@@ -289,7 +315,6 @@ def extract_tags(text: str) -> List[Dict[str, Union[str, List[str]]]]:
     # <F.p.q> or <F.p>
     # <F.g>
     for match in matches:
-        print(f'MATCH: {match}')
         parts = match.split(".")
         sample, entity, field, location, field_type = None, None, None, None, None
         if len(parts) == 1:
@@ -320,9 +345,7 @@ def extract_tags(text: str) -> List[Dict[str, Union[str, List[str]]]]:
             raise ValueError(
                 f"Invalid match: {match}. There should only be 1 or 2 '.'"
             )
-        print(f'sample: {sample}')
-        print(f'entity: {entity}')
-        print(f'field: {field}')
+
         if field:
             field_parts = field.split(":")
 
@@ -363,7 +386,6 @@ def extract_tags(text: str) -> List[Dict[str, Union[str, List[str]]]]:
                 "original": match,
             }
         )
-        pprint(f' appended: {tags[-1]}')
      
     # infer sample and entity  
     infer_entity(tags) 
@@ -377,10 +399,10 @@ def extract_tags(text: str) -> List[Dict[str, Union[str, List[str]]]]:
     fields = set(
         [str(tag["sample"]) + "_" + tag["entity"] + "_" + tag["field"] for tag in tags if tag["field"]]
     )
+    
     locations = set(
         [str(tag["sample"]) + "_" + tag["location"] for tag in tags if tag["location"]]
     )
-    
     
     #pprint({"tags": tags, "samples": list(samples), "entities": list(entities), "location": list(locations), "fields": list(fields)})
     return {"tags": tags, "samples": list(samples), "entities": list(entities), "location": list(locations), "fields": list(fields)}
@@ -394,16 +416,13 @@ def infer_sample(
     If there is an empty sample and multiple other samples defined, thwrow an error.
     """
     defined_samples = [tag["sample"] for tag in tags if tag["sample"]]
-    #print(tags)
     
-    #print(f'defined entities: {defined_entities}')
     unique_samples = set(defined_samples)
 
     if len(unique_samples) > 1 and any(not tag["sample"] for tag in tags):
         raise ValueError("Multiple samples defined, cannot infer empty sample.")
     for tag in [x for x in tags if not x["sample"]]:
         tag["sample"] = "S"
-    print(f"sample inferred: {tags}")
     return tags
 
 def infer_entity(
@@ -418,9 +437,9 @@ def infer_entity(
 
     if len(unique_entities) > 1 and any(not tag["entity"] for tag in tags):
         raise ValueError("Multiple entities defined, cannot infer empty entity.")
-    #for tag in [x for x in tags if not x["entity"]]:
-        #tag["entity"] = "E"
-    print(f"entity inferred. {tags}")
+    
+    for tag in [x for x in tags if not x["entity"] and not x["original"][0] == 'S']:
+        tag["entity"] = "E"
     return tags
 
 
@@ -437,11 +456,9 @@ def expand_constraints(
     #constraints.split(',')
     if isinstance(constraints, str):
         constraints = ast.literal_eval(constraints)
-        #print(f'Entered constraint solver. Constraints: {constraints}')
         
     for constraint in constraints:
         # E1.r.E2.c.to → E1.r.E2['cardinality'].to
-        #print(f'Current constraint: {constraint}')
         resolved = constraint.replace(".c", "['udi:cardinality']")
         
         resolved = constraint.replace(".a", "['udi:assembly']")
@@ -520,15 +537,12 @@ def expand_constraints(
 
     # ensure that fields belong to their entity and sample
     for field in unique_fields:
-        print(f"field: {field}")
         sample = field.split("_")[0]
         expanded_constraints.append(f"{field}['sample'] == {sample}['sample']")
         entity = field.split("_")[1]
-        expanded_constraints.append(f"{field}['sample'] == {sample + "_" + entity}['sample']")
-        expanded_constraints.append(f"{field}['file'] == {sample + "_" + entity}['name']")
-    pprint(expanded_constraints)
+        #expanded_constraints.append(f"{field}['sample'] == {sample + "_" + entity}['sample']")
+        #expanded_constraints.append(f"{field}['file'] == {sample + "_" + entity}['name']")
 
-    #pprint(expanded_constraints)
     return expanded_constraints
 
 
@@ -560,7 +574,6 @@ def resolve_related_entity(text):
         resolved = f"[{match.lstrip('.')}['sample']]"
         #(f'Text before: {text}')
         text = text.replace(match, resolved)
-        #print(f'Text after: {text}')
         
     if foundConstraint:
         pattern = r'S[0-9]*\.r'
@@ -575,7 +588,7 @@ def add_default_entity(text):
     # Use regex to match "F" that is not preceded by "_" and replace it with "S_E_F"
     modified_text = re.sub(r'(?<!_)F', r'S_E_F', text)
     # replace L that does not have _ to replace with S_L
-    modified_text = re.sub(r'(?<!_)E', r'S_E', text)
+    modified_text = re.sub(r'(?<!_)E', r'S_E', modified_text)
     # replace L that does not have _ to replace with S_L
     modified_text = re.sub(r'(?<!_)L', r'S_L', modified_text)
     return modified_text
@@ -606,22 +619,10 @@ def constraint_solver(
     #pprint(field_options)
     problem.addVariables(fields, field_options)
     problem.addVariables(samples, sample_options)
-    #pprint(entity_options)
-    #pprint(entity_options)
     problem.addVariables(entities, entity_options)
     problem.addVariables(locations, location_options)
-    
-    # enforce sample assembly constriant
-    # if len(samples) > 1:
-    #     first = samples[0]
-    #     for other in samples[1:]:
-    #         problem.addConstraint(
-    #             lambda a1, a2: a1["udi:assembly"] == a2["udi:assembly"],
-    #             (first, other)
-    #         )
-    
+        
     for constraint in constraints:
-        print(f'Constraint: {constraint}')
         problem.addConstraint(constraint) 
     
     s = problem.getSolutions()
@@ -738,8 +739,8 @@ if __name__ == "__main__":
     
     with open('example_schema.json', 'r') as f:
         schema=json.load(f)
-    df=pd.read_csv('test-df.tsv', sep='\t')
+    df=pd.read_csv('spec_generation_test.tsv', sep='\t')
 
     expanded_df = expand(df, [schema])
     print(expanded_df)
-    expanded_df.to_csv("expanded_solutions.csv")
+    expanded_df.to_csv("spec_generation_output.csv")

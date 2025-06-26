@@ -1,2 +1,2 @@
 ,query_template,constraints,spec_template,query_type,creation_method,chart_type,chart_complexity,spec_key_count
-0,Where are <F:n> at <L> for <S>?,[ "F['file'] == 'sv' or F['file'] == 'cna'" or "L['gene']=='KMT2C'" ],"{""mark"": ""point"", ""x"": ""position:g"", ""y"": ""F"", ""data_source"": ""S.url""}",question,template,point,simple,
+0,Where are <F:q> at for <S>?,[ "F['file'] == 'vcf'""],"{""mark"": ""point"", ""x"": ""F"", ""data_source"": ""F.url""}",question,template,point,simple,

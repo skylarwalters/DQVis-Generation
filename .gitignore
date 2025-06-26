@@ -5,6 +5,7 @@ out
 # Skylar playing with data
 data_config.json
 test_generation.py
+old-files/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

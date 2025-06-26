@@ -73,6 +73,8 @@ def expand(df, dataset_schemas):
             # 6. Create field options
             field_options=schema_flattened
             
+            pprint(field_options)
+            
             new_rows = expand_template(row, sample_options, field_options, location_options)
             for new_row in new_rows:
                 new_row["dataset_schema"] = sample_name

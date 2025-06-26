@@ -1,12 +1,52 @@
 import os
 import pandas as pd
 import json
+import frictionless
 
 # import pyarrow.csv as pv_csv
 # import pyarrow as pa
 # from ydata_profiling import ProfileReport
 
+'''
+Updating schema_generation
 
+Notes:
+    1. We need to establish a link to the config file, then access the indiv. files
+       from the links in the config --> allows us to account for file types + headers
+       
+    2. Integrate catalog of data to group multiple samples together
+    
+    3. column schema differs by type of file --> use varying get_column_schema methods
+    
+    4. not a folder-based system!
+
+'''
+
+def process_link(url, config=False):
+    '''
+    Processes a link into a dataset schema
+    url: string, link to dataset
+    config: boolean, describes if link is to config.json file (default=False)
+    '''
+    # get config file from
+    if not config:
+        url = url.split('external=')[1]
+    
+    samples = []
+    get_samples(url)
+        
+def get_samples(url):
+    # get all samples from config url
+    with open(url, 'r') as f:
+        data=json.load(f)
+        samples=[]
+        
+        for sample in data:
+            
+
+    
+
+# extract column names and data types
 def get_column_schema(df):
     schema = []
     for col in df.columns:
@@ -29,6 +69,7 @@ def process_folder(folder_path):
     if folder.startswith("_"):
         return
 
+    # create set of entity relationships
     entity_relationships = {}
     possible_entity_file = os.path.join(folder_path, "entity_relationships.json")
     if os.path.exists(possible_entity_file):
