@@ -83,40 +83,38 @@ def generate():
     fields_have_same_type="F1['udi:data_type'] == F2['udi:data_type']"
     
 
-    # df = add_row(
-    #     df,
-    #     query_template="Map the <E> data along <L>",
-    #     spec=(
-    #         {
-    #             "tracks": [
-    #                 {
-    #                 "data": {
-    #                     "url": "E.url",
-    #                     "type": "E['format']",
-    #                     "genomicFieldsToConvert": [
-    #                         {"chromosomeField": "E.chr1", "genomicFields":"E.genomicfields1"},
-    #                         {"chromosomeField": "E.chr2", "genomicFields":"E.genomicfields2"},
-    #                        # {"chromosomeField": "E['position-fields'][0]['chromosome-field]", "genomicFields": "E['posision-fields'][0]['genomic-fields']"},
-    #                        # {"chromosomeField": "E['position-fields'][1]['chromosome-field]", "genomicFields": "E['posision-fields'][1]['genomic-fields']"}
-    #                     ]
-    #                 },
-    #                 "mark": "withinLink",
-    #                 "x": {"field": "E['position-fields-start']", "type": "genomic"},
-    #                 "xe": {"field": "E['position-fields-end']", "type": "genomic"},
-    #                 # CHeck how to acces sv method
-    #                 "stroke": {"field": "svmethod", "type": "nominal"},
-    #                 "strokeWidth": {"value": 1},
-    #                 "opacity": {"value": 0.7}
-    #                 }
-    #             ]
-    #         }
-    #     ),
-    #     constraints=[
-    #         "E['format'] == 'BEDPE'",
-    #     ],
-    #     query_type=QueryType.QUESTION,
-    #     chart_type=ChartType.CONNECTIVITY,
-    # )
+    df = add_row(
+        df,
+        query_template="Map the <E> data",
+        spec=(
+            {
+                "tracks": [
+                    {
+                    "data": {
+                        "url": "<E.url>",
+                        "type": "<E.format>",
+                        "genomicFieldsToConvert": [
+                            {"chromosomeField": "<E.chr1>", "genomicFields":"<E.genomicfields1>"},
+                            {"chromosomeField": "<E.chr2>", "genomicFields":"<E.genomicfields2>"},
+                        ]
+                    },
+                    "mark": "withinLink",
+                    "x": {"field": "<E.genomicfields1>[0]", "type": "genomic"}, # start1
+                    "xe": {"field": "<E.genomicfields2>[1]", "type": "genomic"}, # start2
+                    # CHeck how to acces sv method
+                    "stroke": {"field": "svmethod", "type": "nominal"},
+                    "strokeWidth": {"value": 1},
+                    "opacity": {"value": 0.7}
+                    }
+                ]
+            }
+        ),
+        constraints=[
+            "E['format'] == 'bedpe'",
+        ],
+        query_type=QueryType.QUESTION,
+        chart_type=ChartType.CONNECTIVITY,
+    )
     
     df = add_row(
         df,
@@ -148,10 +146,33 @@ def generate():
    
     # df = add_row(
     #     df,
-    #     query_template="How do <E1> and <E2> compare on <L>?",
+    #     query_template="How do <L1> and <L2> compare for <E>?",
     #     spec=(
     #         { 
-    #          'data_source':'<F.url>',
+    #          # E2: CNV
+    #             {
+    #                 "title": "Copy Number Variants",
+    #                 "data": {
+    #                     "separator": "\t",
+    #                     "url": "<E2.url>",
+    #                     "type": "csv",
+    #                     "chromosomeField": "<E2.chr1>",
+    #                     "genomicFields": "<E2.genomicfields1>"
+    #                 },
+    #                 "mark": "rect",
+    #                 "x": {
+    #                     "field": "<E.genomicfields1>[0]",
+    #                     "type": "genomic"
+    #                 },
+    #                 "xe": {
+    #                     "field": "<E.genomicfields1>[0]",
+    #                     "type": "genomic"
+    #                 },
+    #                 "width": 1400,
+    #                 "height": 60
+    #             },
+        
+             
     #         }
     #     ),
     #     constraints=[

@@ -30,7 +30,7 @@ def expand(df, dataset_schemas):
             entity_info=[]
             for file in schema["resources"]:
                 file_name = file["name"] 
-                sample_id = schema["udi:sample-id"]
+                sample_id = sample_name
                 file_schema = file["schema"]
                 foreignKeys = file_schema.get("foreignKeys", [])
                 file_path = file["path"]
@@ -153,8 +153,6 @@ def expand_solutions(row, tags, solutions):
         expanded_row["query_base"] = resolve_query_template(
             row["query_template"], tags, s
         )
-        #pprint(s)
-        #pprint(f'tags: {tags}')
         expanded_row["spec"] = resolve_spec_template(row["spec_template"], tags, s)
         expanded_row["solution"] = cleanup_solution(s)
         result.append(expanded_row)
@@ -224,24 +222,29 @@ def resolve_spec_template(spec_template, tags, solution):
             if left.startswith("S"):
                 left = content
             elif left.startswith("E") or content.startswith('L'):
-                left = solution["S_" + left[0]]
+                left = "S_" + left
             else:
                 left = expand_field(left, tags)
-                            
-            if right == "url":
+            
+            
+            if right == 'url':
                 resolved = solution[left]['url']
             elif right == "field":
                 resolved = solution[left]["field"]
+            elif right == 'format':
+                resolved = solution[left]["format"]
             elif right == 'chr1':
-                resolved = solution[left]["E['position-fields'][0]['chromosome-field]"]
+                resolved = solution[left]['position-fields'][0]['chromosome-field']
             elif right == 'chr2':
-                resolved = solution[left]["E['position-fields'][1]['chromosome-field]"]
+                resolved = solution[left]['position-fields'][1]['chromosome-field']
             elif right == 'genomicfields1':
-                resolved = solution[left]["E['posision-fields'][0]['genomic-fields']"]
+                resolved = str(solution[left]['position-fields'][0]['genomic-fields'])
             elif right == 'genomicfields2':
-                resolved = solution[left]["E['posision-fields'][1]['genomic-fields']"]
+                resolved = str(solution[left]['position-fields'][1]['genomic-fields'])
             else:
                 resolved = solution[left + "_" + right]["name"]
+                
+                
         elif len(parts) == 5:
             S1, r, S2, id, source = parts
             if S1[0] != "S" or S2[0] != "S" or r != "r" or id != "id" or source not in ["from", "to"]:
@@ -274,7 +277,11 @@ def resolve_spec_template(spec_template, tags, solution):
             raise ValueError(
                 f"Invalid match: {match}. Unexpected formatting length of spec template tag."
             )
+        
+        print(f'the resolved: {resolved}')
         spec = spec.replace(match, resolved, 1)
+        pprint(f'new spec: {spec}')
+        print('-----')
     
     # Special care needs to take place to handle comparisons
     # e.g. {lte} should be replaced with <=
@@ -289,6 +296,7 @@ def resolve_spec_template(spec_template, tags, solution):
     for comparison in comparisons:
         spec = spec.replace(comparison["content"], comparison["resolved"])
     
+    print(f'final spec: {spec}')
     return spec
 
 
@@ -741,6 +749,6 @@ if __name__ == "__main__":
         schema=json.load(f)
     df=pd.read_csv('spec_generation_test.tsv', sep='\t')
 
-    expanded_df = expand(df, [schema])
+    expanded_df = expand(df, schema)
     print(expanded_df)
     expanded_df.to_csv("spec_generation_output.csv")
