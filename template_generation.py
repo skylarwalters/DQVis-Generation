@@ -119,9 +119,44 @@ def generate():
     
     df = add_row(
         df,
+        query_template="Map the <E> data at <L>",
+        spec=(
+            {
+                "tracks": [
+                    {
+                    "data": {
+                        "url": "<E.url>",
+                        "type": "csv",
+                        "separator":"\t",
+                        "genomicFieldsToConvert": [
+                            {"chromosomeField": "<E.chr1>", "genomicFields":["<E.start1>", "<E.end1>"]},
+                            {"chromosomeField": "<E.chr2>", "genomicFields":["<E.start2>", "<E.end2>"]},
+                        ]
+                    },
+                    "mark": "withinLink",
+                    "x": {"field": "<E.start1>", "type": "genomic", "domain":{"chromosome": "<L.geneChr>", "interval": ["<L.geneStart>", "<L.geneEnd>"]}},
+                    "xe": {"field": "<E.end2>", "type": "genomic"},
+                    # CHeck how to acces sv method
+                    "stroke": {"field": "svmethod", "type": "nominal"},
+                    "strokeWidth": {"value": 1},
+                    "opacity": {"value": 0.7}
+            
+                    }
+                ]
+            }
+        ),
+        constraints=[
+            "E['format'] == 'bedpe'",
+        ],
+        query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.CONNECTIVITY,
+    )
+    
+    df = add_row(
+        df,
         query_template="Map the <E> data.",
         spec=({
-            tracks:[{
+            "tracks":[{
                 "title": "Copy Number Variants",
                 "data": {
                     "separator": "\t",

@@ -23,7 +23,7 @@ def expand(df, dataset_schemas):
             schema_genes = schema["udi:genes"]
             gene_list = []
             for elem in schema_genes:
-                gene_list.append({'gene':elem["name"],'position':elem["pos"], 'chromosome':elem["chr"], })
+                gene_list.append({'gene':elem["name"],'start':elem["pos"], 'end':elem['pos'] + 5000, 'chromosome':elem["chr"], })
                 
             # 3. extract data about each file + actual file
             schema_flattened = []
@@ -81,10 +81,7 @@ def selectGenes(assembly, gene_list, gene_ct=20, popularityWeights=True):
     selection is weighted by gene research popularity.
     '''
     if len(gene_list) > gene_ct:
-        return [
-            {'gene': gene_name, 'position': position, 'chromosome': chromo}
-            for item in gene_list for gene_name, chromo, position in item
-            ]
+        return gene_list
     else:
         sampled_genes = []
         df = pd.read_csv(f'gene_data/refSeq_genes_scored_compressed.{assembly}.tsv', sep='\t')
@@ -96,9 +93,11 @@ def selectGenes(assembly, gene_list, gene_ct=20, popularityWeights=True):
             random_state=42
         )
         for row in subsample.itertuples():
+            end = row.start + row.length
             sampled_genes.append({
                 'gene':row.symbol,
-                'position': row.start,
+                'start': row.start,
+                'end': end,
                 'chromosome': row.chrom
             })
         sampled_genes = sampled_genes + gene_list
@@ -244,6 +243,8 @@ def resolve_spec_template(spec_template, tags, solution):
             else:
                 left = expand_field(left, tags)
             
+            print(right)
+            
             if right == 'url':
                 resolved = solution[left]['url']
             elif right == "field":
@@ -256,7 +257,6 @@ def resolve_spec_template(spec_template, tags, solution):
                 resolved = solution[left]['position-fields'][1]['chromosome-field']
             elif right == 'start1':
                 resolved = solution[left]['position-fields'][0]['genomic-fields'][0]
-                print(resolved)
             elif right == 'end1':
                 resolved = solution[left]['position-fields'][0]['genomic-fields'][1]
             elif right == 'start2':
@@ -267,6 +267,14 @@ def resolve_spec_template(spec_template, tags, solution):
                 resolved = solution[left]['position-fields'][0]['genomic-fields'][0]
             elif right == 'end':
                 resolved = solution[left]['position-fields'][0]['genomic-fields'][1]
+            elif right == 'geneStart':
+                resolved = str(solution[left]['start'])
+            elif right == 'geneEnd':
+                resolved = str(solution[left]['end'])
+            elif right == 'geneChr':
+                print(solution[left])
+                print(solution[left].keys())
+                resolved = str(solution[left]['chromosome'])
             else:
                 resolved = solution[left + "_" + right]["name"]
                 
