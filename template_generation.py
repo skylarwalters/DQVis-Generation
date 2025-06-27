@@ -112,7 +112,7 @@ def generate():
         constraints=[
             "E['format'] == 'bedpe'",
         ],
-        query_type=QueryType.QUESTION,
+        query_type=QueryType.UTTERANCE,
         chart_type=ChartType.CONNECTIVITY,
     )
     

@@ -4,6 +4,7 @@ import re
 from constraint import *
 import json
 import ast
+from typing import List, Dict
 
 # from parsimonious.grammar import Grammar
 from pprint import pprint
@@ -22,9 +23,8 @@ def expand(df, dataset_schemas):
             schema_genes = schema["udi:genes"]
             gene_list = []
             for elem in schema_genes:
-                gene_list.append({'name':elem["name"],'chr':elem["chr"], 'pos':elem["pos"]})
+                gene_list.append({'gene':elem["name"],'position':elem["pos"], 'chromosome':elem["chr"], })
                 
-
             # 3. extract data about each file + actual file
             schema_flattened = []
             entity_info=[]
@@ -60,18 +60,9 @@ def expand(df, dataset_schemas):
             entity_options=entity_info
             
             # 5. Create location options
-            gene_positions=[]
-            gene_chr=[]
-            gene_names=[]
-            for gene_info in gene_list:
-                gene_positions.append(gene_info['pos'])
-                gene_chr.append(gene_info['chr'])
-                gene_names.append(gene_info['name'])
-                
-            location_options = [
-                {'gene': gene_name, 'position': position, 'chromosome': chromo}
-                for gene_name, position, chromo in zip(gene_names, gene_positions, gene_chr)
-            ]
+            
+            location_options = selectGenes(sample_assembly, gene_list)
+            print(location_options)
             
             # 6. Create field options
             field_options=schema_flattened
@@ -84,8 +75,38 @@ def expand(df, dataset_schemas):
     expanded_df = pd.DataFrame(expanded_rows)
     return expanded_df
 
-from typing import List, Dict
-
+def selectGenes(assembly, gene_list, gene_ct=20, popularityWeights=True):
+    '''
+    select list of genes from assembly. includes the default genes from the listed file 
+    in addition to gene_ct - number of default genes. If popularityWeights = True,
+    selection is weighted by gene research popularity.
+    '''
+    if len(gene_list) > gene_ct:
+        return [
+            {'gene': gene_name, 'position': position, 'chromosome': chromo}
+            for item in gene_list for gene_name, chromo, position in item
+            ]
+    else:
+        sampled_genes = []
+        df = pd.read_csv(f'gene_data/refSeq_genes_scored_compressed.{assembly}.tsv', sep='\t')
+        # subsample dataframe
+        subsample = df.sample(
+            n=gene_ct-len(gene_list), 
+            weights='score', 
+            replace=False, 
+            random_state=42
+        )
+        for row in subsample.itertuples():
+            print(row.symbol)
+            sampled_genes.append({
+                'gene':row.symbol,
+                'position': row.start,
+                'chromosome': row.chrom
+            })
+        print(sampled_genes)
+        sampled_genes = sampled_genes + gene_list
+        return sampled_genes
+        
 
 def create_sample_options(flattened_resources, sample_assembly, sample_cancer) -> List[Dict]:
     """
@@ -202,9 +223,9 @@ def resolve_spec_template(spec_template, tags, solution):
         content = match.strip("<>")
         parts = content.split(".")
         
-        print(f'match: {match}')
-        print(f'content: {content}')
-        print(f'parts: {parts}')
+        #print(f'match: {match}')
+        #print(f'content: {content}')
+        #print(f'parts: {parts}')
 
         if len(parts) == 1:
             content = parts[0]
@@ -278,10 +299,10 @@ def resolve_spec_template(spec_template, tags, solution):
                 f"Invalid match: {match}. Unexpected formatting length of spec template tag."
             )
         
-        print(f'the resolved: {resolved}')
+        #print(f'the resolved: {resolved}')
         spec = spec.replace(match, resolved, 1)
-        pprint(f'new spec: {spec}')
-        print('-----')
+        #pprint(f'new spec: {spec}')
+        #print('-----')
     
     # Special care needs to take place to handle comparisons
     # e.g. {lte} should be replaced with <=
@@ -296,7 +317,7 @@ def resolve_spec_template(spec_template, tags, solution):
     for comparison in comparisons:
         spec = spec.replace(comparison["content"], comparison["resolved"])
     
-    print(f'final spec: {spec}')
+    #print(f'final spec: {spec}')
     return spec
 
 
