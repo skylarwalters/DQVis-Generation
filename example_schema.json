@@ -159,7 +159,7 @@
         "schema": {
           "fields": [
             { "name": "CHROM", "type": "nominal" },
-            { "name": "POS", "type": "quantitative" },
+            { "name": "POS", "type": "quantitative point" },
             { "name": "ID", "type": "quantitative" },
             { "name": "REF", "type": "nominal" },
             { "name": "ALT", "type": "nominal" },

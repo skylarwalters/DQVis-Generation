@@ -14,7 +14,8 @@ class ChartType(Enum):
     POINT = 'point'
     LINE = 'line',
     CONNECTIVITY = 'connectivity',
-    COMPARATIVE_STACK = 'comparative_stack'
+    COMPARATIVE_STACK = 'comparative_stack',
+    RECTANGLE = 'rectangle'
     #GROUPED_BAR = "stacked_bar"
     #STACKED_BAR = "stacked_bar"
     #NORMALIZED_BAR = "stacked_bar"
@@ -81,7 +82,6 @@ def generate():
     
     entities_have_same_sample="E1['sample'] == E2['sample']"
     fields_have_same_type="F1['udi:data_type'] == F2['udi:data_type']"
-    
 
     df = add_row(
         df,
@@ -92,15 +92,16 @@ def generate():
                     {
                     "data": {
                         "url": "<E.url>",
-                        "type": "<E.format>",
+                        "type": "csv",
+                        "separator":"\t",
                         "genomicFieldsToConvert": [
-                            {"chromosomeField": "<E.chr1>", "genomicFields":"<E.genomicfields1>"},
-                            {"chromosomeField": "<E.chr2>", "genomicFields":"<E.genomicfields2>"},
+                            {"chromosomeField": "<E.chr1>", "genomicFields":["<E.start1>", "<E.end1>"]},
+                            {"chromosomeField": "<E.chr2>", "genomicFields":["<E.start2>", "<E.end2>"]},
                         ]
                     },
                     "mark": "withinLink",
-                    "x": {"field": "<E.genomicfields1>[0]", "type": "genomic"}, # start1
-                    "xe": {"field": "<E.genomicfields2>[1]", "type": "genomic"}, # start2
+                    "x": {"field": "<E.start1>", "type": "genomic"},
+                    "xe": {"field": "<E.end2>", "type": "genomic"},
                     # CHeck how to acces sv method
                     "stroke": {"field": "svmethod", "type": "nominal"},
                     "strokeWidth": {"value": 1},
@@ -118,7 +119,41 @@ def generate():
     
     df = add_row(
         df,
-        query_template="Where are <F:q> at <L> for <S>",
+        query_template="Map the <E> data.",
+        spec=({
+            tracks:[{
+                "title": "Copy Number Variants",
+                "data": {
+                    "separator": "\t",
+                    "url": "<E.url>",
+                    "type": "csv",
+                    "chromosomeField": "<E.chr1>",
+                    "genomicFields": ["<E.start>", "<E.end>"]
+                },
+                "mark": "rect",
+                "x": {
+                    "field": "<E.start>",
+                    "type": "genomic"
+                },
+                "xe": {
+                    "field": "<E.end>",
+                    "type": "genomic"
+                },
+                "width": 1400,
+                "height": 60
+            }
+            ]}
+        ),
+        constraints=[
+            "E['name'] == 'cna' or E['name'] == 'cnv'",
+        ],
+        query_type=QueryType.QUESTION,
+        chart_type=ChartType.RECTANGLE,
+    )
+    
+    df = add_row(
+        df,
+        query_template="Where are <F:p&q> at <L> for <S>",
         spec=(
             {
                 "tracks": [
@@ -131,7 +166,8 @@ def generate():
                     },
                     "mark": "point",
                     "x": {"field": "<F.field>", "type": "genomic", "axis":"bottom"},
-                    "y":{"field": "peak", "type": "quantitative"}
+                    # since data is quant point, there is no vertical shift. 
+                    #"y":{"field": "peak", "type": "quantitative"}
                     }
                 ]
             }
@@ -144,43 +180,7 @@ def generate():
     )
    
    
-    # df = add_row(
-    #     df,
-    #     query_template="How do <L1> and <L2> compare for <E>?",
-    #     spec=(
-    #         { 
-    #          # E2: CNV
-    #             {
-    #                 "title": "Copy Number Variants",
-    #                 "data": {
-    #                     "separator": "\t",
-    #                     "url": "<E2.url>",
-    #                     "type": "csv",
-    #                     "chromosomeField": "<E2.chr1>",
-    #                     "genomicFields": "<E2.genomicfields1>"
-    #                 },
-    #                 "mark": "rect",
-    #                 "x": {
-    #                     "field": "<E.genomicfields1>[0]",
-    #                     "type": "genomic"
-    #                 },
-    #                 "xe": {
-    #                     "field": "<E.genomicfields1>[0]",
-    #                     "type": "genomic"
-    #                 },
-    #                 "width": 1400,
-    #                 "height": 60
-    #             },
-        
-             
-    #         }
-    #     ),
-    #     constraints=[
-    #         entities_have_same_sample,
-    #     ],
-    #     query_type=QueryType.QUESTION,
-    #     chart_type=ChartType.COMPARATIVE_STACK,
-    # )
+    
 
     return df
 

@@ -62,7 +62,6 @@ def expand(df, dataset_schemas):
             # 5. Create location options
             
             location_options = selectGenes(sample_assembly, gene_list)
-            print(location_options)
             
             # 6. Create field options
             field_options=schema_flattened
@@ -97,13 +96,11 @@ def selectGenes(assembly, gene_list, gene_ct=20, popularityWeights=True):
             random_state=42
         )
         for row in subsample.itertuples():
-            print(row.symbol)
             sampled_genes.append({
                 'gene':row.symbol,
                 'position': row.start,
                 'chromosome': row.chrom
             })
-        print(sampled_genes)
         sampled_genes = sampled_genes + gene_list
         return sampled_genes
         
@@ -247,7 +244,6 @@ def resolve_spec_template(spec_template, tags, solution):
             else:
                 left = expand_field(left, tags)
             
-            
             if right == 'url':
                 resolved = solution[left]['url']
             elif right == "field":
@@ -258,10 +254,19 @@ def resolve_spec_template(spec_template, tags, solution):
                 resolved = solution[left]['position-fields'][0]['chromosome-field']
             elif right == 'chr2':
                 resolved = solution[left]['position-fields'][1]['chromosome-field']
-            elif right == 'genomicfields1':
-                resolved = str(solution[left]['position-fields'][0]['genomic-fields'])
-            elif right == 'genomicfields2':
-                resolved = str(solution[left]['position-fields'][1]['genomic-fields'])
+            elif right == 'start1':
+                resolved = solution[left]['position-fields'][0]['genomic-fields'][0]
+                print(resolved)
+            elif right == 'end1':
+                resolved = solution[left]['position-fields'][0]['genomic-fields'][1]
+            elif right == 'start2':
+                resolved = solution[left]['position-fields'][1]['genomic-fields'][0]
+            elif right == 'end2':
+                resolved = solution[left]['position-fields'][1]['genomic-fields'][1]
+            elif right == 'start':
+                resolved = solution[left]['position-fields'][0]['genomic-fields'][0]
+            elif right == 'end':
+                resolved = solution[left]['position-fields'][0]['genomic-fields'][1]
             else:
                 resolved = solution[left + "_" + right]["name"]
                 
@@ -433,7 +438,6 @@ def extract_tags(text: str) -> List[Dict[str, Union[str, List[str]]]]:
         [str(tag["sample"]) + "_" + tag["location"] for tag in tags if tag["location"]]
     )
     
-    #pprint({"tags": tags, "samples": list(samples), "entities": list(entities), "location": list(locations), "fields": list(fields)})
     return {"tags": tags, "samples": list(samples), "entities": list(entities), "location": list(locations), "fields": list(fields)}
 
 
@@ -512,19 +516,9 @@ def expand_constraints(
         #  F → E_F1
         resolved = add_default_entity(resolved)
         expanded_constraints.append(resolved)
-        #print(f'final resolved: {resolved}')
-
-    # Turn field types into constraints
-    #print(f"tag sample: {[tag['sample'] for tag in tags if tag['sample']]}")
-    #print(f"allowed fields: {[tag['allowed_fields'] for tag in tags if tag['field']]}")
-    #print(f"tag fields: {[tag['field'] for tag in tags if tag['field']]}")
-    #pprint(tags)
-    
-    #print("------")
     
     expanded_constraints.extend(
         [
-            #f"{tag['sample']}_{tag['field']}['udi:data_type'] in {tag['allowed_fields']}",
             f"{tag['sample']}_{tag['entity']}_{tag['field']}['udi:data_type'] in {tag['allowed_fields']}"
             for tag in tags
             if tag["field"]
@@ -634,18 +628,7 @@ def constraint_solver(
     location_options:  List[Dict[str, Union[str, int]]]
 ) -> List[Dict[str, str]]:
     problem = Problem()
-    # print(constraints)
-    # print("⭐ constraints ⭐")
-    # pprint(constraints)
-    # print("⭐ entities ⭐")
-    # pprint(samples)
-    # pprint(sample_options)
-    # print("⭐ locations ⭐")
-    # pprint(locations)
-    # pprint(location_options)
-    # print("⭐ fields ⭐")
-    # pprint(fields)
-    #pprint(field_options)
+
     problem.addVariables(fields, field_options)
     problem.addVariables(samples, sample_options)
     problem.addVariables(entities, entity_options)
@@ -658,113 +641,7 @@ def constraint_solver(
     
     return s
 
-# def test_constraint_solver():
-#     problem = Problem()
-#     fields = [
-#         {"entity": "donors", "data_type": "nominal", "name": "A", "cardinality": 3},
-#         {"entity": "donors", "data_type": "nominal", "name": "B", "cardinality": 18},
-#         {
-#             "entity": "samples",
-#             "data_type": "quantitative",
-#             "name": "C",
-#             "cardinality": 5,
-#         },
-#         {
-#             "entity": "samples",
-#             "data_type": "quantitative",
-#             "name": "D",
-#             "cardinality": 23,
-#         },
-#     ]
-
-#     entities = [
-#         {"entity": "donors", "data_type": None, "name": None, "cardinality": 200},
-#         {"entity": "samples", "data_type": None, "name": None, "cardinality": 200},
-#     ]
-#     problem.addVariables(["F1"], fields)
-#     problem.addVariables(["E1", "E2"], entities)
-#     # problem.addConstraint("F1['data_type'] in {'nominal'}")
-#     # problem.addConstraint("F1['entity'] == E1['entity']")
-#     problem.addConstraint("E1['entity'] != E2['entity']")
-#     # problem.addConstraint("F1['cardinality'] > F2['cardinality']")
-#     # problem.addConstraint("F2['cardinality'] > 4")
-#     # problem.addConstraint("F1['entity'] == F2['entity']== 'samples'")
-#     s = problem.getSolutions()
-#     names = [[{k: v["name"], "ent": v["entity"]} for k, v in x.items()] for x in s]
-#     # result: [[['F1', 'B'], ['F2', 'C']]]
-#     pprint(names)
-#     return
-
-
 if __name__ == "__main__":
-    # test_custom_parser()
-    # test_grammar_parser()
-    # test_constraint_solver()
-    # def expand_template(row, entity_options, field_options):
-    # expand_template(
-    #     row={
-    #         "constraints": [],
-    #         "query_template": "How many <E> are there <F:Q>?",
-    #         "spec_template": "{ source: '<E>', '<E.url> rep: <F>'}",
-    #     },
-    #     entity_options=[
-    #         {
-    #             "url": "./data/fake_sample.csv",
-    #             "entity": "fake_sample",
-    #             "name": None,
-    #             "data_type": None,
-    #             "cardinality": None,
-    #         },
-    #         {
-    #             "url": "./data/fake_donor.csv",
-    #             "entity": "fake_donor",
-    #             "name": None,
-    #             "data_type": None,
-    #             "cardinality": None,
-    #         },
-    #         {
-    #             "url": "./data/fake_file.csv",
-    #             "entity": "fake_file",
-    #             "name": None,
-    #             "data_type": None,
-    #             "cardinality": None,
-    #         },
-    #     ],
-    #     field_options=[
-    #         {
-    #             "entity": "fake_sample",
-    #             "name": "organ",
-    #             "data_type": "nominal",
-    #             "cardinality": 6,
-    #         },
-    #         {
-    #             "entity": "fake_donor",
-    #             "name": "weight",
-    #             "data_type": "quantitative",
-    #             "cardinality": 27,
-    #         },
-    #         {
-    #             "entity": "fake_donor",
-    #             "name": "height",
-    #             "data_type": "quantitative",
-    #             "cardinality": 27,
-    #         },
-    #     ],
-    # )
-
-    # # Example usage
-    # data = {
-    #     'Entity': ['Country', 'City'],
-    #     'Field': ['Population', 'Area']
-    # }
-    # df = pd.DataFrame(data)
-
-    # dataset_schemas = [
-    #     {
-    #         "Country": ["Population", "GDP", "Area"],
-    #         "City": ["Population", "Area"]
-    #     }
-    # ]
     
     with open('example_schema.json', 'r') as f:
         schema=json.load(f)

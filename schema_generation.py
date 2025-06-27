@@ -43,9 +43,6 @@ def get_samples(url):
         
         for sample in data:
             
-
-    
-
 # extract column names and data types
 def get_column_schema(df):
     schema = []
