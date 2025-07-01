@@ -1,2 +1,0 @@
-	query_template	constraints	spec_template	query_type	creation_method	chart_type	chart_complexity	spec_key_count
-0	Where are <F1:n> and <F2:n> at <L> for <S>?	"[ ""F1['file'] == F2['file']"", ""F1['file'] == 'sv'"", ""L['gene']=='KMT2C'"" ]"	"{""mark"": ""point"", ""x"": ""position:g"", ""y"": ""F"", ""data_source"": ""S.url""}"	question	template	point	simple	

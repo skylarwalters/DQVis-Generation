@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import json
 import frictionless
+from frictionless import Schema
 
 # import pyarrow.csv as pv_csv
 # import pyarrow as pa
@@ -42,6 +43,7 @@ def get_samples(url):
         samples=[]
         
         for sample in data:
+            schema = Schema.describe()
             
 # extract column names and data types
 def get_column_schema(df):

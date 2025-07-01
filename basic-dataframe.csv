@@ -1,2 +1,0 @@
-,query_template,constraints,spec_template,query_type,creation_method,chart_type,chart_complexity,spec_key_count
-0,Where are <F:n> at <L> for <S>?,["F['file'] == 'sv'"],"{""mark"": ""point"", ""x"": ""position:g"", ""y"": ""F"", ""data_source"": ""S.url""}",question,template,point,simple,

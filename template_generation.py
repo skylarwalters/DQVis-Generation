@@ -83,66 +83,90 @@ def generate():
     entities_have_same_sample="E1['sample'] == E2['sample']"
     fields_have_same_type="F1['udi:data_type'] == F2['udi:data_type']"
 
-    df = add_row(
-        df,
-        query_template="Map the <E> data",
-        spec=(
-            {
-                "tracks": [
-                    {
-                    "data": {
-                        "url": "<E.url>",
-                        "type": "csv",
-                        "separator":"\t",
-                        "genomicFieldsToConvert": [
-                            {"chromosomeField": "<E.chr1>", "genomicFields":["<E.start1>", "<E.end1>"]},
-                            {"chromosomeField": "<E.chr2>", "genomicFields":["<E.start2>", "<E.end2>"]},
-                        ]
-                    },
-                    "mark": "withinLink",
-                    "x": {"field": "<E.start1>", "type": "genomic"},
-                    "xe": {"field": "<E.end2>", "type": "genomic"},
-                    # CHeck how to acces sv method
-                    "stroke": {"field": "svmethod", "type": "nominal"},
-                    "strokeWidth": {"value": 1},
-                    "opacity": {"value": 0.7}
-                    }
-                ]
-            }
-        ),
-        constraints=[
-            "E['format'] == 'bedpe'",
-        ],
-        query_type=QueryType.UTTERANCE,
-        chart_type=ChartType.CONNECTIVITY,
-    )
+    # df = add_row(
+    #     df,
+    #     query_template="Map the <E> data",
+    #     spec=(
+    #         {
+    #             "title": "",
+    #             "tracks": [
+    #                 {
+    #                 "data": {
+    #                     "url": "<E.url>",
+    #                     "type": "csv",
+    #                     "separator":"\t",
+    #                     "genomicFieldsToConvert": [
+    #                         {"chromosomeField": "<E.chr1>", "genomicFields":["<E.start1>", "<E.end1>"]},
+    #                         {"chromosomeField": "<E.chr2>", "genomicFields":["<E.start2>", "<E.end2>"]},
+    #                     ]
+    #                 },
+    #                 "mark": "withinLink",
+    #                 "x": {"field": "<E.start1>", "type": "genomic"},
+    #                 "xe": {"field": "<E.end2>", "type": "genomic"},
+    #                 # CHeck how to acces sv method
+    #                 "stroke": {"field": "svmethod", "type": "nominal"},
+    #                 "strokeWidth": {"value": 1},
+    #                 "opacity": {"value": 0.7}
+    #                 }
+    #             ]
+    #         }
+    #     ),
+    #     constraints=[
+    #         "E['use'] == 'sv'",
+    #     ],
+    #     query_type=QueryType.UTTERANCE,
+    #     chart_type=ChartType.CONNECTIVITY,
+    # )
     
     df = add_row(
         df,
         query_template="Map the <E> data at <L>",
         spec=(
             {
-                "tracks": [
+            "title": "Structural variants at <L>",
+            "tracks": [
+                
+                {
+                "data": {
+                    "url": "<E.url>",
+                    "type": "csv",
+                    "separator": "\t",
+                    "genomicFieldsToConvert": [
                     {
-                    "data": {
-                        "url": "<E.url>",
-                        "type": "csv",
-                        "separator":"\t",
-                        "genomicFieldsToConvert": [
-                            {"chromosomeField": "<E.chr1>", "genomicFields":["<E.start1>", "<E.end1>"]},
-                            {"chromosomeField": "<E.chr2>", "genomicFields":["<E.start2>", "<E.end2>"]},
-                        ]
+                        "chromosomeField": "<E.chr1>",
+                        "genomicFields": ["<E.start1>", "<E.end1>"]
                     },
-                    "mark": "withinLink",
-                    "x": {"field": "<E.start1>", "type": "genomic", "domain":{"chromosome": "<L.geneChr>", "interval": ["<L.geneStart>", "<L.geneEnd>"]}},
-                    "xe": {"field": "<E.end2>", "type": "genomic"},
-                    # CHeck how to acces sv method
-                    "stroke": {"field": "svmethod", "type": "nominal"},
-                    "strokeWidth": {"value": 1},
-                    "opacity": {"value": 0.7}
-            
+                    {
+                        "chromosomeField": "<E.chr2>",
+                        "genomicFields": ["<E.start2>", "<E.end2>"]
                     }
-                ]
+                    ]
+                },
+                "mark": "withinLink",
+                "x": {
+                    "field": "<E.start1>",
+                    "type": "genomic",
+                    "domain": {
+                    "chromosome": "<L.geneChr>",
+                    "interval": ["<L.geneStart>", "<L.geneEnd>"]
+                    }
+                },
+                "xe": {
+                    "field": "<E.end2>",
+                    "type": "genomic"
+                },
+                "stroke": {
+                    "field": "svmethod",
+                    "type": "nominal"
+                },
+                "strokeWidth": {
+                    "value": 1
+                },
+                "opacity": {
+                    "value": 0.7
+                }
+                }
+            ]
             }
         ),
         constraints=[
@@ -152,67 +176,108 @@ def generate():
         chart_type=ChartType.CONNECTIVITY,
     )
     
-    df = add_row(
-        df,
-        query_template="Map the <E> data.",
-        spec=({
-            "tracks":[{
-                "title": "Copy Number Variants",
-                "data": {
-                    "separator": "\t",
-                    "url": "<E.url>",
-                    "type": "csv",
-                    "chromosomeField": "<E.chr1>",
-                    "genomicFields": ["<E.start>", "<E.end>"]
-                },
-                "mark": "rect",
-                "x": {
-                    "field": "<E.start>",
-                    "type": "genomic"
-                },
-                "xe": {
-                    "field": "<E.end>",
-                    "type": "genomic"
-                },
-                "width": 1400,
-                "height": 60
-            }
-            ]}
-        ),
-        constraints=[
-            "E['name'] == 'cna' or E['name'] == 'cnv'",
-        ],
-        query_type=QueryType.QUESTION,
-        chart_type=ChartType.RECTANGLE,
-    )
+    # df = add_row(
+    #     df,
+    #     query_template="Map the <E> data.",
+    #     spec=({
+    #         "tracks":[{
+    #             "title": "Copy Number Variants",
+    #             "data": {
+    #                 "separator": "\t",
+    #                 "url": "<E.url>",
+    #                 "type": "csv",
+    #                 "chromosomeField": "<E.chr1>",
+    #                 "genomicFields": ["<E.start>", "<E.end>"]
+    #             },
+    #             "mark": "rect",
+    #             "x": {
+    #                 "field": "<E.start>",
+    #                 "type": "genomic"
+    #             },
+    #             "xe": {
+    #                 "field": "<E.end>",
+    #                 "type": "genomic"
+    #             },
+    #             "width": 1400,
+    #             "height": 60
+    #         }
+    #         ]}
+    #     ),
+    #     constraints=[
+    #         "E['name'] == 'cna' or E['name'] == 'cnv'",
+    #     ],
+    #     query_type=QueryType.UTTERANCE,
+    #     chart_type=ChartType.RECTANGLE,
+    # )
     
-    df = add_row(
-        df,
-        query_template="Where are <F:p&q> at <L> for <S>",
-        spec=(
-            {
-                "tracks": [
-                    {
-                    "data": {
-                        "url": "<F.url>",
-                        "type":"vcf",
-                        "indexUrl":"https://somatic-browser-test.s3.amazonaws.com/PCAWG/Cervix-AdenoCA/b9d1a64e-d445-4174-a5b4-76dd6ea69419.sorted.vcf.gz.tbi",
-                        "sampleLength":1000 
-                    },
-                    "mark": "point",
-                    "x": {"field": "<F.field>", "type": "genomic", "axis":"bottom"},
-                    # since data is quant point, there is no vertical shift. 
-                    #"y":{"field": "peak", "type": "quantitative"}
-                    }
-                ]
-            }
-        ),
-        constraints=[
-            "F['field'] == 'POS'",
-        ],
-        query_type=QueryType.QUESTION,
-        chart_type=ChartType.POINT,
-    )
+    
+    
+    # df = add_row(
+    #     df,
+    #     query_template="Map the <E> data.",
+    #     spec=({
+    #         "tracks":[{
+    #             "title": "Copy Number Variants",
+    #             "data": {
+    #                 "separator": "\t",
+    #                 "url": "<E.url>",
+    #                 "type": "csv",
+    #                 "chromosomeField": "<E.chr1>",
+    #                 "genomicFields": ["<E.start>", "<E.end>"]
+    #             },
+    #             "mark": "rect",
+    #             "x": {
+    #                 "field": "<E.start>",
+    #                 "type": "genomic",
+    #                 "domain": {
+    #                 "chromosome": "<L.geneChr>",
+    #                 "interval": ["<L.geneStart>", "<L.geneEnd>"]
+    #                 }
+    #             },
+    #             "xe": {
+    #                 "field": "<E.end>",
+    #                 "type": "genomic"
+    #             },
+    #             "width": 1400,
+    #             "height": 60
+    #         }
+    #         ]}
+    #     ),
+    #     constraints=[
+    #         "E['name'] == 'cna' or E['name'] == 'cnv'",
+    #     ],
+    #     query_type=QueryType.UTTERANCE,
+    #     chart_type=ChartType.RECTANGLE,
+    # )
+    
+    
+    # df = add_row(
+    #     df,
+    #     query_template="Where are <F:p&q> at <L> for <S>",
+    #     spec=(
+    #         {
+    #             "tracks": [
+    #                 {
+    #                 "data": {
+    #                     "url": "<F.url>",
+    #                     "type":"vcf",
+    #                     "indexUrl":"https://somatic-browser-test.s3.amazonaws.com/PCAWG/Cervix-AdenoCA/b9d1a64e-d445-4174-a5b4-76dd6ea69419.sorted.vcf.gz.tbi",
+    #                     "sampleLength":1000 
+    #                 },
+    #                 "mark": "point",
+    #                 "x": {"field": "<F.field>", "type": "genomic", "axis":"bottom"},
+    #                 # since data is quant point, there is no vertical shift. 
+    #                 #"y":{"field": "peak", "type": "quantitative"}
+    #                 }
+    #             ]
+    #         }
+    #     ),
+    #     constraints=[
+    #         "F['field'] == 'POS'",
+    #     ],
+    #     query_type=QueryType.QUESTION,
+    #     chart_type=ChartType.POINT,
+    # )
    
    
     

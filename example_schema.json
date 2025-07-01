@@ -43,6 +43,9 @@
         "position-fields": [
           {"chromosome-field": "chrom1", "genomic-fields":["start1", "end1"]},
           {"chromosome-field": "chrom2", "genomic-fields":["start2", "end2"]}
+        ],
+        "use": [
+          "sv"
         ]
       },
       {
@@ -62,6 +65,9 @@
         "format": "txt",
         "position-fields": [
           {"chromosome-field": "chromosome", "genomic-fields":["start", "end"]}
+        ],
+        "use": [
+          "cna"
         ]
       },
       {
@@ -84,6 +90,10 @@
         "position-fields": [
           {"chromosome-field": "", "genomic-fields":[]},
           {"chromosome-field": "", "genomic-fields":[]}
+        ],
+        "use": [
+          "point-mutation",
+          "indel"
         ]
       }
     ]
@@ -132,6 +142,9 @@
         "position-fields": [
           {"chromosome-field": "chrom1", "genomic-fields":["start1", "end1"]},
           {"chromosome-field": "chrom2", "genomic-fields":["start2", "end2"]}
+        ],
+        "use":[
+          "sv"
         ]
       },
       {
@@ -151,6 +164,9 @@
         "format": "txt",
         "position-fields": [
           {"chromosome-field": "chromosome", "genomic-fields":["start", "end"]}
+        ],
+        "use":[
+          "cna"
         ]
       },
       {
@@ -173,6 +189,10 @@
         "position-fields": [
           {"chromosome-field": "", "genomic-fields":[]},
           {"chromosome-field": "", "genomic-fields":[]}
+        ],
+        "use":[
+          "point-mutation",
+          "indel"
         ]
       }
     ]

@@ -1,2 +1,0 @@
-	query_template	constraints	spec_template	query_type	creation_method	chart_type	chart_complexity	spec_key_count
-0	Where are <F:q> in <S>?	"[""F['field'] == 'POS'""]"	"{""mark"": ""point"", ""x"": ""F"",, ""data_source"": ""F.url""}"	question	template	point	simple	
