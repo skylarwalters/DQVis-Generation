@@ -1,0 +1,126 @@
+[
+    {
+      "name": "Berase Cancer Sample",
+      "description": "Chromoscope data containing bam file.",
+      "udi:sample-id":"SRR7890905",
+      "sources": [
+        {
+          "name": "PCAWG",
+          "title": "Pan-Cancer Analysis of Whole Genomes",
+          "path": "https://somatic-browser-test.s3.amazonaws.com/PCAWG/Cervix-AdenoCA/configs/Cervix-AdenoCA.all.config.json"
+        }
+      ],
+      "udi:assembly": "hg38",
+      "udi:cancer-type":"breast",
+      "udi:genes":[
+          {"name":"SMAD4", "chr":"chr18", "pos":48575080},
+          {"name":"SMAD4", "chr":"chr18", "pos":48494410},
+          {"name":"KMT2C", "chr":"chr7", "pos":151873935},
+          {"name":"FBXW7", "chr":"chr4", "pos":153245393},
+          {"name":"FBXW7", "chr":"chr4", "pos":153242410}
+      ],
+      "resources": [
+        {
+            "name": "bam",
+            "path": "https://somatic-browser-test.s3.amazonaws.com/SRR7890905_GAPFI2USVS21.bam",
+            "schema": {
+              "fields": [
+                {"name":"start", "type":"quantitative"},
+                {"name":"end", "type":"quantitative"},
+                {"name":"coverage", "type":"quantitative"},
+                {"name":"group", "type":"nominal"}
+              ],
+              "primaryKey": []
+            },
+            "format": "bam",
+            "position-fields": [
+              {"chromosome-field": "chrName", "genomic-fields":["start", "end"]}
+            ],
+            "use": [
+              "bam"
+            ],
+            "index-file": "https://somatic-browser-test.s3.amazonaws.com/SRR7890905_GAPFI2USVS21.bam.bai"
+        },
+        {
+          "name": "sv",
+          "path": "https://somatic-browser-test.s3.amazonaws.com/SVTYPE_SV_test_tumor_normal_with_panel.bedpe",
+          "schema": {
+            "fields": [
+              {"name":"chrom1", "type":"nominal"},
+              {"name":"start1", "type":"quantitative"},
+              {"name":"end1", "type":"quantitative"},
+              {"name":"chrom2", "type":"string"},
+              {"name":"start2", "type":"quantitative"},
+              {"name":"end2", "type":"quantitative"},
+              {"name":"sv_id", "type":"ordinal"},
+              {"name":"pe_support", "type":"quantitative"}, 
+              {"name":"strand1", "type":"nominal"},
+              {"name":"strand2svclass", "type":"nominal"},
+              {"name":"svmethod", "type":"nominal"}
+            ],
+            "primaryKey": ["chrom1", "start1", "end1", "chrom2", "start2", "end2"]
+          },
+          "format":"bedpe",
+          "position-fields": [
+            {"chromosome-field": "chrom1", "genomic-fields":["start1", "end1"]},
+            {"chromosome-field": "chrom2", "genomic-fields":["start2", "end2"]}
+          ],
+          "use": [
+            "sv"
+          ],
+          "index-file": ""
+        },
+        {
+          "name": "cna",
+          "path": "https://gist.githubusercontent.com/sehilyi/6fbceae35756b13472332d6b81b10803/raw/596428a8b0ebc00e7f8cbc52b050db0fbd6e19a5/SRR7890943.ascat.v3.cnv.tsv",
+          "schema": {
+            "fields": [
+              { "name": "chromosome", "type": "nominal"},
+              { "name": "start", "type": "quantitative" },
+              { "name": "end", "type": "quantitative" },
+              { "name": "total_cn", "type": "quantitative"},
+              { "name": "major_cn", "type": "quantitative"},
+              { "name": "minor_cn", "type": "quantitative"}
+            ],
+            "primaryKey": ["chromosome","start","end"]
+          },
+          "format": "txt",
+          "position-fields": [
+            {"chromosome-field": "chromosome", "genomic-fields":["start", "end"]}
+          ],
+          "use": [
+            "cna"
+          ],
+          "index-file": ""
+        },
+        {
+          "name": "vcf",
+          "path": "https://somatic-browser-test.s3.amazonaws.com/SNV_test_tumor_normal_with_panel.vcf.gz",
+          "schema": {
+            "fields": [
+              { "name": "CHROM", "type": "nominal" },
+              { "name": "POS", "type": "quantitative" },
+              { "name": "ID", "type": "quantitative" },
+              { "name": "REF", "type": "nominal" },
+              { "name": "ALT", "type": "nominal" },
+              { "name": "QUAL", "type": "nominal" },
+              { "name": "FILTER", "type": "nominal" },
+              { "name": "INFO", "type": "nominal" }
+            ],
+            "primaryKey": ["CHROM","POS","ID"]
+          },
+          "format": "vcf",
+          "position-fields": [
+            {"chromosome-field": "", "genomic-fields":[]},
+            {"chromosome-field": "", "genomic-fields":[]}
+          ],
+          "use": [
+            "point-mutation",
+            
+          ],
+          "index-file": "https://somatic-browser-test.s3.amazonaws.com/SNV_test_tumor_normal_with_panel.vcf.gz.tbi"
+        }
+      ]
+    }
+]
+    

@@ -6,7 +6,7 @@ import json
 import ast
 from typing import List, Dict
 
-# from parsimonious.gramfmar import Grammar
+# from parsimonious.grammar import Grammar
 from pprint import pprint
 
 def expand(df, dataset_schemas):
@@ -35,15 +35,17 @@ def expand(df, dataset_schemas):
                 foreignKeys = file_schema.get("foreignKeys", [])
                 file_path = file["path"]
                 
-                entity_info.append({
-                    'name':file_name,
-                    'format':file["format"],
-                    'position-fields':file["position-fields"],
-                    'sample':sample_id,
-                    'url': file_path,
-                    'fields': file_schema["fields"],
-                    'uses': file['uses']
-                })
+                for use in file['use']:
+                    entity_info.append({
+                        'name':file_name,
+                        'use':use,
+                        'format':file["format"],
+                        'position-fields':file["position-fields"],
+                        'sample':sample_id,
+                        'url': file_path,
+                        'fields': file_schema["fields"],
+                        'index-file': file["index-file"]
+                    })
 
                 for col in file_schema["fields"]:
                     schema_flattened.append({
@@ -158,6 +160,8 @@ def expand_template(row, sample_options, entity_options, field_options, location
         
     constraints = expand_constraints(row["constraints"], tags) # added to convert to a list
     # print("⭐ expanded constraints ⭐")
+    
+    print(constraints)
 
     s = constraint_solver(samples, entities, fields, locations, constraints, sample_options, entity_options, field_options, location_options)
 
@@ -196,7 +200,7 @@ def resolve_query_template(query_template, tags, solution):
             resolved = solution[k]["gene"] # integrate chromosome here too?
         elif tag["entity"]:
             k = tag["sample"] + "_" + tag["entity"]
-            resolved = solution[k]["name"]
+            resolved = solution[k]["use"]
         else:
             resolved = solution[tag["sample"]]["sample"] #redefine entity as sample
         query_base = query_base.replace(f"<{tag['original']}>", resolved, 1)
@@ -229,8 +233,12 @@ def resolve_spec_template(spec_template, tags, solution):
             if content.startswith("S"):
                 sample = content
                 resolved = solution[sample]["sample"]
-            elif content.startswith("E") or content.startswith('L'):
-                resolved = solution["S_" + parts[0]]["sample"]
+            elif content.startswith("E"):
+                #print(solution["S_" + parts[0]])
+                resolved = solution["S_" + parts[0]]["use"]
+            
+            elif content.startswith('L'):
+                resolved = solution["S_" + parts[0]]["gene"]
             else:
                 resolved = solution[expand_field(content, tags)]["sample"]
                 
@@ -243,8 +251,6 @@ def resolve_spec_template(spec_template, tags, solution):
                 left = "S_" + left
             else:
                 left = expand_field(left, tags)
-            
-            print(right)
             
             if right == 'url':
                 resolved = solution[left]['url']
@@ -273,9 +279,15 @@ def resolve_spec_template(spec_template, tags, solution):
             elif right == 'geneEnd':
                 resolved = str(solution[left]['end'])
             elif right == 'geneChr':
-                print(solution[left])
-                print(solution[left].keys())
                 resolved = str(solution[left]['chromosome'])
+            elif right == 'index-file':
+                resolved = str(solution[left]['index-file'])
+                
+            # elif right == 'svmethod':
+            #     print(solution.keys())
+            #     #for field in solution[left]['fields']:
+            #     print(solution[left])
+            #     resolved = solution[left]['fields'] 
             else:
                 resolved = solution[left + "_" + right]["name"]
                 
@@ -652,10 +664,9 @@ def constraint_solver(
 
 if __name__ == "__main__":
     
-    with open('example_schema.json', 'r') as f:
+    with open('bam_schema.json', 'r') as f:
         schema=json.load(f)
     df=pd.read_csv('spec_generation_test.tsv', sep='\t')
 
     expanded_df = expand(df, schema)
-    print(expanded_df)
     expanded_df.to_csv("spec_generation_output.csv")

@@ -6,7 +6,7 @@ import json
 import ast
 from typing import List, Dict
 
-# from parsimonious.grammar import Grammar
+# from parsimonious.gramfmar import Grammar
 from pprint import pprint
 
 def expand(df, dataset_schemas):
@@ -35,16 +35,15 @@ def expand(df, dataset_schemas):
                 foreignKeys = file_schema.get("foreignKeys", [])
                 file_path = file["path"]
                 
-                for use in file['use']:
-                    entity_info.append({
-                         #'name':file_name,
-                        'use':use,
-                        'format':file["format"],
-                        'position-fields':file["position-fields"],
-                        'sample':sample_id,
-                        'url': file_path,
-                        'fields': file_schema["fields"],
-                    })
+                entity_info.append({
+                    'name':file_name,
+                    'format':file["format"],
+                    'position-fields':file["position-fields"],
+                    'sample':sample_id,
+                    'url': file_path,
+                    'fields': file_schema["fields"],
+                    'uses': file['uses']
+                })
 
                 for col in file_schema["fields"]:
                     schema_flattened.append({
@@ -197,7 +196,7 @@ def resolve_query_template(query_template, tags, solution):
             resolved = solution[k]["gene"] # integrate chromosome here too?
         elif tag["entity"]:
             k = tag["sample"] + "_" + tag["entity"]
-            resolved = solution[k]["use"]
+            resolved = solution[k]["name"]
         else:
             resolved = solution[tag["sample"]]["sample"] #redefine entity as sample
         query_base = query_base.replace(f"<{tag['original']}>", resolved, 1)
@@ -230,13 +229,8 @@ def resolve_spec_template(spec_template, tags, solution):
             if content.startswith("S"):
                 sample = content
                 resolved = solution[sample]["sample"]
-            elif content.startswith("E"):
-                #print(solution["S_" + parts[0]])
-                resolved = solution["S_" + parts[0]]["use"]
-            
-            elif content.startswith('L'):
-                print(solution["S_" + parts[0]])
-                resolved = solution["S_" + parts[0]]["gene"]
+            elif content.startswith("E") or content.startswith('L'):
+                resolved = solution["S_" + parts[0]]["sample"]
             else:
                 resolved = solution[expand_field(content, tags)]["sample"]
                 
@@ -279,9 +273,8 @@ def resolve_spec_template(spec_template, tags, solution):
             elif right == 'geneEnd':
                 resolved = str(solution[left]['end'])
             elif right == 'geneChr':
-                print(solution[left])
-                print(solution[left].keys())
                 resolved = str(solution[left]['chromosome'])
+              
             else:
                 resolved = solution[left + "_" + right]["name"]
                 

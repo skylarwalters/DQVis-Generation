@@ -20,7 +20,6 @@ Notes:
     3. column schema differs by type of file --> use varying get_column_schema methods
     
     4. not a folder-based system!
-
 '''
 
 def process_link(url, config=False):
