@@ -119,7 +119,8 @@
             {"chromosome-field": "", "genomic-fields":[]}
           ],
           "use": [
-            "point-mutation"
+            "point-mutation",
+            "indel"
           ],
           "index-file": "https://somatic-browser-test.s3.amazonaws.com/SNV_test_tumor_normal_with_panel.vcf.gz.tbi"
         },
@@ -142,7 +143,8 @@
             {"chromosome-field": "chrName", "genomic-fields":["start", "end"]}
           ],
           "use": [
-            "coverage"
+            "coverage",
+            "point mutation"
           ],
           "index-file": "https://somatic-browser-test.s3.amazonaws.com/SRR7890905_GAPFI2USVS21.bam.bai"
       },
