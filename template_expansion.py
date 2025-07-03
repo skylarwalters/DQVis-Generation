@@ -77,17 +77,36 @@ def expand(df, dataset_schemas):
     expanded_df = pd.DataFrame(expanded_rows)
     return expanded_df
 
-def selectGenes(assembly, gene_list, gene_ct=20, popularityWeights=True):
+def selectGenes(assembly, gene_list, gene_ct=10, chrom_ct=4, popularityWeights=True):
     '''
     select list of genes from assembly. includes the default genes from the listed file 
     in addition to gene_ct - number of default genes. If popularityWeights = True,
     selection is weighted by gene research popularity.
     '''
+    
+    sampled_chroms = []
+    df = pd.read_csv(f'location_data/refSeq_chromosomes.{assembly}.tsv', sep='\t')
+    chrom_subsample = df.sample(
+            n=chrom_ct, 
+            replace=False, 
+            random_state=42
+        )
+    
+    for row in chrom_subsample.itertuples():
+            end = int(row.start + row.length)
+            sampled_chroms.append({
+                'gene':row.chrom,
+                'start': row.start,
+                'end': end,
+                'chromosome': row.chrom
+            })
+    
     if len(gene_list) > gene_ct:
-        return gene_list
+        sampled_genes = sampled_chroms + gene_list
+        return sampled_genes
     else:
         sampled_genes = []
-        df = pd.read_csv(f'gene_data/refSeq_genes_scored_compressed.{assembly}.tsv', sep='\t')
+        df = pd.read_csv(f'location_data/refSeq_genes_scored_compressed.{assembly}.tsv', sep='\t')
         # subsample dataframe
         subsample = df.sample(
             n=gene_ct-len(gene_list), 
@@ -103,7 +122,7 @@ def selectGenes(assembly, gene_list, gene_ct=20, popularityWeights=True):
                 'end': end,
                 'chromosome': row.chrom
             })
-        sampled_genes = sampled_genes + gene_list
+        sampled_genes = sampled_genes + gene_list + sampled_chroms
         return sampled_genes
         
 
@@ -157,11 +176,11 @@ def expand_template(row, sample_options, entity_options, field_options, location
     entities = extract["entities"]
     locations = extract["location"]
     fields = extract["fields"]
-        
+    
+            
     constraints = expand_constraints(row["constraints"], tags) # added to convert to a list
     # print("⭐ expanded constraints ⭐")
     
-    print(constraints)
 
     s = constraint_solver(samples, entities, fields, locations, constraints, sample_options, entity_options, field_options, location_options)
 
@@ -223,10 +242,6 @@ def resolve_spec_template(spec_template, tags, solution):
         match = match.group(0)
         content = match.strip("<>")
         parts = content.split(".")
-        
-        #print(f'match: {match}')
-        #print(f'content: {content}')
-        #print(f'parts: {parts}')
 
         if len(parts) == 1:
             content = parts[0]
@@ -282,12 +297,6 @@ def resolve_spec_template(spec_template, tags, solution):
                 resolved = str(solution[left]['chromosome'])
             elif right == 'index-file':
                 resolved = str(solution[left]['index-file'])
-                
-            # elif right == 'svmethod':
-            #     print(solution.keys())
-            #     #for field in solution[left]['fields']:
-            #     print(solution[left])
-            #     resolved = solution[left]['fields'] 
             else:
                 resolved = solution[left + "_" + right]["name"]
                 
@@ -325,10 +334,8 @@ def resolve_spec_template(spec_template, tags, solution):
                 f"Invalid match: {match}. Unexpected formatting length of spec template tag."
             )
         
-        #print(f'the resolved: {resolved}')
         spec = spec.replace(match, resolved, 1)
-        #pprint(f'new spec: {spec}')
-        #print('-----')
+
     
     # Special care needs to take place to handle comparisons
     # e.g. {lte} should be replaced with <=
@@ -343,7 +350,6 @@ def resolve_spec_template(spec_template, tags, solution):
     for comparison in comparisons:
         spec = spec.replace(comparison["content"], comparison["resolved"])
     
-    #print(f'final spec: {spec}')
     return spec
 
 
@@ -664,7 +670,7 @@ def constraint_solver(
 
 if __name__ == "__main__":
     
-    with open('bam_schema.json', 'r') as f:
+    with open('data-schema/bam_schema.json', 'r') as f:
         schema=json.load(f)
     df=pd.read_csv('spec_generation_test.tsv', sep='\t')
 
