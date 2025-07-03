@@ -13,7 +13,7 @@
     "udi:assembly": "hg19",
     "udi:cancer-type":"adenocarcinoma",
     "udi:genes":[
-        {"name":"SMAD4", "chr":"chr18", "pos":48575080},SMA
+        {"name":"SMAD4", "chr":"chr18", "pos":48575080},
         {"name":"SMAD4", "chr":"chr18", "pos":48494410},
         {"name":"KMT2C", "chr":"chr7", "pos":151873935},
         {"name":"FBXW7", "chr":"chr4", "pos":153245393},
