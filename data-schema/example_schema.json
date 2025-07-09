@@ -1,3 +1,7 @@
+
+
+
+
 [
   {
     "name": "CESC Sample 1",
@@ -26,11 +30,11 @@
         "schema": {
           "fields": [
             {"name":"chrom1", "type":"nominal"},
-            {"name":"start1", "type":"quantitative"},
-            {"name":"end1", "type":"quantitative"},
+            {"name":"start1", "type":"quantitative point"},
+            {"name":"end1", "type":"quantitative point"},
             {"name":"chrom2", "type":"string"},
-            {"name":"start2", "type":"quantitative"},
-            {"name":"end2", "type":"quantitative"},
+            {"name":"start2", "type":"quantitative point"},
+            {"name":"end2", "type":"quantitative point"},
             {"name":"sv_id", "type":"ordinal"},
             {"name":"pe_support", "type":"quantitative"}, 
             {"name":"strand1", "type":"nominal"},
@@ -47,7 +51,7 @@
         "use": [
           "sv"
         ],
-        "related": ""
+        "index-file": ""
       },
       {
         "name": "cna",
@@ -70,7 +74,7 @@
         "use": [
           "cna"
         ],
-        "related": ""
+        "index-file": ""
       },
       {
         "name": "vcf",
@@ -97,7 +101,7 @@
           "point-mutation",
           "indel"
         ],
-        "related": "https://somatic-browser-test.s3.amazonaws.com/PCAWG/Cervix-AdenoCA/b9d1a64e-d445-4174-a5b4-76dd6ea69419.sorted.vcf.gz.tbi"
+        "index-file": "https://somatic-browser-test.s3.amazonaws.com/PCAWG/Cervix-AdenoCA/b9d1a64e-d445-4174-a5b4-76dd6ea69419.sorted.vcf.gz.tbi"
       }
     ]
   },
@@ -149,7 +153,7 @@
         "use":[
           "sv"
         ],
-        "related":""
+        "index-file":""
       },
       {
         "name": "cna",
@@ -172,7 +176,7 @@
         "use":[
           "cna"
         ],
-        "related":""
+        "index-file":""
       },
       {
         "name": "vcf",
@@ -199,7 +203,7 @@
           "point-mutation",
           "indel"
         ],
-        "related":"https://somatic-browser-test.s3.amazonaws.com/PCAWG/Cervix-AdenoCA/842df341-d34f-4ed6-928c-eaf15bf7f667.sorted.vcf.gz.tbi"
+        "index-file":"https://somatic-browser-test.s3.amazonaws.com/PCAWG/Cervix-AdenoCA/842df341-d34f-4ed6-928c-eaf15bf7f667.sorted.vcf.gz.tbi"
       }
     ]
   }

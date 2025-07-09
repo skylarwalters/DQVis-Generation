@@ -154,11 +154,11 @@
         "schema": {
           "fields": [
             {"name":"chrom1", "type":"nominal"},
-            {"name":"start1", "type":"quantitative"},
-            {"name":"end1", "type":"quantitative"},
+            {"name":"start1", "type":"quantitative point"},
+            {"name":"end1", "type":"quantitative point"},
             {"name":"chrom2", "type":"string"},
-            {"name":"start2", "type":"quantitative"},
-            {"name":"end2", "type":"quantitative"},
+            {"name":"start2", "type":"quantitative point"},
+            {"name":"end2", "type":"quantitative point"},
             {"name":"sv_id", "type":"ordinal"},
             {"name":"pe_support", "type":"quantitative"}, 
             {"name":"strand1", "type":"nominal"},

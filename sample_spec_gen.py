@@ -12,15 +12,15 @@ from pprint import pprint
 def expand(df, collection):
     expanded_rows=[]
     for _, row in df.iterrows():
-        for dataset_schemas in collection: 
+        
+        for dataset_schemas in collection:
             
-            all_samples = []
-            all_entities = []
-            all_fields = []
-            all_locations = []
+            all_sample_options = [] S1, S2
+            all_entity_options = [] 
+            all_field_options = [] --> [{FIELDS  in s1}, {fields in s2}]
+            all_location_options = []
             
-            for schema in dataset_schemas: # 1 schema is 1 sample ! --> want list of samples. 
-                
+            for schema in dataset_schemas:
                 # 1. extract sample metadata
                 sample_name=schema['name']
                 sample_id = schema['udi:sample-id']
@@ -51,7 +51,7 @@ def expand(df, collection):
                             'position-fields':file["position-fields"],
                             'sample':sample_id,
                             'url': file_path,
-                            #'fields': file_schema["fields"],
+                            'fields': file_schema["fields"],
                             'index-file': file["index-file"]
                         })
 
@@ -70,26 +70,29 @@ def expand(df, collection):
                 sample_options = create_sample_options(schema_flattened, sample_assembly, sample_cancer)
                 entity_options=entity_info
                 
-                
-                
                 # 5. Create location options
                 location_options = selectGenes(sample_assembly, gene_list)
                 
                 # 6. Create field options
                 field_options=schema_flattened
                 
-                all_samples += sample_options
-                all_entities += entity_options
-                all_fields += field_options
+                all_sample_options.append(sample_options)
+                all_entity_options.append(entity_options)
+                all_field_options.append(field_options)
+                all_location_options.append(location_options)
             
-                                        
-            new_rows = expand_template(row, all_samples, all_entities, all_fields, location_options)
-            for new_row in new_rows:
+            #pprint(all_entity_options)
+            all_sample_flat = [item for sublist in all_sample_options for item in sublist]
+
+            all_entity_flat = [item for sublist in all_entity_options for item in sublist]
+            all_field_flat = [item for sublist in all_field_options for item in sublist]
+            
+            rows = expand_template(row, all_sample_flat, all_entity_flat, all_field_flat, all_location_options)
+            #new_rows = expand_template(row, sample_options, entity_options, field_options, location_options)
+            for new_row in rows:
                 new_row["dataset_schema"] = sample_name
-            expanded_rows.extend(new_rows)
-            
-            # SAMPLE OPTIONS.  --> entities and fields
-            
+            expanded_rows.extend(rows)
+                
     expanded_df = pd.DataFrame(expanded_rows)
     return expanded_df
 
@@ -189,6 +192,8 @@ def expand_template(row, sample_options, entity_options, field_options, location
     extract = extract_tags(row["query_template"])
     tags = extract["tags"]
     
+    #pprint(extract)
+        
     samples = extract["samples"]
     entities = extract["entities"]
     locations = extract["location"]
@@ -408,19 +413,14 @@ def extract_tags(text: str) -> List[Dict[str, Union[str, List[str]]]]:
             elif first.startswith("E"):
                 entity=first
             else:
-                
                 field=first
                 
         elif len(parts) == 2:
             first, second = parts
             sample=first
-            if second.startswith("L"):
+            if first.startswith("L"):
                 location = second
-            elif second.startswith("E"):
-                print('brahhhh')
-                entity = second
             else:
-                print('bruh')
                 field=second
         elif len(parts) == 3:
             first, second, third=parts
@@ -474,7 +474,6 @@ def extract_tags(text: str) -> List[Dict[str, Union[str, List[str]]]]:
         )
      
     # infer sample and entity  
-    pprint(tags)
     infer_entity(tags) 
     #pprint(tags)
     infer_sample(tags)
@@ -521,12 +520,12 @@ def infer_entity(
     """
     defined_entities = [tag["entity"] for tag in tags if tag["entity"]]
     unique_entities = set(defined_entities)
-            
-    #if len(unique_entities) > 1 and any(not tag["entity"] for tag in tags):
-    #    raise ValueError("Multiple entities defined, cannot infer empty entity.")
+
+    if len(unique_entities) > 1 and any(not tag["entity"] for tag in tags):
+        raise ValueError("Multiple entities defined, cannot infer empty entity.")
     
     #for tag in [x for x in tags if not x["entity"] and not x["original"][0] == 'S']:
-    for tag in [x for x in tags if not x["entity"] and x['sample'][0] != "S" ]:
+    for tag in [x for x in tags if not x["entity"]]:
         tag["entity"] = "E"
     return tags
 
@@ -595,13 +594,12 @@ def expand_constraints(
         for field in unique_fields:
             other_fields = unique_fields - {field}
             name_str = "['field']"
-            # other_fields_string = (
-            #     "[" + ",".join([str(x) + name_str for x in other_fields]) + "]"
-            # )
-            
-            # expanded_constraints.append(
-            #   f"{field + name_str} not in {other_fields_string}"
-            # )
+            other_fields_string = (
+                "[" + ",".join([str(x) + name_str for x in other_fields]) + "]"
+            )
+            expanded_constraints.append(
+                f"{field + name_str} not in {other_fields_string}"
+            )
 
     # ensure that samples are not repeated
     unique_samples = set([tag["sample"] for tag in tags])
@@ -613,10 +611,7 @@ def expand_constraints(
                 "[" + ",".join([str(x) + e_str for x in other_samples]) + "]"
             )
             expanded_constraints.append(
-              f"{sample + e_str} not in {other_samples_string}"
-            )
-            expanded_constraints.append(
-               f"{sample + e_str} not in {other_samples_string}"
+                f"{sample + e_str} not in {other_samples_string}"
             )
 
     # ensure that fields belong to their entity and sample
@@ -690,19 +685,27 @@ def constraint_solver(
     location_options:  List[Dict[str, Union[str, int]]]
 ) -> List[Dict[str, str]]:
     problem = Problem()
-    
 
     problem.addVariables(fields, field_options)
     problem.addVariables(samples, sample_options)
     problem.addVariables(entities, entity_options)
     problem.addVariables(locations, location_options)
+    
+    
+    print(f'Fields: {fields}')
+    print(f'Samples: {samples}')
+    
+    print('sample options')
+    pprint(field_options)
         
     for constraint in constraints:
         problem.addConstraint(constraint) 
         print(constraint)
     
     s = problem.getSolutions()
-        
+    
+    print(f'Solution: {s}')
+    
     return s
 
 if __name__ == "__main__":
@@ -712,5 +715,4 @@ if __name__ == "__main__":
     df=pd.read_csv('spec_generation_test.tsv', sep='\t')
 
     expanded_df = expand(df, [schema])
-    print(expanded_df)
     expanded_df.to_csv("spec_generation_output.csv")

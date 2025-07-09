@@ -9,86 +9,72 @@ from typing import List, Dict
 # from parsimonious.grammar import Grammar
 from pprint import pprint
 
-def expand(df, collection):
+def expand(df, dataset_schemas):
     expanded_rows=[]
     for _, row in df.iterrows():
-        for dataset_schemas in collection: 
+        for schema in dataset_schemas: # 1 schema is 1 sample ! --> want list of samples. 
             
-            all_samples = []
-            all_entities = []
-            all_fields = []
-            all_locations = []
+            # 1. extract sample metadata
+            sample_name=schema['name']
+            sample_id = schema['udi:sample-id']
+            sample_assembly=schema["udi:assembly"]
+            sample_cancer = schema["udi:cancer-type"]
             
-            for schema in dataset_schemas: # 1 schema is 1 sample ! --> want list of samples. 
+            # 2. extract gene data
+            schema_genes = schema["udi:genes"]
+            gene_list = []
+            for elem in schema_genes:
+                gene_list.append({'gene':elem["name"],'start':elem["pos"], 'end':elem['pos'] + 5000, 'chromosome':elem["chr"], })
                 
-                # 1. extract sample metadata
-                sample_name=schema['name']
-                sample_id = schema['udi:sample-id']
-                sample_assembly=schema["udi:assembly"]
-                sample_cancer = schema["udi:cancer-type"]
+            # 3. extract data about each file + actual file
+            schema_flattened = []
+            entity_info=[]
+            for file in schema["resources"]:
+                file_name = file["name"] 
+                sample_id = sample_name
+                file_schema = file["schema"]
+                foreignKeys = file_schema.get("foreignKeys", [])
+                file_path = file["path"]
                 
-                # 2. extract gene data
-                schema_genes = schema["udi:genes"]
-                gene_list = []
-                for elem in schema_genes:
-                    gene_list.append({'gene':elem["name"],'start':elem["pos"], 'end':elem['pos'] + 5000, 'chromosome':elem["chr"], })
-                    
-                # 3. extract data about each file + actual file
-                schema_flattened = []
-                entity_info=[]
-                for file in schema["resources"]:
-                    file_name = file["name"] 
-                    sample_id = sample_name
-                    file_schema = file["schema"]
-                    foreignKeys = file_schema.get("foreignKeys", [])
-                    file_path = file["path"]
-                    
-                    for use in file['use']:
-                        entity_info.append({
-                            'name':file_name,
-                            'use':use,
-                            'format':file["format"],
-                            'position-fields':file["position-fields"],
-                            'sample':sample_id,
-                            'url': file_path,
-                            #'fields': file_schema["fields"],
-                            'index-file': file["index-file"]
-                        })
+                for use in file['use']:
+                    entity_info.append({
+                        'name':file_name,
+                        'use':use,
+                        'format':file["format"],
+                        'position-fields':file["position-fields"],
+                        'sample':sample_id,
+                        'url': file_path,
+                        #'fields': file_schema["fields"],
+                        'index-file': file["index-file"]
+                    })
 
-                    for col in file_schema["fields"]:
-                        schema_flattened.append({
-                            "file": file_name,
-                            "field": col["name"],  
-                            "udi:data_type": col.get("type"),
-                            "url": file_path,
-                            "foreignKeys": foreignKeys,
-                            "column_metadata": col,
-                            "sample": sample_id,
-                        })
+                for col in file_schema["fields"]:
+                    schema_flattened.append({
+                        "file": file_name,
+                        "field": col["name"],  
+                        "udi:data_type": col.get("type"),
+                        "url": file_path,
+                        "foreignKeys": foreignKeys,
+                        "column_metadata": col,
+                        "sample": sample_id,
+                    })
 
-                # 4. Create sample and entity options
-                sample_options = create_sample_options(schema_flattened, sample_assembly, sample_cancer)
-                entity_options=entity_info
-                
-                
-                
-                # 5. Create location options
-                location_options = selectGenes(sample_assembly, gene_list)
-                
-                # 6. Create field options
-                field_options=schema_flattened
-                
-                all_samples += sample_options
-                all_entities += entity_options
-                all_fields += field_options
+            # 4. Create sample and entity options
+            sample_options = create_sample_options(schema_flattened, sample_assembly, sample_cancer)
+            entity_options=entity_info
             
-                                        
-            new_rows = expand_template(row, all_samples, all_entities, all_fields, location_options)
+            # 5. Create location options
+            location_options = selectGenes(sample_assembly, gene_list)
+            
+            # 6. Create field options
+            field_options=schema_flattened
+                                    
+            new_rows = expand_template(row, sample_options, entity_options, field_options, location_options)
             for new_row in new_rows:
                 new_row["dataset_schema"] = sample_name
             expanded_rows.extend(new_rows)
-            
-            # SAMPLE OPTIONS.  --> entities and fields
+        
+        # SAMPLE OPTIONS.  --> entities and fields
             
     expanded_df = pd.DataFrame(expanded_rows)
     return expanded_df
@@ -197,6 +183,7 @@ def expand_template(row, sample_options, entity_options, field_options, location
     constraints = expand_constraints(row["constraints"], tags) # added to convert to a list
     # print("⭐ expanded constraints ⭐")
     
+
     s = constraint_solver(samples, entities, fields, locations, constraints, sample_options, entity_options, field_options, location_options)
 
     return expand_solutions(row, tags, s)
@@ -408,19 +395,14 @@ def extract_tags(text: str) -> List[Dict[str, Union[str, List[str]]]]:
             elif first.startswith("E"):
                 entity=first
             else:
-                
                 field=first
                 
         elif len(parts) == 2:
             first, second = parts
             sample=first
-            if second.startswith("L"):
+            if first.startswith("L"):
                 location = second
-            elif second.startswith("E"):
-                print('brahhhh')
-                entity = second
             else:
-                print('bruh')
                 field=second
         elif len(parts) == 3:
             first, second, third=parts
@@ -595,13 +577,12 @@ def expand_constraints(
         for field in unique_fields:
             other_fields = unique_fields - {field}
             name_str = "['field']"
-            # other_fields_string = (
-            #     "[" + ",".join([str(x) + name_str for x in other_fields]) + "]"
-            # )
-            
-            # expanded_constraints.append(
-            #   f"{field + name_str} not in {other_fields_string}"
-            # )
+            other_fields_string = (
+                "[" + ",".join([str(x) + name_str for x in other_fields]) + "]"
+            )
+            expanded_constraints.append(
+                f"{field + name_str} not in {other_fields_string}"
+            )
 
     # ensure that samples are not repeated
     unique_samples = set([tag["sample"] for tag in tags])
@@ -613,10 +594,7 @@ def expand_constraints(
                 "[" + ",".join([str(x) + e_str for x in other_samples]) + "]"
             )
             expanded_constraints.append(
-              f"{sample + e_str} not in {other_samples_string}"
-            )
-            expanded_constraints.append(
-               f"{sample + e_str} not in {other_samples_string}"
+                f"{sample + e_str} not in {other_samples_string}"
             )
 
     # ensure that fields belong to their entity and sample
@@ -696,10 +674,19 @@ def constraint_solver(
     problem.addVariables(samples, sample_options)
     problem.addVariables(entities, entity_options)
     problem.addVariables(locations, location_options)
+    
+    print('--------------')
+    print('Samples')
+    pprint(samples)
+    pprint(sample_options)
+    
+    print('--------------')
+    print('Entities')
+    pprint(entities)
+    pprint(entity_options)
         
     for constraint in constraints:
         problem.addConstraint(constraint) 
-        print(constraint)
     
     s = problem.getSolutions()
         
@@ -711,6 +698,5 @@ if __name__ == "__main__":
         schema=json.load(f)
     df=pd.read_csv('spec_generation_test.tsv', sep='\t')
 
-    expanded_df = expand(df, [schema])
-    print(expanded_df)
+    expanded_df = expand(df, schema)
     expanded_df.to_csv("spec_generation_output.csv")
