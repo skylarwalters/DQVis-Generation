@@ -1,0 +1,11 @@
+[
+  {
+    "template": {
+      "start": "Map the <E> data at <L>",
+      "end": "Add another <E> at <L> to compare"
+    },
+    "match": [{ "start": "E", "end": "E1", "on": "entity" }],
+    "transition_type": "comparative addition"
+  }
+
+]
