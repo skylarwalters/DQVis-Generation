@@ -84,7 +84,7 @@ def expand(df, collection):
                 all_locations += location_options
             
                                         
-            new_rows = expand_template(row, all_samples, all_entities, all_fields, location_options)
+            new_rows = expand_template(row, all_samples, all_entities, all_fields, all_locations)
             for new_row in new_rows:
                 new_row["dataset_schema"] = sample_name
             expanded_rows.extend(new_rows)
