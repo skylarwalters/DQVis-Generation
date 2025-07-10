@@ -7,5 +7,4 @@
     "match": [{ "start": "E", "end": "E1", "on": "entity" }],
     "transition_type": "comparative addition"
   }
-
 ]

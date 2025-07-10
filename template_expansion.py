@@ -525,9 +525,10 @@ def infer_entity(
     #if len(unique_entities) > 1 and any(not tag["entity"] for tag in tags):
     #    raise ValueError("Multiple entities defined, cannot infer empty entity.")
     
-    #for tag in [x for x in tags if not x["entity"] and not x["original"][0] == 'S']:
-    for tag in [x for x in tags if not x["entity"] and x['sample'][0] != "S" ]:
+    for tag in [x for x in tags if not x["entity"] and not x["original"][0] == 'S']:
+    #for tag in [x for x in tags if not x["entity"] and x['sample'][0] != "S" ]:
         tag["entity"] = "E"
+        
     return tags
 
 
