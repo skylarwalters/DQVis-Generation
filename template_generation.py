@@ -154,7 +154,10 @@ def generate():
                     "x": {"field": "<E.start1>", "type": "genomic"},
                     "xe": {"field": "<E.end2>", "type": "genomic"},
                     "strokeWidth": {"value": 1},
-                    "opacity": {"value": 0.7}
+                    "opacity": {"value": 0.7},
+                    "stroke": {"value": "#D55D00"},
+                    "style": {"linkStyle": "elliptical"}
+                    
                     }
                 ]
             }
@@ -207,7 +210,10 @@ def generate():
                 },
                 "opacity": {
                     "value": 0.7
-                }
+                },
+                "stroke": {"value": "#D55D00"},
+                "style": {"linkStyle": "elliptical"}
+                
                 }
             ]
             }
@@ -224,7 +230,7 @@ def generate():
     
     df = add_row(
         df,
-        query_template="Map the <E> data at <L>.",
+        query_template="How do the <E> appear at <L>?",
         spec=({
             "tracks":[{
                 "title": "Copy Number Variants",
@@ -248,59 +254,26 @@ def generate():
                     "field": "<E.end>",
                     "type": "genomic"
                 },
-                "width": 1400,
-                "height": 60
+                "y": {
+                    "field": "total_cn",
+                    "type": "quantitative",
+                    "axis": "right",
+                    "range": [10, 50]
+                  },
             }
             ]}
         ),
         constraints=[
             "E['use'] == 'cna'",
         ],
-        query_type=QueryType.UTTERANCE,
+        query_type=QueryType.QUESTION,
         chart_type=ChartType.RECTANGLE,
     )
     
-    df = add_row(
-        df,
-        query_template="Map the <E> data at <L>.",
-        spec=({
-            "tracks":[{
-                "title": "Copy Number Variants",
-                "data": {
-                    "separator": "\t",
-                    "url": "<E.url>",
-                    "type": "csv",
-                    "chromosomeField": "<E.chr1>",
-                    "genomicFields": ["<E.start>", "<E.end>"]
-                },
-                "mark": "rect",
-                "x": {
-                    "field": "<E.start>",
-                    "type": "genomic",
-                    "domain": {
-                    "chromosome": "<L.geneChr>",
-                    "interval": ["<L.geneStart>", "<L.geneEnd>"]
-                    }
-                },
-                "xe": {
-                    "field": "<E.end>",
-                    "type": "genomic"
-                },
-                "width": 1400,
-                "height": 60
-            }
-            ]}
-        ),
-        constraints=[
-            "E['use'] == 'cna'",
-        ],
-        query_type=QueryType.UTTERANCE,
-        chart_type=ChartType.RECTANGLE,
-    )
     # point mutations + indels
     df = add_row(
         df,
-        query_template="Map the <E> data.",
+        query_template="How do the <E> appear?",
         spec=({
             "title": "Point Mutations",
             'tracks': [{
@@ -340,7 +313,7 @@ def generate():
     
     df = add_row(
         df,
-        query_template="Map the <E> data at <L>.",
+        query_template="What are the <E> at <L>?",
         spec=({
             "title": "Point Mutations",
             'tracks': [{
@@ -1007,7 +980,10 @@ def generate():
                             "x": {"field": "<E2.start1>", "type": "genomic"},
                             "xe": {"field": "<E2.end2>", "type": "genomic"},
                             "strokeWidth": {"value": 1},
-                            "opacity": {"value": 0.7}
+                            "opacity": {"value": 0.7},
+                            "stroke": {"value": "#D55D00"},
+                            "style": {"linkStyle": "elliptical"}
+                            
                         }
                     
                 ]

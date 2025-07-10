@@ -81,6 +81,7 @@ def expand(df, collection):
                 all_samples += sample_options
                 all_entities += entity_options
                 all_fields += field_options
+                all_locations += location_options
             
                                         
             new_rows = expand_template(row, all_samples, all_entities, all_fields, location_options)
