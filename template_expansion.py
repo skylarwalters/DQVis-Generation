@@ -43,10 +43,10 @@ def expand(df, collection):
                     foreignKeys = file_schema.get("foreignKeys", [])
                     file_path = file["path"]
                     
-                    for use in file['use']:
+                    for use in file['udi:use']:
                         entity_info.append({
                             'name':file_name,
-                            'use':use,
+                            'udi:use':use,
                             'format':file["format"],
                             'position-fields':file["position-fields"],
                             'sample':sample_id,
@@ -190,6 +190,8 @@ def expand_template(row, sample_options, entity_options, field_options, location
     extract = extract_tags(row["query_template"])
     tags = extract["tags"]
     
+    #pprint(tags)
+    
     samples = extract["samples"]
     entities = extract["entities"]
     locations = extract["location"]
@@ -235,7 +237,7 @@ def resolve_query_template(query_template, tags, solution):
             resolved = solution[k]["gene"] # integrate chromosome here too?
         elif tag["entity"]:
             k = tag["sample"] + "_" + tag["entity"]
-            resolved = solution[k]["use"]
+            resolved = solution[k]["udi:use"]
         else:
             resolved = solution[tag["sample"]]["sample"] #redefine entity as sample
         query_base = query_base.replace(f"<{tag['original']}>", resolved, 1)
@@ -267,7 +269,7 @@ def resolve_spec_template(spec_template, tags, solution):
                 resolved = solution[sample]["sample"]
             elif content.startswith("E"):
                 #print(solution["S_" + parts[0]])
-                resolved = solution["S_" + parts[0]]["use"]
+                resolved = solution["S_" + parts[0]]["udi:use"]
             
             elif content.startswith('L'):
                 resolved = solution["S_" + parts[0]]["gene"]
@@ -692,6 +694,9 @@ def constraint_solver(
     location_options:  List[Dict[str, Union[str, int]]]
 ) -> List[Dict[str, str]]:
     problem = Problem()
+    
+    pprint(sample_options)
+    pprint(location_options)
     
 
     problem.addVariables(fields, field_options)

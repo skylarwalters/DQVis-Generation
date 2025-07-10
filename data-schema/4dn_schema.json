@@ -1,0 +1,62 @@
+[
+    {
+      "name": "WTC-11 differentiated to cardiac muscle cell",
+      "description": "in situ Hi-C on compound heterozygous Crispr modified TBX5 LOF with 1 bp insertion causing frameshift and 8 bp deletion in WTC-11 iPSC cells differentiated for 20 days to atrial cardiac myocytes.",
+      "udi:experiment-set":"4DNESW7WYVHO",
+      "sources": [
+        {
+          "title": "Hi-C on WTC-11 differentiated to cardiac muscle cell",
+          "path": "https://data.4dnucleome.org/higlass-view-configs/1d604a2e-8ea9-4962-a565-42e900b79832/"
+        }
+      ],
+      "udi:assembly": "hg19",
+      "udi:genes":[
+          {"name":"UBIAD1", "chr":"chr1", "pos":11273206},
+          {"name":"ITPR", "chr":"chr3", "pos":4493345},
+          {"name":"SPZ1", "chr":"chr5", "pos":80319625},
+          {"name":"SHLD2", "chr":"chr10", "pos":87094161},
+          {"name":"WRAP53", "chr":"chr17", "pos":7686071},
+          {"name":"ARMCX3", "chr":"chrX", "pos":101622797},
+          {"name":"TAAR3P", "chr":"chr6", "pos":1326803225},
+          {"name":"LNCARSR", "chr":"chr9", "pos":79505804}
+      ],
+      "resources": [
+        {
+            "name": "beddb",
+            "path": "https://higlass.4dnucleome.org/api/v1/tileset_info/?d=Svq0LF9NRim8UwNmeueMrg",
+            "schema": {
+              "fields": [
+                {"name":"start", "type":"genomic"},
+                {"name":"end", "type": "genomic"}
+                ],
+              "primaryKey": []
+            },
+            "format": "beddb",
+            "position-fields": [
+              {"genomic-fields":["start", "end"]}
+            ],
+            "udi:use": [
+              "boundary"
+            ]
+        },
+        {
+          "name": "mcool",
+          "path": "https://higlass.4dnucleome.org/api/v1/tileset_info/?d=9f9b830c-c284-4d77-b747-2e6598aa3262",
+          "schema": {
+            "fields": [
+                {"name":"xs", "type":"genomic"},
+                {"name":"xe", "type":"genomic"},
+                {"name":"ys", "type":"genomic"},
+                {"name":"value", "type":"quantitative"}
+            ],
+            "primaryKey": []
+          },
+          "format": "mcool",
+          "position-fields": [],
+          "udi:use": [
+            "hic"
+          ]
+        }
+    ] 
+  }
+]

@@ -1,10 +1,49 @@
+
 [
   {
     "template": {
-      "start": "Map the <E> data at <L>",
-      "end": "Add another <E> at <L> to compare"
+      "start": "What are the <E> at <L>?",
+      "end": "Compare with <E2> at <L>"
+    },
+    "match": [],
+    "transition_type": "comparative addition"
+  },
+
+  {
+    "template": {
+      "start": "What are the <E> at <L>?",
+      "end": "Show in <E> as a circular view"
     },
     "match": [{ "start": "E", "end": "E1", "on": "entity" }],
-    "transition_type": "comparative addition"
+    "transition_type": "visual"
+  },
+
+  {
+    "template": {
+      "start": "What are the <E> at <L>?",
+      "end": "Separate <E> by <F>"
+    },
+    "match": [{ "start": "E", "end": "E1", "on": "entity" }],
+    "transition_type": "data stratification"
+  },
+
+  {
+    "template": {
+      "start": "What are the <E> at <L>?",
+      "end": "Overlay the frequency of <E> as a bar chart"
+    },
+    "match": [{ "start": "E", "end": "E1", "on": "entity" }],
+    "transition_type": "overlay"
+  },
+
+
+  {
+    "template": {
+      "start": "What are the <E>?",
+      "end": "Zoom in on <E> at <L>"
+    },
+    "match": [{ "start": "E", "end": "E1", "on": "entity" }],
+    "transition_type": "overlay"
   }
+
 ]
