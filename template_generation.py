@@ -88,7 +88,7 @@ def generate():
     
     
     # USE THIS ONE !! YAYYYYYYY
-        df = add_row(
+    df = add_row(
         df,
         query_template="How do the <E> appear?",
         spec=({
