@@ -209,6 +209,7 @@ def expand_template(row, sample_options, entity_options, field_options, location
     constraints = expand_constraints(row["constraints"], tags) # added to convert to a list
     # print("⭐ expanded constraints ⭐")
     
+    
     s = constraint_solver(samples, entities, fields, locations, constraints, sample_options, entity_options, field_options, location_options)
 
     return expand_solutions(row, tags, s)
@@ -758,9 +759,10 @@ def constraint_solver(
     problem.addVariables(samples, sample_options)
     problem.addVariables(entities, entity_options)
     problem.addVariables(locations, location_options)
-        
+            
     for constraint in constraints:
         problem.addConstraint(constraint) 
+        print(constraint)
     
     s = problem.getSolutions()
         

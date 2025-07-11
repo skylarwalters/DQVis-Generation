@@ -32,7 +32,7 @@ class ChartType(Enum):
     #GROUPED_DOT = "grouped_dot"
 
 
-def add_row(df, query_template, spec, constraints, query_type: QueryType, chart_type: ChartType):
+def add_row(df, query_template, spec, constraints, justification, query_type: QueryType, chart_type: ChartType):
     spec_key_count = get_total_key_count(spec)
     if spec_key_count <= 12:
         complexity = "simple"
@@ -50,7 +50,8 @@ def add_row(df, query_template, spec, constraints, query_type: QueryType, chart_
         "creation_method": "template",
         "chart_type": chart_type.value,
         "chart_complexity": complexity,
-        "spec_key_count": spec_key_count
+        "spec_key_count": spec_key_count,
+        "justification": justification
     }
     return df
 
@@ -73,6 +74,7 @@ def generate():
             "chart_type",
             "chart_complexity",
             "spec_key_count",
+            "justification"
         ]
     )
 
@@ -97,6 +99,7 @@ def generate():
 
     # Location zoom
     location_zoom = "The plot's visual scope is centered on the user-defined area of interest."
+    whole_genome = "The plot's visual scope covers the full genome, as no location was defined."
     
     # Comparison 
     sample_comparison_vertical = "There are plots for each user-defined sample. " + vertical_stacked_view
@@ -110,56 +113,17 @@ def generate():
     cnv="Copy number data displays the number of copies in a given sample by elevating the rectangle to the corresponding copy frequency."
     coverage_area="Coverage is displayed in an area plot to convey the depth of reads at each genomic location."
     coverage_line="Coverage is displayed in a line plot to convey the depth of reads at each genomic location."
+    coverage_bar="Coverage is displayed in a bar plot to convey the depth of reads at each genomic location."
+    
+    
+    
 
-    
-    
-    df = add_row(
-        df,
-        query_template="What is the <E> data?",
-        spec=(
-            {
-                "title": "Structural variants on whole genome",
-                "tracks": [
-                    {
-                    "data": {
-                        "url": "<E.url>",
-                        "type": "csv",
-                        "separator":"\t",
-                        "genomicFieldsToConvert": [
-                            {"chromosomeField": "<E.chr1>", "genomicFields":["<E.start1>", "<E.end1>"]},
-                            {"chromosomeField": "<E.chr2>", "genomicFields":["<E.start2>", "<E.end2>"]},
-                        ]
-                    },
-                    "mark": "withinLink",
-                    "x": {"field": "<E.start1>", "type": "genomic"},
-                    "xe": {"field": "<E.end2>", "type": "genomic"},
-                    "strokeWidth": {"value": 1},
-                    "opacity": {"value": 0.7},
-                    "stroke": {"value": "#D55D00"},
-                    "style": {"linkStyle": "elliptical"}
-                    
-                    }
-                ]
-            }
-        ),
-        constraints=[
-            "E['use'] == 'sv'",
-        ],
-        justification=[
-            sv
-        ],
-        query_type=QueryType.UTTERANCE,
-        chart_type=ChartType.CONNECTIVITY,
-    )
-    
-    
     '''    
         
     # ---------------------------------------------------------
     # Mapping entities
     # ---------------------------------------------------------
     
-    
     df = add_row(
         df,
         query_template="What is the <E> data?",
@@ -190,7 +154,57 @@ def generate():
             }
         ),
         constraints=[
-            "E['use'] == 'sv'",
+            "E['udi:use'] == 'sv'",
+        ],
+        justification=[
+            sv,
+            whole_genome
+        ],
+        query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.CONNECTIVITY,
+    )
+    
+    df = add_row(
+        df,
+        query_template="What is the <E> data in a circular view?",
+        spec=(
+            {
+                "title": "Structural variants on whole genome",
+                "views":[
+                    {"layout": "circular",
+                    "tracks": [
+                    {
+                    "data": {
+                        "url": "<E.url>",
+                        "type": "csv",
+                        "separator":"\t",
+                        "genomicFieldsToConvert": [
+                            {"chromosomeField": "<E.chr1>", "genomicFields":["<E.start1>", "<E.end1>"]},
+                            {"chromosomeField": "<E.chr2>", "genomicFields":["<E.start2>", "<E.end2>"]},
+                        ]
+                    },
+                    "mark": "withinLink",
+                    "x": {"field": "<E.start1>", "type": "genomic"},
+                    "xe": {"field": "<E.end2>", "type": "genomic"},
+                    "strokeWidth": {"value": 1},
+                    "opacity": {"value": 0.7},
+                    "stroke": {"value": "#D55D00"},
+                    "style": {"linkStyle": "elliptical"}
+                    
+                    }
+                ]}
+                ]
+                }
+                
+            
+        ),
+        constraints=[
+            "E['udi:use'] == 'sv'",
+        ],
+        justification=[
+            sv,
+            circular_view,
+            whole_genome
         ],
         query_type=QueryType.UTTERANCE,
         chart_type=ChartType.CONNECTIVITY,
@@ -248,13 +262,292 @@ def generate():
         constraints=[
             "E['use'] == 'sv'",
         ],
+        justification=[
+            sv,
+            location_zoom
+        ],
         query_type=QueryType.UTTERANCE,
         chart_type=ChartType.CONNECTIVITY,
     )
     
     df = add_row(
         df,
-        query_template="How do the <E> appear?",
+        query_template="What are <E> at <L> for <S>?",
+        spec=(
+            {
+            "title": "Structural variants at <L> in <S>",
+            "tracks": [
+                {
+                "data": {
+                    "url": "<E.url>",
+                    "type": "csv",
+                    "separator": "\t",
+                    "genomicFieldsToConvert": [
+                    {
+                        "chromosomeField": "<E.chr1>",
+                        "genomicFields": ["<E.start1>", "<E.end1>"]
+                    },
+                    {
+                        "chromosomeField": "<E.chr2>",
+                        "genomicFields": ["<E.start2>", "<E.end2>"]
+                    }
+                    ]
+                },
+                "mark": "withinLink",
+                "x": {
+                    "field": "<E.start1>",
+                    "type": "genomic",
+                    "domain": {
+                    "chromosome": "<L.geneChr>",
+                    "interval": ["<L.geneStart>", "<L.geneEnd>"]
+                    }
+                },
+                "xe": {
+                    "field": "<E.end2>",
+                    "type": "genomic"
+                },
+                "strokeWidth": {
+                    "value": 1
+                },
+                "opacity": {
+                    "value": 0.7
+                },
+                "stroke": {"value": "#D55D00"},
+                "style": {"linkStyle": "elliptical"}
+                
+                }
+            ]
+            }
+        ),
+        constraints=[
+            "E['use'] == 'sv'",
+        ],
+        justification=[
+            sv,
+            location_zoom
+        ],
+        query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.CONNECTIVITY,
+    )
+    
+    df = add_row(
+        df,
+        query_template="What is the <E> data, by type?",
+        spec=(
+            {
+                "title": "Structural variants on whole genome, by type",
+                "tracks": [
+                    {
+                    "dataTransform": [
+                        {
+                        "type": "svType",
+                        "firstBp": {
+                            "chrField": "chrom1",
+                            "posField": "start1",
+                            "strandField": "strand1"
+                        },
+                        "secondBp": {
+                            "chrField": "chrom2",
+                            "posField": "start2",
+                            "strandField": "strand2"
+                        },
+                        "newField": "svclass"
+                        },
+                        {
+                        "type": "replace",
+                        "field": "svclass",
+                        "replace": [
+                            {"from": "DUP", "to": "Duplication"},
+                            {"from": "TRA", "to": "Translocation"},
+                            {"from": "DEL", "to": "Deletion"},
+                            {"from": "t2tINV", "to": "Inversion (TtT)"},
+                            {"from": "h2hINV", "to": "Inversion (HtH)"}
+                        ],
+                        "newField": "svclass"
+                        }
+                    ],
+                    "data": {
+                        "url": "<E.url>",
+                        "type": "csv",
+                        "separator": "\t",
+                        "genomicFieldsToConvert": [
+                            {"chromosomeField": "<E.chr1>", "genomicFields":["<E.start1>", "<E.end1>"]},
+                            {"chromosomeField": "<E.chr2>", "genomicFields":["<E.start2>", "<E.end2>"]},
+                        ]
+                    },
+                    "mark": "withinLink",
+                    "x": {"field": "start1", "type": "genomic"},
+                    "xe": {"field": "end2", "type": "genomic"},
+                    "tooltip": [{"field": "svclass", "type": "nominal"}],
+                    "strokeWidth": {"value": 1},
+                    "opacity": {"value": 0.7},
+                    "row": {
+                        "field": "svclass",
+                        "type": "nominal",
+                        "domain": [
+                        "Translocation",
+                        "Duplication",
+                        "Deletion",
+                        "Inversion (TtT)",
+                        "Inversion (HtH)"
+                        ]
+                    },
+                    "stroke": {
+                        "field": "svclass",
+                        "type": "nominal",
+                        "legend": True,
+                        "domain": [
+                        "Translocation",
+                        "Duplication",
+                        "Deletion",
+                        "Inversion (TtT)",
+                        "Inversion (HtH)"
+                        ],
+                        "range": ["#1f77b4", "#d62728", "#2ca02c", "#ff7f0e", "#9467bd"]
+                    },
+                    "color": {
+                        "field": "svclass",
+                        "type": "nominal",
+                        "legend": True,
+                        "domain": [
+                        "Translocation",
+                        "Duplication",
+                        "Deletion",
+                        "Inversion (TtT)",
+                        "Inversion (HtH)"
+                        ],
+                        "range": ["#1f77b4", "#d62728", "#2ca02c", "#ff7f0e", "#9467bd"]
+                    },
+                    "style": {"linkStyle": "elliptical"}
+                    }
+                ]
+                }
+        ),
+        constraints=[
+            "E['udi:use'] == 'sv'",
+        ],
+        justification=[
+            sv,
+            whole_genome,
+            color_stratification
+        ],
+        query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.CONNECTIVITY,
+    )
+    
+    df = add_row(
+        df,
+        query_template="What is the <E> data at <L>, by type?",
+        spec=(
+            {
+                "title": "Structural variants on whole genome, by type",
+                "tracks": [
+                    {
+                    "dataTransform": [
+                        {
+                        "type": "svType",
+                        "firstBp": {
+                            "chrField": "chrom1",
+                            "posField": "start1",
+                            "strandField": "strand1"
+                        },
+                        "secondBp": {
+                            "chrField": "chrom2",
+                            "posField": "start2",
+                            "strandField": "strand2"
+                        },
+                        "newField": "svclass"
+                        },
+                        {
+                        "type": "replace",
+                        "field": "svclass",
+                        "replace": [
+                            {"from": "DUP", "to": "Duplication"},
+                            {"from": "TRA", "to": "Translocation"},
+                            {"from": "DEL", "to": "Deletion"},
+                            {"from": "t2tINV", "to": "Inversion (TtT)"},
+                            {"from": "h2hINV", "to": "Inversion (HtH)"}
+                        ],
+                        "newField": "svclass"
+                        }
+                    ],
+                    "data": {
+                        "url": "<E.url>",
+                        "type": "csv",
+                        "separator": "\t",
+                        "genomicFieldsToConvert": [
+                            {"chromosomeField": "<E.chr1>", "genomicFields":["<E.start1>", "<E.end1>"]},
+                            {"chromosomeField": "<E.chr2>", "genomicFields":["<E.start2>", "<E.end2>"]},
+                        ]
+                    },
+                    "mark": "withinLink",
+                    "x": {"field": "start1", "type": "genomic","domain": {
+                            "chromosome": "<L.geneChr>",
+                            "interval": ["<L.geneStart>", "<L.geneEnd>"]
+                        }
+                    },
+                    "xe": {"field": "end2", "type": "genomic"},
+                    "tooltip": [{"field": "svclass", "type": "nominal"}],
+                    "strokeWidth": {"value": 1},
+                    "opacity": {"value": 0.7},
+                    "row": {
+                        "field": "svclass",
+                        "type": "nominal",
+                        "domain": [
+                        "Translocation",
+                        "Duplication",
+                        "Deletion",
+                        "Inversion (TtT)",
+                        "Inversion (HtH)"
+                        ]
+                    },
+                    "stroke": {
+                        "field": "svclass",
+                        "type": "nominal",
+                        "legend": True,
+                        "domain": [
+                        "Translocation",
+                        "Duplication",
+                        "Deletion",
+                        "Inversion (TtT)",
+                        "Inversion (HtH)"
+                        ],
+                        "range": ["#1f77b4", "#d62728", "#2ca02c", "#ff7f0e", "#9467bd"]
+                    },
+                    "color": {
+                        "field": "svclass",
+                        "type": "nominal",
+                        "legend": True,
+                        "domain": [
+                        "Translocation",
+                        "Duplication",
+                        "Deletion",
+                        "Inversion (TtT)",
+                        "Inversion (HtH)"
+                        ],
+                        "range": ["#1f77b4", "#d62728", "#2ca02c", "#ff7f0e", "#9467bd"]
+                    },
+                    "style": {"linkStyle": "elliptical"}
+                    }
+                ]
+                }
+        ),
+        constraints=[
+            "E['udi:use'] == 'sv'",
+        ],
+        justification=[
+            sv,
+            whole_genome,
+            color_stratification
+        ],
+        query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.CONNECTIVITY,
+    )
+    
+    
+    df = add_row(
+        df,
+        query_template="What is the <E> data?",
         spec=({
             "tracks":[{
                 "title": "Copy Number Variants",
@@ -288,6 +581,10 @@ def generate():
         constraints=[
             "E['use'] == 'cna'",
         ],
+        justification=[
+            cnv,
+            whole_genome
+        ],
         query_type=QueryType.UTTERANCE,
         chart_type=ChartType.RECTANGLE,
     )
@@ -295,7 +592,7 @@ def generate():
     
     df = add_row(
         df,
-        query_template="How do the <E> appear at <L>?",
+        query_template="What are the <E> at <L>?",
         spec=({
             "tracks":[{
                 "title": "Copy Number Variants",
@@ -331,14 +628,17 @@ def generate():
         constraints=[
             "E['use'] == 'cna'",
         ],
+        justification=[
+            cnv,
+            location_zoom
+        ],
         query_type=QueryType.QUESTION,
         chart_type=ChartType.RECTANGLE,
     )
     
-    # point mutations + indels
     df = add_row(
         df,
-        query_template="How do the <E> appear?",
+        query_template="What are the <E>?",
         spec=({
             "title": "Point Mutations",
             'tracks': [{
@@ -372,6 +672,10 @@ def generate():
         constraints=[
             "E['use'] == 'point-mutation'",
         ],
+        justification=[
+            point_plot,
+            whole_genome
+        ],
         query_type=QueryType.UTTERANCE,
         chart_type=ChartType.RECTANGLE,
     )
@@ -380,7 +684,7 @@ def generate():
         df,
         query_template="What are the <E> at <L>?",
         spec=({
-            "title": "Point Mutations",
+            "title": "Point Mutations at <L>",
             'tracks': [{
                 
                 "data": {
@@ -417,168 +721,63 @@ def generate():
         constraints=[
             "E['use'] == 'point-mutation'",
         ],
+        justification=[
+            point_plot,
+            location_zoom
+        ],
         query_type=QueryType.UTTERANCE,
         chart_type=ChartType.RECTANGLE,
     )
     
-    
-    # df = add_row(
-    #     df,
-    #     query_template="Map the <E> data.",
-    #     spec=({
-    #         "title": "Indels",
-    #         'tracks': [{
+    df = add_row(
+        df,
+        query_template="What are the <E> at <L> in <S>?",
+        spec=({
+            "title": "Point Mutations at <L> in <S>",
+            'tracks': [{
                 
-    #             "data": {
-    #                 "type": "vcf",
-    #                 "url": "<E.url>",
-    #                 "indexUrl": "<E.index-file>",
-    #             },
-    #             "dataTransform": [
-    #                 {
-    #                     "type": "concat",
-    #                     "fields": [
-    #                         "REF",
-    #                         "ALT"
-    #                     ],
-    #                     "separator": " → ",
-    #                     "newField": "LAB"
-    #                 },
-    #                 {
-    #                     "type": "replace",
-    #                     "field": "MUTTYPE",
-    #                     "replace": [
-    #                         {
-    #                         "from": "insertion",
-    #                         "to": "Insertion"
-    #                         },
-    #                         {
-    #                         "from": "deletion",
-    #                         "to": "Deletion"
-    #                         }
-    #                     ],
-    #                     "newField": "MUTTYPE"
-    #                 }
-    #             ],
-    #             "mark": "rect",
-    #             "x": {
-    #                 "field": "POS",
-    #                 "type": "genomic",
-                    
-    #             },
-               
-    #             "color":{
-    #                 "field": "MUTTYPE",
-    #                 "type": "nominal",
-    #                 "legend": True,
-    #                 "domain": [
-    #                     "Insertion",
-    #                     "Deletion"
-    #                 ]
-    #             },
-    #             "tooltip": [
-    #                 {
-    #                 "field": "POS",
-    #                 "type": "genomic"
-    #                 },
-    #                 {
-    #                 "field": "REF",
-    #                 "type": "nominal"
-    #                 },
-    #                 {
-    #                 "field": "ALT",
-    #                 "type": "nominal"
-    #                 }
-    #             ]}],
-    #         }
-    #     ),
-    #     constraints=[
-    #         "E['use'] == 'indel'",
-    #     ],
-    #     query_type=QueryType.UTTERANCE,
-    #     chart_type=ChartType.RECTANGLE,
-    # )
+                "data": {
+                    "type": "vcf",
+                    "url": "<E.url>",
+                    "indexUrl": "<E.index-file>",
+                },
+                "mark": "point",
+                "x": {
+                    "field": "POS",
+                    "type": "genomic",
+                    "domain": {
+                        "chromosome": "<L.geneChr>",
+                        "interval": ["<L.geneStart>", "<L.geneEnd>"]
+                    }
+                },
+                "tooltip": [
+                    {
+                    "field": "POS",
+                    "type": "genomic"
+                    },
+                    {
+                    "field": "REF",
+                    "type": "nominal"
+                    },
+                    {
+                    "field": "ALT",
+                    "type": "nominal"
+                    }
+                ]
+                }],
+            }
+        ),
+        constraints=[
+            "E['use'] == 'point-mutation'",
+        ],
+        justification=[
+            point_plot,
+            location_zoom
+        ],
+        query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.RECTANGLE,
+    )
     
-    
-    # df = add_row(
-    #     df,
-    #     query_template="Map the <E> data at <L>.",
-    #     spec=({
-    #         "title": "Indels",
-    #         'tracks': [{
-                
-    #             "data": {
-    #                 "type": "vcf",
-    #                 "url": "<E.url>",
-    #                 "indexUrl": "<E.index-file>",
-    #             },
-    #             "dataTransform": [
-    #                 {
-    #                     "type": "concat",
-    #                     "fields": [
-    #                         "REF",
-    #                         "ALT"
-    #                     ],
-    #                     "separator": " → ",
-    #                     "newField": "LAB"
-    #                 },
-    #                 {
-    #                     "type": "replace",
-    #                     "field": "MUTTYPE",
-    #                     "replace": [
-    #                         {
-    #                         "from": "insertion",
-    #                         "to": "Insertion"
-    #                         },
-    #                         {
-    #                         "from": "deletion",
-    #                         "to": "Deletion"
-    #                         }
-    #                     ],
-    #                     "newField": "MUTTYPE"
-    #                 }
-    #             ],
-    #             "mark": "rect",
-    #             "x": {
-    #                 "field": "POS",
-    #                 "type": "genomic",
-    #                 "domain": {
-    #                     "chromosome": "<L.geneChr>",
-    #                     "interval": ["<L.geneStart>", "<L.geneEnd>"]
-    #                 }
-    #             },
-               
-    #             "color":{
-    #                 "field": "MUTTYPE",
-    #                 "type": "nominal",
-    #                 "legend": True,
-    #                 "domain": [
-    #                     "Insertion",
-    #                     "Deletion"
-    #                 ]
-    #             },
-    #             "tooltip": [
-    #                 {
-    #                 "field": "POS",
-    #                 "type": "genomic"
-    #                 },
-    #                 {
-    #                 "field": "REF",
-    #                 "type": "nominal"
-    #                 },
-    #                 {
-    #                 "field": "ALT",
-    #                 "type": "nominal"
-    #                 }
-    #             ]}],
-    #         }
-    #     ),
-    #     constraints=[
-    #         "E['use'] == 'indel'",
-    #     ],
-    #     query_type=QueryType.UTTERANCE,
-    #     chart_type=ChartType.RECTANGLE,
-    # )
     
     df = add_row(
         df,
@@ -608,67 +807,92 @@ def generate():
         constraints=[
             "E['use'] == 'coverage'",
         ],
+        justification=[
+            coverage_bar,
+            whole_genome
+        ],
         query_type=QueryType.QUESTION,
         chart_type=ChartType.POINT,
     )
         
-    
     df = add_row(
         df,
-        query_template="Where are <F:p&q> at <L> for <S>",
+        query_template="What is the <E> of the data at <L>?",
         spec=(
             {
+                "title": "Bar Graph Using BAM Data at <L>",
+                "layout": "linear",
                 "tracks": [
                     {
-                    "data": {
-                        "url": "<F.url>",
-                        "type":"vcf",
-                        "indexUrl":"https://somatic-browser-test.s3.amazonaws.com/PCAWG/Cervix-AdenoCA/b9d1a64e-d445-4174-a5b4-76dd6ea69419.sorted.vcf.gz.tbi",
-                        "sampleLength":1000 
+                        "data": {
+                            "url": "<E.url>",
+                            "type": "bam",
+                            "indexUrl": "<E.index-file>",
+                        },
+                    "mark": "bar",
+                    "dataTransform": [
+                            {"type": "coverage", "startField": "<E.start>", "endField": "<E.end>"}
+                        ],
+                    "x": {"field": "<E.start>", "type": "genomic", "domain": {
+                        "chromosome": "<L.geneChr>",
+                        "interval": ["<L.geneStart>", "<L.geneEnd>"]
+                    }},
+                    "xe": {"field": "<E.end>", "type": "genomic"},
+                    "y": {"field": "coverage", "type": "quantitative", "axis": "right"},
                     },
-                    "mark": "point",
-                    "x": {"field": "<F.field>", "type": "genomic", "axis":"bottom"},
-                    }
-                ]
-            }
+                ]     
+            }       
         ),
         constraints=[
-            "F['field'] == 'POS'",
+            "E['use'] == 'coverage'",
+        ],
+        justification=[
+            coverage_bar,
+            location_zoom
         ],
         query_type=QueryType.QUESTION,
         chart_type=ChartType.POINT,
     )
     
-    
-    
-    
-    
-    
     df = add_row(
         df,
-        query_template="Where are <F:p&q> at <L> for <S>",
+        query_template="What is the <E> of the data at <L> in <S>?",
         spec=(
             {
+                "title": "Coverage Data at <L> in <S>",
+                "layout": "linear",
                 "tracks": [
                     {
-                    "data": {
-                        "url": "<F.url>",
-                        "type":"vcf",
-                        "indexUrl":"https://somatic-browser-test.s3.amazonaws.com/PCAWG/Cervix-AdenoCA/b9d1a64e-d445-4174-a5b4-76dd6ea69419.sorted.vcf.gz.tbi",
-                        "sampleLength":1000 
+                        "data": {
+                            "url": "<E.url>",
+                            "type": "bam",
+                            "indexUrl": "<E.index-file>",
+                        },
+                    "mark": "bar",
+                    "dataTransform": [
+                            {"type": "coverage", "startField": "<E.start>", "endField": "<E.end>"}
+                        ],
+                    "x": {"field": "<E.start>", "type": "genomic", "domain": {
+                        "chromosome": "<L.geneChr>",
+                        "interval": ["<L.geneStart>", "<L.geneEnd>"]
+                    }},
+                    "xe": {"field": "<E.end>", "type": "genomic"},
+                    "y": {"field": "coverage", "type": "quantitative", "axis": "right"},
                     },
-                    "mark": "point",
-                    "x": {"field": "<F.field>", "type": "genomic", "axis":"bottom"},
-                    }
-                ]
-            }
+                ]     
+            }       
         ),
         constraints=[
-            "F['field'] == 'POS'",
+            "E['use'] == 'coverage'",
+        ],
+        justification=[
+            coverage_bar,
+            location_zoom
         ],
         query_type=QueryType.QUESTION,
         chart_type=ChartType.POINT,
     )
+    
     
     
     # Analytical queries
@@ -727,13 +951,17 @@ def generate():
         constraints=[
             "E['use'] == 'point-mutation'", 
         ],
+        justification=[
+            binned_bars,
+            whole_genome
+        ],
         query_type=QueryType.QUESTION,
         chart_type=ChartType.POINT,
     )
     
     df = add_row(
         df,
-        query_template="How is <E> distributed on <S>?",
+        query_template="How is <E> distributed in <S>?",
         spec=(
             {
                 "title": "<E> Distribution",
@@ -783,6 +1011,10 @@ def generate():
         ),
         constraints=[
             "E['use'] == 'point-mutation'", 
+        ],
+        justification=[
+            binned_bars,
+            whole_genome
         ],
         query_type=QueryType.QUESTION,
         chart_type=ChartType.POINT,
@@ -849,6 +1081,79 @@ def generate():
         constraints=[
             "E['use'] == 'point-mutation'", 
         ],
+        justification=[
+            binned_bars,
+            location_zoom
+        ],
+        query_type=QueryType.QUESTION,
+        chart_type=ChartType.POINT,
+    )
+    
+    df = add_row(
+        df,
+        query_template="How is <E> distributed on <L> in <S>?",
+        spec=(
+            {
+                "title": "<E> Distribution on <L> in <S>",
+                "layout": "linear",
+                "arrangement": "vertical",
+                "centerRadius": 0.8,
+                "views": [
+                    {
+                    "tracks": [
+                        {
+                        "id": "track-1",
+                        "data": {
+                            "url": "<E.url>",
+                            "type": "vcf",
+                            "indexUrl": "<E.index-file>",
+                        },
+                        "dataTransform": [
+                            {
+                            "type": "coverage",
+                            "startField": "POS",
+                            "endField": "POS",
+                            "newField": "depth"
+                            }
+                        ],
+                        "mark": "bar",
+                        "x": {
+                            "field": "POS", 
+                            "type": "genomic", 
+                            "axis": "top",
+                            "domain":
+                                {
+                                    "chromosome": "<L.geneChr>",
+                                    "interval": ["<L.geneStart>", "<L.geneEnd>"]
+                                }
+                              },
+                        "y": {"field": "depth", "type": "quantitative"},
+                        "tooltip": [
+                            {
+                            "field": "POS",
+                            "type": "genomic"
+                            },
+                            {
+                            "field": "depth",
+                            "type": "quantitative"
+                            }
+                        ],
+                        "opacity": {"value": 1},
+                        "width": 600,
+                        "height": 130
+                        }
+                    ]
+                    }
+                ]
+            }
+        ),
+        constraints=[
+            "E['use'] == 'point-mutation'", 
+        ],
+        justification=[
+            binned_bars,
+            location_zoom
+        ],
         query_type=QueryType.QUESTION,
         chart_type=ChartType.POINT,
     )
@@ -914,6 +1219,10 @@ def generate():
         constraints=[
             "E['use'] == 'point-mutation'", 
         ],
+        justification=[
+            binned_bars,
+            location_zoom
+        ],
         query_type=QueryType.QUESTION,
         chart_type=ChartType.POINT,
     )
@@ -978,6 +1287,10 @@ def generate():
         ),
         constraints=[
             "E['use'] == 'point-mutation'", 
+        ],
+        justification=[
+            binned_bars,
+            location_zoom
         ],
         query_type=QueryType.QUESTION,
         chart_type=ChartType.POINT,
@@ -1057,6 +1370,11 @@ def generate():
              "E1['use'] == 'point-mutation'",
              "E2['use'] == 'sv'",  
         ],
+        justification=[
+            point_plot,
+            sv,
+            entity_comparison_vertical
+        ],
         query_type=QueryType.QUESTION,
         chart_type=ChartType.POINT,
     )
@@ -1105,7 +1423,7 @@ def generate():
                         "height": 130
                         }
                     ]
-                    },
+                },
                     {"tracks": [
                         {
                         "id": "track-2",
@@ -1143,6 +1461,10 @@ def generate():
         constraints=[
              "E['use'] == 'point-mutation'",
              different_genes
+        ],
+        justification=[
+            point_plot,
+            location_comparison_vertical
         ],
         query_type=QueryType.QUESTION,
         chart_type=ChartType.POINT,
@@ -1256,6 +1578,10 @@ def generate():
              "E['use'] == 'point-mutation'",
              different_genes
         ],
+        justification=[
+            point_plot,
+            location_comparison_vertical
+        ],
         query_type=QueryType.QUESTION,
         chart_type=ChartType.POINT,
     )
@@ -1351,6 +1677,10 @@ def generate():
              "E['use'] == 'coverage'",
              different_genes
         ],
+        justification=[
+            coverage_bar,
+            location_comparison_vertical
+        ],
         query_type=QueryType.QUESTION,
         chart_type=ChartType.POINT,
     )
@@ -1436,6 +1766,10 @@ def generate():
             "E['udi:use'] == 'cna'", 
             different_genes
         ],
+        justification=[
+            cnv,
+            location_comparison_vertical
+        ],
         query_type=QueryType.UTTERANCE,
         chart_type=ChartType.RECTANGLE,
     )
@@ -1504,96 +1838,222 @@ def generate():
             "E['udi:use'] == 'sv'", 
             different_genes
         ],
+        justification=[
+            sv,
+            location_comparison_vertical
+        ],
         query_type=QueryType.UTTERANCE,
         chart_type=ChartType.RECTANGLE,
     )    
     
-    
-    
-    
-    
-    
-    
-    
-   
-    # df = add_row(
-    #     df,
-    #     query_template="How is <S1.E.F:p&q> distributed in <S1> versus <S2.E.F:p&q> in <S2>?",
-    #     spec=(
-    #         {
-    #             "title": "<F> in <S1> and <S2>",
-    #             "layout": "linear",
-    #             "arrangement": "vertical",
-    #             "centerRadius": 0.8,
-    #             "views": [
-    #                 {
-    #                 "tracks": [
-    #                     {
-    #                         "title": "<F> in <S1>",
-    #                         "data": {
-    #                             "url": "<F.url>",
-    #                             "type": "vcf",
-    #                             "indexUrl": "<F.index-file>",
-    #                         },
-    #                         "mark": "point",
-    #                         "x": {
-    #                             "field": "<F>", 
-    #                             "type": "genomic", 
-    #                             "axis": "top",
-    #                         },    
-    #                         "tooltip": [
-    #                             {
-    #                             "field": "<F>",
-    #                             "type": "genomic"
-    #                             },
-    #                             {
-    #                             "field": "depth",
-    #                             "type": "quantitative"
-    #                             }
-    #                         ],
-    #                         "opacity": {"value": 1},
-    #                         "width": 600,
-    #                         "height": 130
-    #                     },
-    #                     {
-    #                         "title": "<F> in <S2>",
-    #                         "data": {
-    #                             "url": "<F.url>",
-    #                             "type": "vcf",
-    #                             "indexUrl": "<F.index-file>",
-    #                         },
-    #                         "mark": "point",
-    #                         "x": {
-    #                             "field": "<F>", 
-    #                             "type": "genomic", 
-    #                             "axis": "top",
-    #                         },    
-    #                         "tooltip": [
-    #                             {
-    #                             "field": "<F>",
-    #                             "type": "genomic"
-    #                             },
-    #                             {
-    #                             "field": "depth",
-    #                             "type": "quantitative"
-    #                             }
-    #                         ],
-    #                         "opacity": {"value": 1},
-    #                         "width": 600,
-    #                         "height": 130
-    #                     }] 
-    #                 }
-    #             ]
-    #         }
-    #     ),
-    #     constraints=[
-    #         #"S1.E.F['field'] == 'start1' or S1.E.F['field'] == 'end1' or S1.E.F['field'] == 'start2' or S1.E.F['field'] == 'end2'", 
-    #         #"S1.E.F['field'] == S2.E.F['field']",
-    #         #different_samples
-    #     ],
-    #     query_type=QueryType.QUESTION,
-    #     chart_type=ChartType.POINT,
-    # )
+    df = add_row(
+        df,
+        query_template="How do <E> at <L1> and <L2> compare, by type?",
+        spec=(
+            {
+                "title": "Structural variants on <L1> and <L2>, by type",
+                "views": [
+                    {
+                    "title":"Variants on <L1>",
+                    "tracks": [
+                        {
+                        "dataTransform": [
+                            {
+                            "type": "svType",
+                            "firstBp": {
+                                "chrField": "chrom1",
+                                "posField": "start1",
+                                "strandField": "strand1"
+                            },
+                            "secondBp": {
+                                "chrField": "chrom2",
+                                "posField": "start2",
+                                "strandField": "strand2"
+                            },
+                            "newField": "svclass"
+                            },
+                            {
+                            "type": "replace",
+                            "field": "svclass",
+                            "replace": [
+                                {"from": "DUP", "to": "Duplication"},
+                                {"from": "TRA", "to": "Translocation"},
+                                {"from": "DEL", "to": "Deletion"},
+                                {"from": "t2tINV", "to": "Inversion (TtT)"},
+                                {"from": "h2hINV", "to": "Inversion (HtH)"}
+                            ],
+                            "newField": "svclass"
+                            }
+                        ],
+                        "data": {
+                            "url": "<E.url>",
+                            "type": "csv",
+                            "separator": "\t",
+                            "genomicFieldsToConvert": [
+                                {"chromosomeField": "<E.chr1>", "genomicFields":["<E.start1>", "<E.end1>"]},
+                                {"chromosomeField": "<E.chr2>", "genomicFields":["<E.start2>", "<E.end2>"]},
+                            ]
+                        },
+                        "mark": "withinLink",
+                        "x": {"field": "start1", "type": "genomic", "domain": {
+                                "chromosome": "<L1.geneChr>",
+                                "interval": ["<L1.geneStart>", "<L1.geneEnd>"]
+                                }
+                            },
+                        "xe": {"field": "end2", "type": "genomic"},
+                        "tooltip": [{"field": "svclass", "type": "nominal"}],
+                        "strokeWidth": {"value": 1},
+                        "opacity": {"value": 0.7},
+                        "row": {
+                            "field": "svclass",
+                            "type": "nominal",
+                            "domain": [
+                            "Translocation",
+                            "Duplication",
+                            "Deletion",
+                            "Inversion (TtT)",
+                            "Inversion (HtH)"
+                            ]
+                        },
+                        "stroke": {
+                            "field": "svclass",
+                            "type": "nominal",
+                            "legend": True,
+                            "domain": [
+                            "Translocation",
+                            "Duplication",
+                            "Deletion",
+                            "Inversion (TtT)",
+                            "Inversion (HtH)"
+                            ],
+                            "range": ["#1f77b4", "#d62728", "#2ca02c", "#ff7f0e", "#9467bd"]
+                        },
+                        "color": {
+                            "field": "svclass",
+                            "type": "nominal",
+                            "legend": True,
+                            "domain": [
+                            "Translocation",
+                            "Duplication",
+                            "Deletion",
+                            "Inversion (TtT)",
+                            "Inversion (HtH)"
+                            ],
+                            "range": ["#1f77b4", "#d62728", "#2ca02c", "#ff7f0e", "#9467bd"]
+                        },
+                        "style": {"linkStyle": "elliptical"}
+                        }
+                    ]
+                },
+                          
+                {
+                    "title":"Variants on <L2>",
+                    "tracks": [
+                        {
+                        "dataTransform": [
+                            {
+                            "type": "svType",
+                            "firstBp": {
+                                "chrField": "chrom1",
+                                "posField": "start1",
+                                "strandField": "strand1"
+                            },
+                            "secondBp": {
+                                "chrField": "chrom2",
+                                "posField": "start2",
+                                "strandField": "strand2"
+                            },
+                            "newField": "svclass"
+                            },
+                            {
+                            "type": "replace",
+                            "field": "svclass",
+                            "replace": [
+                                {"from": "DUP", "to": "Duplication"},
+                                {"from": "TRA", "to": "Translocation"},
+                                {"from": "DEL", "to": "Deletion"},
+                                {"from": "t2tINV", "to": "Inversion (TtT)"},
+                                {"from": "h2hINV", "to": "Inversion (HtH)"}
+                            ],
+                            "newField": "svclass"
+                            }
+                        ],
+                        "data": {
+                            "url": "<E.url>",
+                            "type": "csv",
+                            "separator": "\t",
+                            "genomicFieldsToConvert": [
+                                {"chromosomeField": "<E.chr1>", "genomicFields":["<E.start1>", "<E.end1>"]},
+                                {"chromosomeField": "<E.chr2>", "genomicFields":["<E.start2>", "<E.end2>"]},
+                            ]
+                        },
+                        "mark": "withinLink",
+                        "x": {"field": "start1", "type": "genomic", "domain": {
+                                "chromosome": "<L2.geneChr>",
+                                "interval": ["<L2.geneStart>", "<L2.geneEnd>"]
+                                }
+                            },
+                        "xe": {"field": "end2", "type": "genomic"},
+                        "tooltip": [{"field": "svclass", "type": "nominal"}],
+                        "strokeWidth": {"value": 1},
+                        "opacity": {"value": 0.7},
+                        "row": {
+                            "field": "svclass",
+                            "type": "nominal",
+                            "domain": [
+                            "Translocation",
+                            "Duplication",
+                            "Deletion",
+                            "Inversion (TtT)",
+                            "Inversion (HtH)"
+                            ]
+                        },
+                        "stroke": {
+                            "field": "svclass",
+                            "type": "nominal",
+                            "legend": True,
+                            "domain": [
+                            "Translocation",
+                            "Duplication",
+                            "Deletion",
+                            "Inversion (TtT)",
+                            "Inversion (HtH)"
+                            ],
+                            "range": ["#1f77b4", "#d62728", "#2ca02c", "#ff7f0e", "#9467bd"]
+                        },
+                        "color": {
+                            "field": "svclass",
+                            "type": "nominal",
+                            "legend": True,
+                            "domain": [
+                            "Translocation",
+                            "Duplication",
+                            "Deletion",
+                            "Inversion (TtT)",
+                            "Inversion (HtH)"
+                            ],
+                            "range": ["#1f77b4", "#d62728", "#2ca02c", "#ff7f0e", "#9467bd"]
+                        },
+                        "style": {"linkStyle": "elliptical"}
+                        }
+                    ]
+                }]
+                
+            }
+        ),
+        constraints=[
+            "E['udi:use'] == 'sv'", 
+            "L1['gene'] != L2['gene']"
+        ],
+        justification=[
+            sv,
+            location_zoom,
+            color_stratification,
+            vertical_stacked_view
+        ],
+        query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.CONNECTIVITY,
+    )
     
     
     df = add_row(
@@ -1668,85 +2128,16 @@ def generate():
             "S2.E['url'] != S1.E['url']",
             same_assembly
         ],
-        query_type=QueryType.UTTERANCE,
-        chart_type=ChartType.RECTANGLE,
-    )
-    
-    df = add_row(
-        df,
-        query_template="How do <S1.E> in <S1> and <S2.E> in <S2> compare at <S1.L>?",
-        spec=({
-            "title": "Copy Number Variants, <S1> and <S2>",
-            "tracks":[
-                {
-                "title":"<S1>",
-                "data": {
-                    "separator": "\t",
-                    "url": "<S1.E.url>",
-                    "type": "csv",
-                    "chromosomeField": "<S1.E.chr1>",
-                    "genomicFields": ["<S1.E.start>", "<S1.E.end>"]
-                },
-                "mark": "rect",
-                "x": {
-                    "field": "<S1.E.start>",
-                    "type": "genomic",
-                    "domain": {
-                        "chromosome": "<S1.L.geneChr>",
-                        "interval": ["<S1.L.geneStart>", "<S1.L.geneEnd>"]
-                    }
-                },
-                "xe": {
-                    "field": "<S1.E.end>",
-                    "type": "genomic"
-                },
-                "y": {
-                    "field": "total_cn",
-                    "type": "quantitative",
-                    "axis": "right",
-                    "range": [10, 50]
-                  }, 
-            },
-            {
-                "title": "<S2>",
-                "data": {
-                    "separator": "\t",
-                    "url": "<S2.E.url>",
-                    "type": "csv",
-                    "chromosomeField": "<S2.E.chr1>",
-                    "genomicFields": ["<S2.E.start>", "<S2.E.end>"]
-                },
-                "mark": "rect",
-                "x": {
-                    "field": "<S2.E.start>",
-                    "type": "genomic",
-                    "domain":{
-                        "chromosome": "<S1.L.geneChr>",
-                        "interval": ["<S1.L.geneStart>", "<S1.L.geneEnd>"]
-                    }
-                },
-                "xe": {
-                    "field": "<S2.E.end>",
-                    "type": "genomic"
-                },
-                "y": {
-                    "field": "total_cn",
-                    "type": "quantitative",
-                    "axis": "right",
-                    "range": [10, 50]
-                },
-                }
-            ]}
-        ),
-        constraints=[
-            "S1.E['udi:use'] == 'cna'", 
-            "S2.E['udi:use'] == 'cna'",
-            "S2.E['url'] != S1.E['url']",
-            same_assembly
+        justification=[
+            cnv,
+            location_zoom,
+            sample_comparison_vertical,
+            matching_zoom
         ],
         query_type=QueryType.UTTERANCE,
         chart_type=ChartType.RECTANGLE,
     )
+    
     
     df = add_row(
         df,
@@ -1812,77 +2203,15 @@ def generate():
             "S2.E['url'] != S1.E['url']",
             same_assembly
         ],
-        query_type=QueryType.UTTERANCE,
-        chart_type=ChartType.RECTANGLE,
-    )
-    
-    df = add_row(
-        df,
-        query_template="How do <S1.E> in <S1> and <S2.E> in <S2> compare?",
-        spec=({
-            "title": "Copy Number Variants, <S1> and <S2>",
-            "tracks":[
-                {
-                "title":"<S1>",
-                "data": {
-                    "separator": "\t",
-                    "url": "<S1.E.url>",
-                    "type": "csv",
-                    "chromosomeField": "<S1.E.chr1>",
-                    "genomicFields": ["<S1.E.start>", "<S1.E.end>"]
-                },
-                "mark": "rect",
-                "x": {
-                    "field": "<S1.E.start>",
-                    "type": "genomic"
-                },
-                "xe": {
-                    "field": "<S1.E.end>",
-                    "type": "genomic"
-                },
-                "y": {
-                    "field": "total_cn",
-                    "type": "quantitative",
-                    "axis": "right",
-                    "range": [10, 50]
-                  }, 
-            },
-            {
-                "title": "<S2>",
-                "data": {
-                    "separator": "\t",
-                    "url": "<S2.E.url>",
-                    "type": "csv",
-                    "chromosomeField": "<S2.E.chr1>",
-                    "genomicFields": ["<S2.E.start>", "<S2.E.end>"]
-                },
-                "mark": "rect",
-                "x": {
-                    "field": "<S2.E.start>",
-                    "type": "genomic"
-                },
-                "xe": {
-                    "field": "<S2.E.end>",
-                    "type": "genomic"
-                },
-                "y": {
-                    "field": "total_cn",
-                    "type": "quantitative",
-                    "axis": "right",
-                    "range": [10, 50]
-                },
-                }
-            ]}
-        ),
-        constraints=[
-            "S1.E['udi:use'] == 'cna'", 
-            "S2.E['udi:use'] == 'cna'",
-            "S2.E['url'] != S1.E['url']",
-            same_assembly
+        justification=[
+            cnv,
+            sample_comparison_vertical,
+            matching_zoom
         ],
         query_type=QueryType.UTTERANCE,
         chart_type=ChartType.RECTANGLE,
     )
+    
     
     df = add_row(
         df,
@@ -1951,6 +2280,11 @@ def generate():
             "S2.E['udi:use'] == 'point-mutation'",
             "S2.E['url'] != S1.E['url']",
             same_assembly
+        ],
+        justification=[
+            point_plot,
+            sample_comparison_vertical,
+            matching_zoom
         ],
         query_type=QueryType.UTTERANCE,
         chart_type=ChartType.RECTANGLE,
@@ -2031,6 +2365,12 @@ def generate():
             "S2.E['udi:use'] == 'point-mutation'",
             "S2.E['url'] != S1.E['url']",
             same_assembly
+        ],
+        justification=[
+            point_plot,
+            location_zoom,
+            sample_comparison_vertical,
+            matching_zoom
         ],
         query_type=QueryType.UTTERANCE,
         chart_type=ChartType.RECTANGLE,
@@ -2088,6 +2428,11 @@ def generate():
             "S2.E['udi:use'] == 'sv'",
             "S2.E['url'] != S1.E['url']",
             same_assembly
+        ],
+        justification=[
+            sv,
+            sample_comparison_vertical,
+            matching_zoom
         ],
         query_type=QueryType.UTTERANCE,
         chart_type=ChartType.RECTANGLE,
@@ -2151,6 +2496,12 @@ def generate():
             "S2.E['udi:use'] == 'sv'",
             "S2.E['url'] != S1.E['url']",
             same_assembly
+        ],
+        justification=[
+            sv,
+            location_zoom,
+            sample_comparison_vertical,
+            matching_zoom
         ],
         query_type=QueryType.UTTERANCE,
         chart_type=ChartType.RECTANGLE,
@@ -2237,6 +2588,11 @@ def generate():
             "S2.E['url'] != S1.E['url']",
             same_assembly
         ],
+        justification=[
+            coverage_bar,
+            sample_comparison_vertical,
+            matching_zoom
+        ],
         query_type=QueryType.UTTERANCE,
         chart_type=ChartType.RECTANGLE,
     )
@@ -2311,6 +2667,12 @@ def generate():
             "S2.E['udi:use'] == 'coverage'",
             "S2.E['url'] != S1.E['url']",
             same_assembly
+        ],
+        justification=[
+            coverage_bar,
+            location_zoom,
+            sample_comparison_vertical,
+            matching_zoom
         ],
         query_type=QueryType.UTTERANCE,
         chart_type=ChartType.RECTANGLE,
