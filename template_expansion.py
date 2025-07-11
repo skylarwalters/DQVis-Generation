@@ -44,6 +44,7 @@ def expand(df, collection):
                     file_path = file["path"]
                     
                     for use in file['udi:use']:
+                    
                         entity_info.append({
                             'name':file_name,
                             'udi:use':use,
@@ -54,6 +55,7 @@ def expand(df, collection):
                             #'fields': file_schema["fields"],
                             'index-file': file["index-file"]
                         })
+                        
 
                     for col in file_schema["fields"]:
                         schema_flattened.append({
@@ -67,13 +69,15 @@ def expand(df, collection):
                         })
 
                 # 4. Create sample and entity options
-                sample_options = create_sample_options(schema_flattened, sample_assembly, sample_cancer)
-                entity_options=entity_info
-                
-                
-                
-                # 5. Create location options
                 location_options = selectGenes(sample_assembly, gene_list)
+                
+                sample_options = create_sample_options(schema_flattened, sample_assembly, sample_cancer, location_options)
+                entity_options=entity_info
+                pprint(sample_options)
+                
+                
+                
+                
                 
                 # 6. Create field options
                 field_options=schema_flattened
@@ -143,7 +147,7 @@ def selectGenes(assembly, gene_list, gene_ct=10, chrom_ct=4, popularityWeights=T
         return sampled_genes
         
 
-def create_sample_options(flattened_resources, sample_assembly, sample_cancer) -> List[Dict]:
+def create_sample_options(flattened_resources, sample_assembly, sample_cancer, location_options) -> List[Dict]:
     """
     Create sample options from the flattened resources (and maybe assembly
     and cancer ?)
@@ -176,12 +180,17 @@ def create_sample_options(flattened_resources, sample_assembly, sample_cancer) -
                 #"column_metadata": row.get("column_metadata", {}),
             })
         
+        location_list=[]
+        for loc in location_options:
+            location_list.append(loc['gene'])
+        
         # put together sample options
         sample_options.append({
             "sample": sample,
             "files": list(files.values()),
             "udi:assembly": sample_assembly,
             "udi:cancer-type": sample_cancer,
+            "locations":location_list
         })
 
     return sample_options
@@ -288,6 +297,8 @@ def resolve_spec_template(spec_template, tags, solution):
             
             if right == 'url':
                 resolved = solution[left]['url']
+            elif right == 'sample_name':
+                resolved = solution[left]['sample']
             elif right == "field":
                 resolved = solution[left]["field"]
             elif right == 'format':
@@ -313,6 +324,60 @@ def resolve_spec_template(spec_template, tags, solution):
             elif right == 'geneEnd':
                 resolved = str(solution[left]['end'])
             elif right == 'geneChr':
+                pprint(solution[left])
+                resolved = str(solution[left]['chromosome'])
+            elif right == 'index-file':
+                resolved = str(solution[left]['index-file'])
+            else:
+                resolved = solution[left + "_" + right]["name"]
+                
+        elif len(parts) == 3:
+            left, mid, right  = parts
+            
+            #if left.startswith("S"):
+            #    left = content
+            #elif left.startswith("E") or content.startswith('L'):
+            #    left = "S_" + left
+            #else:
+            #    left = expand_field(left, tags)
+            
+            if mid.startswith("E"):
+                left = left + "_" + mid
+            elif mid.startswith("L"):
+                left = left + "_" + mid
+            print('left')
+            pprint(left)
+            
+            if right == 'url':
+                resolved = solution[left]['url']
+            elif right == 'sample_name':
+                resolved = solution[left]['sample']
+            elif right == "field":
+                resolved = solution[left]["field"]
+            elif right == 'format':
+                resolved = solution[left]["format"]
+            elif right == 'chr1':
+                resolved = solution[left]['position-fields'][0]['chromosome-field']
+            elif right == 'chr2':
+                resolved = solution[left]['position-fields'][1]['chromosome-field']
+            elif right == 'start1':
+                resolved = solution[left]['position-fields'][0]['genomic-fields'][0]
+            elif right == 'end1':
+                resolved = solution[left]['position-fields'][0]['genomic-fields'][1]
+            elif right == 'start2':
+                resolved = solution[left]['position-fields'][1]['genomic-fields'][0]
+            elif right == 'end2':
+                resolved = solution[left]['position-fields'][1]['genomic-fields'][1]
+            elif right == 'start':
+                resolved = solution[left]['position-fields'][0]['genomic-fields'][0]
+            elif right == 'end':
+                resolved = solution[left]['position-fields'][0]['genomic-fields'][1]
+            elif right == 'geneStart':
+                resolved = str(solution[left]['start'])
+            elif right == 'geneEnd':
+                resolved = str(solution[left]['end'])
+            elif right == 'geneChr':
+                pprint(solution[left])
                 resolved = str(solution[left]['chromosome'])
             elif right == 'index-file':
                 resolved = str(solution[left]['index-file'])
@@ -397,9 +462,6 @@ def extract_tags(text: str) -> List[Dict[str, Union[str, List[str]]]]:
     for match in matches:
         parts = match.split(".")
         
-        #print(f'Match: {match}')
-        #print(f'Parts: {parts}')
-        
         sample, entity, field, location, field_type = None, None, None, None, None
         if len(parts) == 1:
             first = parts[0]
@@ -420,10 +482,8 @@ def extract_tags(text: str) -> List[Dict[str, Union[str, List[str]]]]:
             if second.startswith("L"):
                 location = second
             elif second.startswith("E"):
-                print('brahhhh')
                 entity = second
             else:
-                print('bruh')
                 field=second
         elif len(parts) == 3:
             first, second, third=parts
@@ -477,9 +537,7 @@ def extract_tags(text: str) -> List[Dict[str, Union[str, List[str]]]]:
         )
      
     # infer sample and entity  
-    pprint(tags)
     infer_entity(tags) 
-    #pprint(tags)
     infer_sample(tags)
     
     samples = set([tag["sample"] for tag in tags])
@@ -695,10 +753,7 @@ def constraint_solver(
 ) -> List[Dict[str, str]]:
     problem = Problem()
     
-    pprint(sample_options)
-    pprint(location_options)
     
-
     problem.addVariables(fields, field_options)
     problem.addVariables(samples, sample_options)
     problem.addVariables(entities, entity_options)
@@ -706,7 +761,6 @@ def constraint_solver(
         
     for constraint in constraints:
         problem.addConstraint(constraint) 
-        print(constraint)
     
     s = problem.getSolutions()
         
@@ -714,7 +768,7 @@ def constraint_solver(
 
 if __name__ == "__main__":
     
-    with open('data-schema/example_schema.json', 'r') as f:
+    with open('data-schema/bam_schema.json', 'r') as f:
         schema=json.load(f)
     df=pd.read_csv('spec_generation_test.tsv', sep='\t')
 

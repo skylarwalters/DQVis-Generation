@@ -76,57 +76,84 @@ def generate():
         ]
     )
 
-    # Define recurring constraints
+    # ----------- Define recurring constraints ---------------------------------
     overlap = "F1['name'] in F2['udi:overlapping_fields'] or F2['udi:overlapping_fields'] == 'all'"
-    sample_assembly = "S1['udi:assembly] == S2['udi:assembly]"
+    same_assembly = "S1['udi:assembly'] == S2['udi:assembly']"
     
-    entities_have_same_sample="E1['sample'] == E2['sample']"
-    fields_have_same_type="F1['udi:data_type'] == F2['udi:data_type']"
     different_genes="L1['gene'] != L2['gene']"
     different_samples="S1['sample'] != S2['sample']"
+    same_location = "S1.L['gene'] in S2['locations']"
+    sample_contains_entity="S1.E['name'] == S2.E['name']"
+
+    # ----------- Define recurring justifications ------------------------------
+    # Visual justifications
+    vertical_stacked_view="The plots are stacked vertically to allow for visually-friendly comparison."
+    matching_zoom="The views are synced to visualize the same genomic region across samples."
+    circular_view="A circular view enables a space-condensed visualization across the range of interest."
+    
+    # Stratification
+    stacked_stratification="The data is split by type between plots to enable comparison across types." + " " + vertical_stacked_view
+    color_stratification="The data is colored by type to enable comparison across subtypes."
+
+    # Location zoom
+    location_zoom = "The plot's visual scope is centered on the user-defined area of interest."
+    
+    # Comparison 
+    sample_comparison_vertical = "There are plots for each user-defined sample. " + vertical_stacked_view
+    location_comparison_vertical = "There are plots for each user-defined location. " + vertical_stacked_view
+    entity_comparison_vertical = "There are plots for each user-defined data comparison. " + vertical_stacked_view
+    
+    # Plot type justification
+    binned_bars="Bars pool discrete data over genomic ranges to portray the frequency of these discrete data types."
+    sv="Structural variant (SV) data is shown in a connectivity plot. The connectivity plot enables viewing of the SV breakpoints between and within chromosomes"
+    point_plot="Point marks are used to display the data because the data type is discrete across the genome."
+    cnv="Copy number data displays the number of copies in a given sample by elevating the rectangle to the corresponding copy frequency."
+    coverage_area="Coverage is displayed in an area plot to convey the depth of reads at each genomic location."
+    coverage_line="Coverage is displayed in a line plot to convey the depth of reads at each genomic location."
+
     
     
-    
-    # USE THIS ONE !! YAYYYYYYY
     df = add_row(
         df,
-        query_template="How do the <E> appear?",
-        spec=({
-            "tracks":[{
-                "title": "Copy Number Variants",
-                "data": {
-                    "separator": "\t",
-                    "url": "<E.url>",
-                    "type": "csv",
-                    "chromosomeField": "<E.chr1>",
-                    "genomicFields": ["<E.start>", "<E.end>"]
-                },
-                "mark": "rect",
-                "x": {
-                    "field": "<E.start>",
-                    "type": "genomic"
-                },
-                "xe": {
-                    "field": "<E.end>",
-                    "type": "genomic"
-                },
-                "y": {
-                    "field": "total_cn",
-                    "type": "quantitative",
-                    "axis": "right",
-                    "range": [10, 50]
-                  },
-                "width": 1400,
-                "height": 60
+        query_template="What is the <E> data?",
+        spec=(
+            {
+                "title": "Structural variants on whole genome",
+                "tracks": [
+                    {
+                    "data": {
+                        "url": "<E.url>",
+                        "type": "csv",
+                        "separator":"\t",
+                        "genomicFieldsToConvert": [
+                            {"chromosomeField": "<E.chr1>", "genomicFields":["<E.start1>", "<E.end1>"]},
+                            {"chromosomeField": "<E.chr2>", "genomicFields":["<E.start2>", "<E.end2>"]},
+                        ]
+                    },
+                    "mark": "withinLink",
+                    "x": {"field": "<E.start1>", "type": "genomic"},
+                    "xe": {"field": "<E.end2>", "type": "genomic"},
+                    "strokeWidth": {"value": 1},
+                    "opacity": {"value": 0.7},
+                    "stroke": {"value": "#D55D00"},
+                    "style": {"linkStyle": "elliptical"}
+                    
+                    }
+                ]
             }
-            ]}
         ),
         constraints=[
-            "E['use'] == 'cna'",
+            "E['use'] == 'sv'",
+        ],
+        justification=[
+            sv
         ],
         query_type=QueryType.UTTERANCE,
-        chart_type=ChartType.RECTANGLE,
+        chart_type=ChartType.CONNECTIVITY,
     )
+    
+    
+    '''    
         
     # ---------------------------------------------------------
     # Mapping entities
@@ -225,7 +252,45 @@ def generate():
         chart_type=ChartType.CONNECTIVITY,
     )
     
-
+    df = add_row(
+        df,
+        query_template="How do the <E> appear?",
+        spec=({
+            "tracks":[{
+                "title": "Copy Number Variants",
+                "data": {
+                    "separator": "\t",
+                    "url": "<E.url>",
+                    "type": "csv",
+                    "chromosomeField": "<E.chr1>",
+                    "genomicFields": ["<E.start>", "<E.end>"]
+                },
+                "mark": "rect",
+                "x": {
+                    "field": "<E.start>",
+                    "type": "genomic"
+                },
+                "xe": {
+                    "field": "<E.end>",
+                    "type": "genomic"
+                },
+                "y": {
+                    "field": "total_cn",
+                    "type": "quantitative",
+                    "axis": "right",
+                    "range": [10, 50]
+                  },
+                "width": 1400,
+                "height": 60
+            }
+            ]}
+        ),
+        constraints=[
+            "E['use'] == 'cna'",
+        ],
+        query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.RECTANGLE,
+    )
     
     
     df = add_row(
@@ -1289,6 +1354,167 @@ def generate():
         query_type=QueryType.QUESTION,
         chart_type=ChartType.POINT,
     )
+    
+    df = add_row(
+        df,
+        query_template="How do <E> at <L1> and <L2> compare?",
+        spec=({
+            "title": "Copy Number Variants, <L1> and <L2>",
+            "arrangement": "vertical",
+            "layout": "linear",
+            "views":[
+                {
+                    "tracks":[
+                    {
+                        "title":"<L1>",
+                        "data": {
+                            "separator": "\t",
+                            "url": "<E.url>",
+                            "type": "csv",
+                            "chromosomeField": "<E.chr1>",
+                            "genomicFields": ["<E.start>", "<E.end>"]
+                        },
+                        "mark": "rect",
+                        "x": {
+                            "field": "<E.start>",
+                            "type": "genomic",
+                            "domain": {
+                                "chromosome": "<L1.geneChr>",
+                                "interval": ["<L1.geneStart>", "<L1.geneEnd>"]
+                            }
+                        },
+                        "xe": {
+                            "field": "<E.end>",
+                            "type": "genomic"
+                        },
+                        "y": {
+                            "field": "total_cn",
+                            "type": "quantitative",
+                            "axis": "right",
+                            "range": [10, 50]
+                        }, 
+                    }
+                    ]
+                },
+                {
+                    "tracks":[
+                    {
+                        "title":"<L2>",
+                        "data": {
+                            "separator": "\t",
+                            "url": "<E.url>",
+                            "type": "csv",
+                            "chromosomeField": "<E.chr1>",
+                            "genomicFields": ["<E.start>", "<E.end>"]
+                        },
+                        "mark": "rect",
+                        "x": {
+                            "field": "<E.start>",
+                            "type": "genomic",
+                            "domain": {
+                                "chromosome": "<L2.geneChr>",
+                                "interval": ["<L2.geneStart>", "<L2.geneEnd>"]
+                            }
+                        },
+                        "xe": {
+                            "field": "<E.end>",
+                            "type": "genomic"
+                        },
+                        "y": {
+                            "field": "total_cn",
+                            "type": "quantitative",
+                            "axis": "right",
+                            "range": [10, 50]
+                        }, 
+                    }
+                    ]
+                },
+            ]
+            }
+        ),
+        constraints=[
+            "E['udi:use'] == 'cna'", 
+            different_genes
+        ],
+        query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.RECTANGLE,
+    )
+    
+    df = add_row(
+        df,
+        query_template="How do <E> at <L1> and <L2> compare?",
+        spec=({
+            "title": "Structural Variations, <L1> and <L2>",
+            "arrangement": "vertical",
+            "layout": "linear",
+            "views":
+                [
+                    {
+                        "tracks": [
+                        {
+                            "title": "<L1>",
+                            "data": {
+                                "url": "<E.url>",
+                                "type": "csv",
+                                "separator":"\t",
+                                "genomicFieldsToConvert": [
+                                    {"chromosomeField": "<E.chr1>", "genomicFields":["<E.start1>", "<E.end1>"]},
+                                    {"chromosomeField": "<E.chr2>", "genomicFields":["<E.start2>", "<E.end2>"]},
+                                ]
+                            },
+                            "mark": "withinLink",
+                            "x": {"field": "<E.start1>", "type": "genomic","domain":{
+                                    "chromosome": "<L1.geneChr>",
+                                    "interval": ["<L1.geneStart>", "<L1.geneEnd>"]
+                                }},
+                            "xe": {"field": "<E.end2>", "type": "genomic"},
+                            "strokeWidth": {"value": 1},
+                            "opacity": {"value": 0.7},
+                            "stroke": {"value": "#D55D00"},
+                            "style": {"linkStyle": "elliptical"}
+                        },]
+                    },
+                    {"tracks":[{
+                        "title": "<L2>",
+                        "data": {
+                            "url": "<E.url>",
+                            "type": "csv",
+                            "separator":"\t",
+                            "genomicFieldsToConvert": [
+                                {"chromosomeField": "<E.chr1>", "genomicFields":["<E.start1>", "<E.end1>"]},
+                                {"chromosomeField": "<E.chr2>", "genomicFields":["<E.start2>", "<E.end2>"]},
+                            ]
+                        },
+                        "mark": "withinLink",
+                        "x": {"field": "<E.start1>", "type": "genomic","domain":{
+                                "chromosome": "<L2.geneChr>",
+                                "interval": ["<L2.geneStart>", "<L2.geneEnd>"]
+                            }},
+                        "xe": {"field": "<E.end2>", "type": "genomic"},
+                        "strokeWidth": {"value": 1},
+                        "opacity": {"value": 0.7},
+                        "stroke": {"value": "#D55D00"},
+                        "style": {"linkStyle": "elliptical"}}
+                ]}   
+                ]
+                
+            }
+        ),
+        constraints=[
+            "E['udi:use'] == 'sv'", 
+            different_genes
+        ],
+        query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.RECTANGLE,
+    )    
+    
+    
+    
+    
+    
+    
+    
+    
    
     # df = add_row(
     #     df,
@@ -1368,6 +1594,738 @@ def generate():
     #     query_type=QueryType.QUESTION,
     #     chart_type=ChartType.POINT,
     # )
+    
+    
+    df = add_row(
+        df,
+        query_template="How do <S1.E> in <S1> and <S2.E> in <S2> compare at <S1.L>?",
+        spec=({
+            "title": "Copy Number Variants, <S1> and <S2>",
+            "tracks":[
+                {
+                "title":"<S1>",
+                "data": {
+                    "separator": "\t",
+                    "url": "<S1.E.url>",
+                    "type": "csv",
+                    "chromosomeField": "<S1.E.chr1>",
+                    "genomicFields": ["<S1.E.start>", "<S1.E.end>"]
+                },
+                "mark": "rect",
+                "x": {
+                    "field": "<S1.E.start>",
+                    "type": "genomic",
+                    "domain": {
+                        "chromosome": "<S1.L.geneChr>",
+                        "interval": ["<S1.L.geneStart>", "<S1.L.geneEnd>"]
+                    }
+                },
+                "xe": {
+                    "field": "<S1.E.end>",
+                    "type": "genomic"
+                },
+                "y": {
+                    "field": "total_cn",
+                    "type": "quantitative",
+                    "axis": "right",
+                    "range": [10, 50]
+                  }, 
+            },
+            {
+                "title": "<S2>",
+                "data": {
+                    "separator": "\t",
+                    "url": "<S2.E.url>",
+                    "type": "csv",
+                    "chromosomeField": "<S2.E.chr1>",
+                    "genomicFields": ["<S2.E.start>", "<S2.E.end>"]
+                },
+                "mark": "rect",
+                "x": {
+                    "field": "<S2.E.start>",
+                    "type": "genomic",
+                    "domain":{
+                        "chromosome": "<S1.L.geneChr>",
+                        "interval": ["<S1.L.geneStart>", "<S1.L.geneEnd>"]
+                    }
+                },
+                "xe": {
+                    "field": "<S2.E.end>",
+                    "type": "genomic"
+                },
+                "y": {
+                    "field": "total_cn",
+                    "type": "quantitative",
+                    "axis": "right",
+                    "range": [10, 50]
+                },
+                }
+            ]}
+        ),
+        constraints=[
+            "S1.E['udi:use'] == 'cna'", 
+            "S2.E['udi:use'] == 'cna'",
+            "S2.E['url'] != S1.E['url']",
+            same_assembly
+        ],
+        query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.RECTANGLE,
+    )
+    
+    df = add_row(
+        df,
+        query_template="How do <S1.E> in <S1> and <S2.E> in <S2> compare at <S1.L>?",
+        spec=({
+            "title": "Copy Number Variants, <S1> and <S2>",
+            "tracks":[
+                {
+                "title":"<S1>",
+                "data": {
+                    "separator": "\t",
+                    "url": "<S1.E.url>",
+                    "type": "csv",
+                    "chromosomeField": "<S1.E.chr1>",
+                    "genomicFields": ["<S1.E.start>", "<S1.E.end>"]
+                },
+                "mark": "rect",
+                "x": {
+                    "field": "<S1.E.start>",
+                    "type": "genomic",
+                    "domain": {
+                        "chromosome": "<S1.L.geneChr>",
+                        "interval": ["<S1.L.geneStart>", "<S1.L.geneEnd>"]
+                    }
+                },
+                "xe": {
+                    "field": "<S1.E.end>",
+                    "type": "genomic"
+                },
+                "y": {
+                    "field": "total_cn",
+                    "type": "quantitative",
+                    "axis": "right",
+                    "range": [10, 50]
+                  }, 
+            },
+            {
+                "title": "<S2>",
+                "data": {
+                    "separator": "\t",
+                    "url": "<S2.E.url>",
+                    "type": "csv",
+                    "chromosomeField": "<S2.E.chr1>",
+                    "genomicFields": ["<S2.E.start>", "<S2.E.end>"]
+                },
+                "mark": "rect",
+                "x": {
+                    "field": "<S2.E.start>",
+                    "type": "genomic",
+                    "domain":{
+                        "chromosome": "<S1.L.geneChr>",
+                        "interval": ["<S1.L.geneStart>", "<S1.L.geneEnd>"]
+                    }
+                },
+                "xe": {
+                    "field": "<S2.E.end>",
+                    "type": "genomic"
+                },
+                "y": {
+                    "field": "total_cn",
+                    "type": "quantitative",
+                    "axis": "right",
+                    "range": [10, 50]
+                },
+                }
+            ]}
+        ),
+        constraints=[
+            "S1.E['udi:use'] == 'cna'", 
+            "S2.E['udi:use'] == 'cna'",
+            "S2.E['url'] != S1.E['url']",
+            same_assembly
+        ],
+        query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.RECTANGLE,
+    )
+    
+    df = add_row(
+        df,
+        query_template="How do <S1.E> in <S1> and <S2.E> in <S2> compare?",
+        spec=({
+            "title": "Copy Number Variants, <S1> and <S2>",
+            "tracks":[
+                {
+                "title":"<S1>",
+                "data": {
+                    "separator": "\t",
+                    "url": "<S1.E.url>",
+                    "type": "csv",
+                    "chromosomeField": "<S1.E.chr1>",
+                    "genomicFields": ["<S1.E.start>", "<S1.E.end>"]
+                },
+                "mark": "rect",
+                "x": {
+                    "field": "<S1.E.start>",
+                    "type": "genomic"
+                },
+                "xe": {
+                    "field": "<S1.E.end>",
+                    "type": "genomic"
+                },
+                "y": {
+                    "field": "total_cn",
+                    "type": "quantitative",
+                    "axis": "right",
+                    "range": [10, 50]
+                  }, 
+            },
+            {
+                "title": "<S2>",
+                "data": {
+                    "separator": "\t",
+                    "url": "<S2.E.url>",
+                    "type": "csv",
+                    "chromosomeField": "<S2.E.chr1>",
+                    "genomicFields": ["<S2.E.start>", "<S2.E.end>"]
+                },
+                "mark": "rect",
+                "x": {
+                    "field": "<S2.E.start>",
+                    "type": "genomic"
+                },
+                "xe": {
+                    "field": "<S2.E.end>",
+                    "type": "genomic"
+                },
+                "y": {
+                    "field": "total_cn",
+                    "type": "quantitative",
+                    "axis": "right",
+                    "range": [10, 50]
+                },
+                }
+            ]}
+        ),
+        constraints=[
+            "S1.E['udi:use'] == 'cna'", 
+            "S2.E['udi:use'] == 'cna'",
+            "S2.E['url'] != S1.E['url']",
+            same_assembly
+        ],
+        query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.RECTANGLE,
+    )
+    
+    df = add_row(
+        df,
+        query_template="How do <S1.E> in <S1> and <S2.E> in <S2> compare?",
+        spec=({
+            "title": "Copy Number Variants, <S1> and <S2>",
+            "tracks":[
+                {
+                "title":"<S1>",
+                "data": {
+                    "separator": "\t",
+                    "url": "<S1.E.url>",
+                    "type": "csv",
+                    "chromosomeField": "<S1.E.chr1>",
+                    "genomicFields": ["<S1.E.start>", "<S1.E.end>"]
+                },
+                "mark": "rect",
+                "x": {
+                    "field": "<S1.E.start>",
+                    "type": "genomic"
+                },
+                "xe": {
+                    "field": "<S1.E.end>",
+                    "type": "genomic"
+                },
+                "y": {
+                    "field": "total_cn",
+                    "type": "quantitative",
+                    "axis": "right",
+                    "range": [10, 50]
+                  }, 
+            },
+            {
+                "title": "<S2>",
+                "data": {
+                    "separator": "\t",
+                    "url": "<S2.E.url>",
+                    "type": "csv",
+                    "chromosomeField": "<S2.E.chr1>",
+                    "genomicFields": ["<S2.E.start>", "<S2.E.end>"]
+                },
+                "mark": "rect",
+                "x": {
+                    "field": "<S2.E.start>",
+                    "type": "genomic"
+                },
+                "xe": {
+                    "field": "<S2.E.end>",
+                    "type": "genomic"
+                },
+                "y": {
+                    "field": "total_cn",
+                    "type": "quantitative",
+                    "axis": "right",
+                    "range": [10, 50]
+                },
+                }
+            ]}
+        ),
+        constraints=[
+            "S1.E['udi:use'] == 'cna'", 
+            "S2.E['udi:use'] == 'cna'",
+            "S2.E['url'] != S1.E['url']",
+            same_assembly
+        ],
+        query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.RECTANGLE,
+    )
+    
+    df = add_row(
+        df,
+        query_template="How do <S1.E> in <S1> and <S2.E> in <S2> compare?",
+        spec=({
+            "title": "Point Mutations, <S1> and <S2>",
+            "tracks":[
+                {
+                "title": "<S1>",
+                "data": {
+                    "type": "vcf",
+                    "url": "<S1.E.url>",
+                    "indexUrl": "<S1.E.index-file>",
+                },
+                "mark": "point",
+                "x": {
+                    "field": "POS",
+                    "type": "genomic"
+                },
+                "tooltip": [
+                    {
+                    "field": "POS",
+                    "type": "genomic"
+                    },
+                    {
+                    "field": "REF",
+                    "type": "nominal"
+                    },
+                    {
+                    "field": "ALT",
+                    "type": "nominal"
+                    }
+                ]
+            },
+                {
+                "title": "<S2>",
+                "data": {
+                    "type": "vcf",
+                    "url": "<S2.E.url>",
+                    "indexUrl": "<S2.E.index-file>",
+                },
+                "mark": "point",
+                "x": {
+                    "field": "POS",
+                    "type": "genomic"
+                },
+                "tooltip": [
+                    {
+                    "field": "POS",
+                    "type": "genomic"
+                    },
+                    {
+                    "field": "REF",
+                    "type": "nominal"
+                    },
+                    {
+                    "field": "ALT",
+                    "type": "nominal"
+                    }
+                ]
+            }
+            ]}
+        ),
+        constraints=[
+            "S1.E['udi:use'] == 'point-mutation'", 
+            "S2.E['udi:use'] == 'point-mutation'",
+            "S2.E['url'] != S1.E['url']",
+            same_assembly
+        ],
+        query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.RECTANGLE,
+    )
+    
+    df = add_row(
+        df,
+        query_template="How do <S1.E> in <S1> and <S2.E> in <S2> compare at <S1.L>?",
+        spec=({
+            "title": "Point Mutations, <S1> and <S2>",
+            "tracks":[
+                {
+                "title": "<S1>",
+                "data": {
+                    "type": "vcf",
+                    "url": "<S1.E.url>",
+                    "indexUrl": "<S1.E.index-file>",
+                },
+                "mark": "point",
+                "x": {
+                    "field": "POS",
+                    "type": "genomic",
+                    "domain":{
+                        "chromosome": "<S1.L.geneChr>",
+                        "interval": ["<S1.L.geneStart>", "<S1.L.geneEnd>"]
+                    }
+                },
+                "tooltip": [
+                    {
+                    "field": "POS",
+                    "type": "genomic"
+                    },
+                    {
+                    "field": "REF",
+                    "type": "nominal"
+                    },
+                    {
+                    "field": "ALT",
+                    "type": "nominal"
+                    }
+                ]
+            },
+                {
+                "title": "<S2>",
+                "data": {
+                    "type": "vcf",
+                    "url": "<S2.E.url>",
+                    "indexUrl": "<S2.E.index-file>",
+                },
+                "mark": "point",
+                "x": {
+                    "field": "POS",
+                    "type": "genomic",
+                    "domain":{
+                        "chromosome": "<S1.L.geneChr>",
+                        "interval": ["<S1.L.geneStart>", "<S1.L.geneEnd>"]
+                    }
+                },
+                "tooltip": [
+                    {
+                    "field": "POS",
+                    "type": "genomic"
+                    },
+                    {
+                    "field": "REF",
+                    "type": "nominal"
+                    },
+                    {
+                    "field": "ALT",
+                    "type": "nominal"
+                    }
+                ]
+            }
+            ]}
+        ),
+        constraints=[
+            "S1.E['udi:use'] == 'point-mutation'", 
+            "S2.E['udi:use'] == 'point-mutation'",
+            "S2.E['url'] != S1.E['url']",
+            same_assembly
+        ],
+        query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.RECTANGLE,
+    )
+    
+    df = add_row(
+        df,
+        query_template="How do <S1.E> in <S1> and <S2.E> in <S2> compare?",
+        spec=({
+            "title": "Structural Variations, <S1> and <S2>",
+            "tracks": [
+                {
+                    "title": "<S1>",
+                "data": {
+                    "url": "<S1.E.url>",
+                    "type": "csv",
+                    "separator":"\t",
+                    "genomicFieldsToConvert": [
+                        {"chromosomeField": "<S1.E.chr1>", "genomicFields":["<S1.E.start1>", "<S1.E.end1>"]},
+                        {"chromosomeField": "<S1.E.chr2>", "genomicFields":["<S1.E.start2>", "<S1.E.end2>"]},
+                    ]
+                },
+                "mark": "withinLink",
+                "x": {"field": "<S1.E.start1>", "type": "genomic"},
+                "xe": {"field": "<S1.E.end2>", "type": "genomic"},
+                "strokeWidth": {"value": 1},
+                "opacity": {"value": 0.7},
+                "stroke": {"value": "#D55D00"},
+                "style": {"linkStyle": "elliptical"}
+                },
+                
+                {
+                    "title": "<S2>",
+                "data": {
+                    "url": "<S2.E.url>",
+                    "type": "csv",
+                    "separator":"\t",
+                    "genomicFieldsToConvert": [
+                        {"chromosomeField": "<S2.E.chr1>", "genomicFields":["<S2.E.start1>", "<S2.E.end1>"]},
+                        {"chromosomeField": "<S2.E.chr2>", "genomicFields":["<S2.E.start2>", "<S2.E.end2>"]},
+                    ]
+                },
+                "mark": "withinLink",
+                "x": {"field": "<S2.E.start1>", "type": "genomic"},
+                "xe": {"field": "<S2.E.end2>", "type": "genomic"},
+                "strokeWidth": {"value": 1},
+                "opacity": {"value": 0.7},
+                "stroke": {"value": "#D55D00"},
+                "style": {"linkStyle": "elliptical"}
+                }
+            ]}
+        ),
+        constraints=[
+            "S1.E['udi:use'] == 'sv'", 
+            "S2.E['udi:use'] == 'sv'",
+            "S2.E['url'] != S1.E['url']",
+            same_assembly
+        ],
+        query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.RECTANGLE,
+    )
+    
+    df = add_row(
+        df,
+        query_template="How do <S1.E> in <S1> and <S2.E> in <S2> compare at <S1.L>?",
+        spec=({
+            "title": "Structural Variations, <S1> and <S2>",
+            "tracks": [
+                {
+                    "title": "<S1>",
+                "data": {
+                    "url": "<S1.E.url>",
+                    "type": "csv",
+                    "separator":"\t",
+                    "genomicFieldsToConvert": [
+                        {"chromosomeField": "<S1.E.chr1>", "genomicFields":["<S1.E.start1>", "<S1.E.end1>"]},
+                        {"chromosomeField": "<S1.E.chr2>", "genomicFields":["<S1.E.start2>", "<S1.E.end2>"]},
+                    ]
+                },
+                "mark": "withinLink",
+                "x": {"field": "<S1.E.start1>", "type": "genomic","domain":{
+                        "chromosome": "<S1.L.geneChr>",
+                        "interval": ["<S1.L.geneStart>", "<S1.L.geneEnd>"]
+                    }},
+                "xe": {"field": "<S1.E.end2>", "type": "genomic"},
+                "strokeWidth": {"value": 1},
+                "opacity": {"value": 0.7},
+                "stroke": {"value": "#D55D00"},
+                "style": {"linkStyle": "elliptical"}
+                },
+                
+                {
+                    "title": "<S2>",
+                "data": {
+                    "url": "<S2.E.url>",
+                    "type": "csv",
+                    "separator":"\t",
+                    "genomicFieldsToConvert": [
+                        {"chromosomeField": "<S2.E.chr1>", "genomicFields":["<S2.E.start1>", "<S2.E.end1>"]},
+                        {"chromosomeField": "<S2.E.chr2>", "genomicFields":["<S2.E.start2>", "<S2.E.end2>"]},
+                    ]
+                },
+                "mark": "withinLink",
+                "x": {"field": "<S2.E.start1>", "type": "genomic","domain":{
+                        "chromosome": "<S1.L.geneChr>",
+                        "interval": ["<S1.L.geneStart>", "<S1.L.geneEnd>"]
+                    }},
+                "xe": {"field": "<S2.E.end2>", "type": "genomic"},
+                "strokeWidth": {"value": 1},
+                "opacity": {"value": 0.7},
+                "stroke": {"value": "#D55D00"},
+                "style": {"linkStyle": "elliptical"}
+                }
+            ]}
+        ),
+        constraints=[
+            "S1.E['udi:use'] == 'sv'", 
+            "S2.E['udi:use'] == 'sv'",
+            "S2.E['url'] != S1.E['url']",
+            same_assembly
+        ],
+        query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.RECTANGLE,
+    )
+    
+        df = add_row(
+        df,
+        query_template="How do <S1.E> in <S1> and <S2.E> in <S2> compare at <S1.L>?",
+        spec=({
+            "title": "Coverage, <S1> and <S2>",
+            "tracks": [
+                {
+                    "title": "<S1>",
+                    "data": {
+                        "url": "<S1.E.url>",
+                        "type": "bam",
+                        "indexUrl": "<S1.E.index-file>",
+                    },
+                    "mark": "bar",
+                    "dataTransform": [
+                            {"type": "coverage", "startField": "<S1.E.start>", "endField": "<S1.E.end>"}
+                        ],
+                    "x": {
+                        "field": "POS", 
+                        "type": "genomic", 
+                        "axis": "top",
+                        "domain":
+                            {
+                                "chromosome": "<S1.L.geneChr>",
+                                "interval": ["<S1.L.geneStart>", "<S1.L.geneEnd>"]
+                            }
+                            },
+                    "y": {"field": "depth", "type": "quantitative"},
+                    "tooltip": [
+                        {
+                        "field": "POS",
+                        "type": "genomic"
+                        },
+                        {
+                        "field": "depth",
+                        "type": "quantitative"
+                        }
+                    ]
+                    },
+                
+                {   
+                    "title": "<S2>",
+                    "data": {
+                        "url": "<S2.E.url>",
+                        "type": "bam",
+                        "indexUrl": "<S2.E.index-file>",
+                    },
+                    "mark": "bar",
+                    "dataTransform": [
+                            {"type": "coverage", "startField": "<S2.E.start>", "endField": "<S2.E.end>"}
+                        ],
+                    "x": {
+                        "field": "POS", 
+                        "type": "genomic", 
+                        "axis": "top",
+                        "domain":
+                            {
+                                "chromosome": "<S1.L.geneChr>",
+                                "interval": ["<S1.L.geneStart>", "<S1.L.geneEnd>"]
+                            }
+                            },
+                    "y": {"field": "depth", "type": "quantitative"},
+                    "tooltip": [
+                        {
+                        "field": "POS",
+                        "type": "genomic"
+                        },
+                        {
+                        "field": "depth",
+                        "type": "quantitative"
+                        }
+                    ]
+                    }
+            ]}
+        ),
+        constraints=[
+            "S1.E['udi:use'] == 'coverage'", 
+            "S2.E['udi:use'] == 'coverage'",
+            "S2.E['url'] != S1.E['url']",
+            same_assembly
+        ],
+        query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.RECTANGLE,
+    )
+    
+    df = add_row(
+        df,
+        query_template="How do <S1.E> in <S1> and <S2.E> in <S2> compare?",
+        spec=({
+            "title": "Coverage, <S1> and <S2>",
+            "tracks": [
+                {
+                    "title": "<S1>",
+                    "data": {
+                        "url": "<S1.E.url>",
+                        "type": "bam",
+                        "indexUrl": "<S1.E.index-file>",
+                    },
+                    "mark": "bar",
+                    "dataTransform": [
+                            {"type": "coverage", "startField": "<S1.E.start>", "endField": "<S1.E.end>"}
+                        ],
+                    "x": {
+                        "field": "POS", 
+                        "type": "genomic", 
+                        "axis": "top",
+                        },
+                    "y": {"field": "depth", "type": "quantitative"},
+                    "tooltip": [
+                        {
+                        "field": "POS",
+                        "type": "genomic"
+                        },
+                        {
+                        "field": "depth",
+                        "type": "quantitative"
+                        }
+                    ]
+                    },
+                
+                {   
+                    "title": "<S2>",
+                    "data": {
+                        "url": "<S2.E.url>",
+                        "type": "bam",
+                        "indexUrl": "<S2.E.index-file>",
+                    },
+                    "mark": "bar",
+                    "dataTransform": [
+                            {"type": "coverage", "startField": "<S2.E.start>", "endField": "<S2.E.end>"}
+                        ],
+                    "x": {
+                        "field": "POS", 
+                        "type": "genomic", 
+                        "axis": "top"
+                        },
+                    "y": {"field": "depth", "type": "quantitative"},
+                    "tooltip": [
+                        {
+                        "field": "POS",
+                        "type": "genomic"
+                        },
+                        {
+                        "field": "depth",
+                        "type": "quantitative"
+                        }
+                    ]
+                    }
+            ]}
+        ),
+        constraints=[
+            "S1.E['udi:use'] == 'coverage'", 
+            "S2.E['udi:use'] == 'coverage'",
+            "S2.E['url'] != S1.E['url']",
+            same_assembly
+        ],
+        query_type=QueryType.UTTERANCE,
+        chart_type=ChartType.RECTANGLE,
+    )
+    
+    '''
+    
+    
+    
+
+    
+
+
+    
+    
     
 
     return df

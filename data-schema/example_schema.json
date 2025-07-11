@@ -1,7 +1,4 @@
 
-
-
-
 [
   {
     "name": "CESC Sample 1",
@@ -48,7 +45,7 @@
           {"chromosome-field": "chrom1", "genomic-fields":["start1", "end1"]},
           {"chromosome-field": "chrom2", "genomic-fields":["start2", "end2"]}
         ],
-        "use": [
+        "udi:use": [
           "sv"
         ],
         "index-file": ""
@@ -71,7 +68,7 @@
         "position-fields": [
           {"chromosome-field": "chromosome", "genomic-fields":["start", "end"]}
         ],
-        "use": [
+        "udi:use": [
           "cna"
         ],
         "index-file": ""
@@ -97,7 +94,7 @@
           {"chromosome-field": "", "genomic-fields":[]},
           {"chromosome-field": "", "genomic-fields":[]}
         ],
-        "use": [
+        "udi:use": [
           "point-mutation",
           "indel"
         ],
@@ -119,11 +116,11 @@
     "udi:assembly": "hg19",
     "udi:cancer-type":"adenocarcinoma",
     "udi:genes":[
-        {"name":"SMAD4", "chr":18, "pos":48575080},
-        {"name":"SMAD4", "chr":18, "pos":48494410},
-        {"name":"KMT2C", "chr":7, "pos":151873935},
-        {"name":"FBXW7", "chr":4, "pos":153245393},
-        {"name":"FBXW7", "chr":4, "pos":153242410}
+        {"name":"SMAD4", "chr":"chr18", "pos":48575080},
+        {"name":"SMAD4", "chr":"chr18", "pos":48494410},
+        {"name":"KMT2C", "chr":"chr7", "pos":151873935},
+        {"name":"FBXW7", "chr":"chr4", "pos":153245393},
+        {"name":"FBXW7", "chr":"chr4", "pos":153242410}
     ],
     "resources": [
       {
@@ -150,7 +147,7 @@
           {"chromosome-field": "chrom1", "genomic-fields":["start1", "end1"]},
           {"chromosome-field": "chrom2", "genomic-fields":["start2", "end2"]}
         ],
-        "use":[
+        "udi:use":[
           "sv"
         ],
         "index-file":""
@@ -173,7 +170,7 @@
         "position-fields": [
           {"chromosome-field": "chromosome", "genomic-fields":["start", "end"]}
         ],
-        "use":[
+        "udi:use":[
           "cna"
         ],
         "index-file":""
@@ -199,7 +196,7 @@
           {"chromosome-field": "", "genomic-fields":[]},
           {"chromosome-field": "", "genomic-fields":[]}
         ],
-        "use":[
+        "udi:use":[
           "point-mutation",
           "indel"
         ],

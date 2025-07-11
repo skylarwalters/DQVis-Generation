@@ -40,7 +40,7 @@
             "position-fields": [
               {"chromosome-field": "chrName", "genomic-fields":["start", "end"]}
             ],
-            "use": [
+            "udi:use": [
               "coverage"
             ],
             "index-file": "https://somatic-browser-test.s3.amazonaws.com/SRR7890905_GAPFI2USVS21.bam.bai"
@@ -69,7 +69,7 @@
             {"chromosome-field": "chrom1", "genomic-fields":["start1", "end1"]},
             {"chromosome-field": "chrom2", "genomic-fields":["start2", "end2"]}
           ],
-          "use": [
+          "udi:use": [
             "sv"
           ],
           "index-file": ""
@@ -92,7 +92,7 @@
           "position-fields": [
             {"chromosome-field": "chromosome", "genomic-fields":["start", "end"]}
           ],
-          "use": [
+          "udi:use": [
             "cna"
           ],
           "index-file": ""
@@ -118,7 +118,7 @@
             {"chromosome-field": "", "genomic-fields":[]},
             {"chromosome-field": "", "genomic-fields":[]}
           ],
-          "use": [
+          "udi:use": [
             "point-mutation",
             "indel"
           ],
@@ -142,7 +142,7 @@
           "position-fields": [
             {"chromosome-field": "chrName", "genomic-fields":["start", "end"]}
           ],
-          "use": [
+          "udi:use": [
             "coverage",
             "point mutation"
           ],
@@ -172,7 +172,7 @@
           {"chromosome-field": "chrom1", "genomic-fields":["start1", "end1"]},
           {"chromosome-field": "chrom2", "genomic-fields":["start2", "end2"]}
         ],
-        "use": [
+        "udi:use": [
           "sv"
         ],
         "index-file": ""
@@ -195,7 +195,7 @@
         "position-fields": [
           {"chromosome-field": "chromosome", "genomic-fields":["start", "end"]}
         ],
-        "use": [
+        "udi:use": [
           "cna"
         ],
         "index-file": ""
@@ -221,7 +221,7 @@
           {"chromosome-field": "", "genomic-fields":[]},
           {"chromosome-field": "", "genomic-fields":[]}
         ],
-        "use": [
+        "udi:use": [
           "point-mutation"
         ],
         "index-file": "https://somatic-browser-test.s3.amazonaws.com/SNV_test_tumor_normal_with_panel.vcf.gz.tbi"
